@@ -2,15 +2,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>d79fbf19-307d-4fa4-a15e-358b7a0ca02a</ProjectGuid>
+    <ProjectGuid>106709ab-6abc-4459-ae55-a03530c4a88b</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>SlideSearch.py</StartupFile>
+    <StartupFile>SlideIndexer.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
-    <Name>SlideSearch</Name>
-    <RootNamespace>SlideSearch</RootNamespace>
+    <Name>SlideIndexer</Name>
+    <RootNamespace>SlideIndexer</RootNamespace>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,7 +21,7 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="SlideSearch.py" />
+    <Compile Include="SlideIndexer.py" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

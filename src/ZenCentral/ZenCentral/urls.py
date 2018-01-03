@@ -1,5 +1,5 @@
 """
-Definition of urls for SlideSearch.
+Definition of urls for ZenCentral.
 """
 
 from datetime import datetime
