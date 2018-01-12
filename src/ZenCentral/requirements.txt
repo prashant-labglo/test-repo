@@ -1,2 +1,5 @@
 django >=1.9, <2
 djangorestframework>=3.6.2
+django_enumfields>=0.9.0
+django_tagulous>=0.12.0
+django_jsonfield>=1.0.1

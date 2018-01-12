@@ -1,40 +1,71 @@
 """
-
     Design
         https://prezentium.sharepoint.com/sites/lisadev/Shared%20Documents/01_Design/Atto%20-%20Design%20-%20Slide%20Search.docx?web=1
     References:
         Download word2vec from here: http://mccormickml.com/2016/04/12/googles-pretrained-word2vec-model-in-python/
         Smaller version of same flie: https://github.com/eyaler/word2vec-slim
+
+        LambdaMART Implementation
+        https://bitbucket.org/tunystom/rankpy
 """
 
 import json
 import gensim
 
-# Read JSON file.
-def textCleanUp(data):
+def textCleanUp(jsonObject, badStrings=None):
     """
-    Removes unnecessary whitespace and makes everything lowercase.
+    Removes unnecessary whitespace and makes everything lowercase for an arbitrary JSON.
     """
-    if (isinstance(data, str)):
-        return data.lower().strip().replace(" ", "_")
-    if (isinstance(data, list)):
-        return [textCleanUp(item) for item in data]
-    if (isinstance(data, dict)):
-        return {key:textCleanUp(value) for (key, value) in data.items()}
-    return data
+    if (isinstance(jsonObject, str)):
+        if badStrings is not None and (" " in jsonObject or "," in jsonObject):
+            badStrings.add(jsonObject)
+        return jsonObject.lower().strip().replace(" ", "_")
+    if (isinstance(jsonObject, list)):
+        # Some of the strings are of kind "a, b". They should be flattened into list.
+        if any([isinstance(item, str) and "," in item for item in jsonObject]):
+            badStrings.add(jsonObject[0])
+            jsonObject = ",".join(jsonObject).split(",")
+
+        # If we are not dealing with list of strings, then we need to clean them up, recursively.
+        jsonObject = [textCleanUp(item, badStrings) for item in jsonObject]
+
+        # Remove empty string
+        jsonObject = [item for item in jsonObject if item]
+
+        # Remove duplicates if we are dealing with list of strings.
+        if all([isinstance(item, str) for item in jsonObject]):
+            jsonObject = list(set(jsonObject))
+        return jsonObject
+
+    if (isinstance(jsonObject, dict)):
+        return {key:textCleanUp(value, badStrings) for (key, value) in jsonObject.items()}
+    return jsonObject
 
 class SlideSearchIndex(object):
-    def __init__(self, slideInfoFilepath):
+    """
+    Search engine object for slides.
+    """
+    def __init__(self, word2vecModelPath, slideInfoFilepath):
+        """
+        Constructor for SlideSearchIndex takes the path of slide contents file as input.
+        """
+        with open(slideInfoFilepath, "r", encoding="utf8") as fp:
+            slideInfoSet = json.load(fp)
+        badStrings = set()
+        self.slideInfoSet = textCleanUp(slideInfoSet, badStrings)
+        self.badStrings = badStrings
+        for badString in badStrings:
+            print(badString)
+        json.dump(self.slideInfoSet, open(slideInfoFilepath + "Cleaned.json", "w"))
 
-        slideInfoSet = json.load(open(slideInfoFilepath, "r", encoding="utf8"))
-        self.slideInfoSet = textCleanUp(slideInfoSet)
-
-        self.word2vecModel = gensim.models.KeyedVectors.load_word2vec_format('C:/Users/NishantSharma/source/repos/word2vec-slim/GoogleNews-vectors-negative300-SLIM.bin', binary=True)
+        # self.word2vecModel = gensim.models.KeyedVectors.load_word2vec_format('C:/Users/NishantSharma/source/repos/word2vec-slim/GoogleNews-vectors-negative300-SLIM.bin', binary=True)
+        self.word2vecModel = gensim.models.KeyedVectors.load_word2vec_format(word2vecModelPath, binary=True)
 
     def word2wordSemanticSimilarity(self, word1, word2):
         try:
             return self.word2vecModel.similarity(word1, word2)
         except KeyError:
+            print("Key not found: {0} or {1}".format(word1, word2))
             return -2
 
     def word2TagsetSemanticSimilarity(self, word, tagset):
@@ -61,12 +92,28 @@ class SlideSearchIndex(object):
         """
             QueryJson can be of the following form.
             {
+                # Optional
+                "Keywords" : ["keyword1", "keyword2", ...],
+
+                # Optional
                 "permittedConstructs" : [
                     ("permittedConcept1", "permittedSubConcept1", "PermittedConstruct1"),
                     ("permittedConcept2", "permittedSubConcept2", "PermittedConstruct2"),
                     ("permittedConcept3", "permittedSubConcept3", "PermittedConstruct3"),
                     ...
-                ]
+                ],
+
+                # Optional
+                "permittedIcon"  : True | False,
+
+                # Optional
+                "permittedImage"  : True | False,
+
+                # Optional
+                "permittedStyle"  : True | False,
+
+                # Optional
+                "permittedVisualStyle"  : True | False
             }
         """
         queryJson = textCleanUp(queryJson)
@@ -118,7 +165,10 @@ class SlideSearchIndex(object):
         return resultList
 
 if __name__ == "__main__":
-    slideSearchIndex = SlideSearchIndex(".\slidelist.json")
+    slideSearchIndex = SlideSearchIndex(
+        #'C:/Users/NishantSharma/source/repos/word2vec/GoogleNews-vectors-negative300.bin',
+        'C:/Users/NishantSharma/source/repos/word2vec-slim/GoogleNews-vectors-negative300-SLIM.bin',
+        ".\slidelist_json.json")
 
     import pdb;pdb.set_trace()
     slideSearchIndex.slideSearch({"Keywords" : ["Agenda"]})
