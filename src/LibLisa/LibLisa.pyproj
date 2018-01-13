@@ -2,14 +2,16 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>d79fbf19-307d-4fa4-a15e-358b7a0ca02a</ProjectGuid>
+    <ProjectGuid>3160d2d5-7a4c-4b97-835f-e24c310d3e8e</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>SlideSearch.py</StartupFile>
-    <SearchPath>..\LibLisa;..\..\src</SearchPath>
+    <StartupFile>
+    </StartupFile>
+    <SearchPath>
+    </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
-    <Name>SlideSearch</Name>
-    <RootNamespace>SlideSearch</RootNamespace>
+    <Name>LibLisa</Name>
+    <RootNamespace>LibLisa</RootNamespace>
     <InterpreterId>Global|ContinuumAnalytics|Anaconda36-64</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -21,22 +23,32 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="SlideSearch.py" />
+    <Compile Include="behaviors.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="config.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="RestClient.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SlideSearchClient.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="WorkflowClient.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="Global|ContinuumAnalytics|Anaconda36-64" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="requirements.txt">
       <SubType>Code</SubType>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\LibLisa\LibLisa.pyproj">
-      <Name>LibLisa</Name>
-      <Project>{3160d2d5-7a4c-4b97-835f-e24c310d3e8e}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <InterpreterReference Include="Global|ContinuumAnalytics|Anaconda36-64" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2008
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "ZenCentral", "ZenCentral\ZenCentral.pyproj", "{C49F6814-03C6-4765-9938-643E441F1D9F}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "SlideIndexer", "SlideIndexer\SlideIndexer.pyproj", "{106709AB-6ABC-4459-AE55-A03530C4A88B}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "LibLisa", "LibLisa\LibLisa.pyproj", "{3160D2D5-7A4C-4B97-835F-E24C310D3E8E}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "SlideSearch", "SlideSearch\SlideSearch.pyproj", "{D79FBF19-307D-4FA4-A15E-358B7A0CA02A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C49F6814-03C6-4765-9938-643E441F1D9F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C49F6814-03C6-4765-9938-643E441F1D9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C49F6814-03C6-4765-9938-643E441F1D9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C49F6814-03C6-4765-9938-643E441F1D9F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{106709AB-6ABC-4459-AE55-A03530C4A88B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{106709AB-6ABC-4459-AE55-A03530C4A88B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3160D2D5-7A4C-4B97-835F-E24C310D3E8E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3160D2D5-7A4C-4B97-835F-E24C310D3E8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D79FBF19-307D-4FA4-A15E-358B7A0CA02A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D79FBF19-307D-4FA4-A15E-358B7A0CA02A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {68C7916E-26C7-4EFC-978A-CD91672A2584}
+	EndGlobalSection
+EndGlobal
