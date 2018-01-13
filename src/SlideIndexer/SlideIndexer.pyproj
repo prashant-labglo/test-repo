@@ -5,12 +5,12 @@
     <ProjectGuid>106709ab-6abc-4459-ae55-a03530c4a88b</ProjectGuid>
     <ProjectHome>.</ProjectHome>
     <StartupFile>SlideIndexer.py</StartupFile>
-    <SearchPath>
-    </SearchPath>
+    <SearchPath>..\..\src</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>SlideIndexer</Name>
     <RootNamespace>SlideIndexer</RootNamespace>
+    <InterpreterId>Global|ContinuumAnalytics|Anaconda36-64</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -22,6 +22,16 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="SlideIndexer.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LibLisa\LibLisa.pyproj">
+      <Name>LibLisa</Name>
+      <Project>{3160d2d5-7a4c-4b97-835f-e24c310d3e8e}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="Global|ContinuumAnalytics|Anaconda36-64" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

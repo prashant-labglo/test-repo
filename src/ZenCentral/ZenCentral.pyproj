@@ -13,8 +13,7 @@
     <ProjectHome>.</ProjectHome>
     <ProjectTypeGuids>{5F0BE9CA-D677-4A4D-8806-6076C0FAAD37};{349c5851-65df-11da-9384-00065b846f21};{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <StartupFile>manage.py</StartupFile>
-    <SearchPath>
-    </SearchPath>
+    <SearchPath>..\LibLisa;..\SlideSearch</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <WebBrowserUrl>http://localhost</WebBrowserUrl>
     <LaunchProvider>Django launcher</LaunchProvider>
@@ -119,6 +118,18 @@
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="Global|ContinuumAnalytics|Anaconda36-64" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LibLisa\LibLisa.pyproj">
+      <Name>LibLisa</Name>
+      <Project>{3160d2d5-7a4c-4b97-835f-e24c310d3e8e}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\SlideSearch\SlideSearch.pyproj">
+      <Name>SlideSearch</Name>
+      <Project>{d79fbf19-307d-4fa4-a15e-358b7a0ca02a}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Django.targets" />
   <!-- Specify pre- and post-build commands in the BeforeBuild and 

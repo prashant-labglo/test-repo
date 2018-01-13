@@ -3,7 +3,7 @@ RestClient.py defines the base class for all REST clients.
 """
 import sys
 import urllib
-import urllib2
+import urllib.request
 import json
 import time
 
@@ -51,7 +51,7 @@ class RestClient(object):
                 data = json.loads(content)
             self.req_count += 1
 
-        except urllib2.HTTPError, e:
+        except urllib2.HTTPError as e:
             # check if we are being rate limited by the baseURL
             if e.code == 429:
                 if 'Retry-After' in e.headers:
@@ -86,7 +86,7 @@ def test(species, symbol):
     variants = client.get_variants(species, symbol)
     if variants:
         for v in variants:
-            print '{seq_region_name}:{start}-{end}:{strand} ==> {id} ({consequence_type})'.format(**v);
+            print("{seq_region_name}:{start}-{end}:{strand} ==> {id} ({consequence_type})".format(**v))
 
 if __name__ == '__main__':
     if len(sys.argv) == 3:
