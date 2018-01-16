@@ -5,15 +5,17 @@ from behaviors import Behavior
 
 lisaConfig = LisaConfig()
 
-def textCleanUp(jsonObject, badStrings=None):
+def textCleanUp(jsonObject, badStrings=None, allStrings=None):
     """
     Removes unnecessary whitespace and makes everything lowercase for an arbitrary JSON.
     """
     if (isinstance(jsonObject, str)):
         if badStrings is not None and (" " in jsonObject or "," in jsonObject):
             badStrings.add(jsonObject)
-        return jsonObject.lower().strip().replace(" ", "_")
-    if (isinstance(jsonObject, list)):
+        retval = jsonObject.lower().strip().replace(" ", "_")
+        if allStrings is not None:
+            allStrings.add(retval)
+    elif (isinstance(jsonObject, list)):
         # Some of the strings are of kind "a, b". They should be flattened into list.
         if any([isinstance(item, str) and "," in item for item in jsonObject]):
             badStrings.add(jsonObject[0])
@@ -27,10 +29,15 @@ def textCleanUp(jsonObject, badStrings=None):
 
         # Remove duplicates if we are dealing with list of strings.
         if all([isinstance(item, str) for item in jsonObject]):
-            jsonObject = list(set(jsonObject))
-        return jsonObject
-
-    if (isinstance(jsonObject, dict)):
-        return {key:textCleanUp(value, badStrings) for (key, value) in jsonObject.items()}
-    return jsonObject
+            jsonObject = set(jsonObject)
+            if allStrings is not None:
+                allStrings = allStrings.update(jsonObject)
+            jsonObject = list(jsonObject)
+        retval = jsonObject
+    elif (isinstance(jsonObject, dict)):
+        retval = {key:textCleanUp(value, badStrings) for (key, value) in jsonObject.items()}
+    else:
+        retval = jsonObject
+        
+    return retval
 
