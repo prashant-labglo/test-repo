@@ -44,14 +44,26 @@
     <Compile Include="SlideDB\apps.py" />
     <Compile Include="SlideDB\migrations\__init__.py" />
     <Compile Include="SlideDB\models.py" />
+    <Compile Include="SlideDB\serializers.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="SlideDB\tests.py" />
+    <Compile Include="SlideDB\urls.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="SlideDB\views.py" />
     <Compile Include="SlideDB\__init__.py" />
     <Compile Include="SlideSearch\admin.py" />
     <Compile Include="SlideSearch\apps.py" />
     <Compile Include="SlideSearch\migrations\__init__.py" />
     <Compile Include="SlideSearch\models.py" />
+    <Compile Include="SlideSearch\serializer.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="SlideSearch\tests.py" />
+    <Compile Include="SlideSearch\urls.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="SlideSearch\views.py" />
     <Compile Include="SlideSearch\__init__.py" />
     <Compile Include="ZenCentral\__init__.py" />
