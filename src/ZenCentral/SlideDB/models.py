@@ -1,6 +1,6 @@
 from django.db import models
-from tagulous.models import TagField, SingleTagField
 from enumfields import Enum, EnumField
+from taggit.managers import TaggableManager
 
 # Create your models here.
 class Concept(models.Model):
@@ -16,7 +16,6 @@ class Construct(models.Model):
     name = models.CharField(max_length=64)
     parent = models.ForeignKey(SubConcept, related_name="constructs", on_delete=models.CASCADE)
     enabled = models.BooleanField()
-    tags = TagField()
 
 class LayoutChoices(Enum):
     Basic = 0
@@ -33,7 +32,7 @@ class VisualStyleChoices(Enum):
 class Slide(models.Model):
     parent = models.ForeignKey(Construct, related_name="slides", on_delete=models.CASCADE)
     pptFile = models.FileField(upload_to='uploads/')
-    tags = TagField()
+    tags = TaggableManager()
 
     # Derived attributes.
     thumbnailFile = models.ImageField(upload_to='uploads/')

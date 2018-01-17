@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from jsonfield import JSONField
+from SlideDB.models import Slide
 
 # Create your models here.
 class SearchResult(models.Model):

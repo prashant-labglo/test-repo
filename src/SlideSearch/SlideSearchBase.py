@@ -129,7 +129,7 @@ class SlideSearchBase(object):
         resultList = [slideInfo for slideInfo in resultList if slideScores[slideInfo["Index"]] > 0]
 
         # Sort remaining permitted slides according to score.
-        resultList.sort(key = lambda slideInfo : slideScores[slideInfo["Index"]])
+        resultList.sort(key = lambda slideInfo : -slideScores[slideInfo["Index"]])
 
         # Append scores with items in resultList.
         resultList = [(slideScores[slideInfo["Index"]], slideInfo) for slideInfo in resultList]

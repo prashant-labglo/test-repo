@@ -1,4 +1,4 @@
-import json, os
+import json, os, re, sys
 
 from LibLisa import lastCallProfile
 
@@ -31,7 +31,11 @@ if __name__ == "__main__":
     slideSearchIndex.fit(Tx, Ty, Tqids)
 
     # Make a query.
-    queryInfo = {"Keywords" : ["Agenda"]}
-    result = slideSearchIndex.slideSearch(queryInfo)
-
+    while True:
+        queryStr = input("Enter search keywords:")
+        keywords = re.split("\W+", queryStr)
+        queryInfo = {"Keywords" : keywords}
+        result = slideSearchIndex.slideSearch(queryInfo)
+        print("Results:")
+        json.dump(result[0:10], sys.stdout, indent=4)
 

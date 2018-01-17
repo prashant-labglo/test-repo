@@ -3,11 +3,11 @@ Definition of urls for ZenCentral.
 """
 
 from datetime import datetime
-from django.conf.urls import url
+from django.conf.urls import url, include
 import django.contrib.auth.views
 
-import app.forms
-import app.views
+import app, app.views, app.forms
+from SlideDB.urls import router as slideDbRouter
 
 # Uncomment the next lines to enable the admin:
 # from django.conf.urls import include
@@ -43,4 +43,7 @@ urlpatterns = [
 
     # Uncomment the next line to enable the admin:
     # url(r'^admin/', include(admin.site.urls)),
+
+    # SlideDB URLs
+    url(r'^slidedb/', include(slideDbRouter.urls)),
 ]
