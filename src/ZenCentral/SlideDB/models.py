@@ -7,14 +7,9 @@ class Concept(models.Model):
     name = models.CharField(max_length=64)
     enabled = models.BooleanField()
 
-class SubConcept(models.Model):
-    name = models.CharField(max_length=64)
-    parent = models.ForeignKey(Concept, related_name="subConcepts", on_delete=models.CASCADE)
-    enabled = models.BooleanField()
-
 class Construct(models.Model):
     name = models.CharField(max_length=64)
-    parent = models.ForeignKey(SubConcept, related_name="constructs", on_delete=models.CASCADE)
+    parent = models.ForeignKey(Concept, related_name="constructs", on_delete=models.CASCADE)
     enabled = models.BooleanField()
 
 class LayoutChoices(Enum):

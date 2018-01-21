@@ -3,8 +3,8 @@ from SlideSearch.views import SearchResultViewSet, SearchQueryViewSet, SearchSes
 
 # Create router for SlideDB URLs.
 router = routers.DefaultRouter()
-router.register(r'results', SearchResultViewSet)
-router.register(r'queries', SearchQueryViewSet)
 router.register(r'sessions', SearchSessionViewSet)
+router.register(r'queries', SearchQueryViewSet)
+router.register(r'results', SearchResultViewSet)
 
 

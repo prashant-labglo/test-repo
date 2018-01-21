@@ -32,9 +32,8 @@ class SlideSearchBase(object):
 
             for (index, slideInfo) in enumerate(self.slideInfoSet):
                 # Replace path elements with path.
-                slideInfo["Path"] = (slideInfo["Concept"], slideInfo["SubConcept"], slideInfo["Construct"])
+                slideInfo["Path"] = (slideInfo["Concept"], slideInfo["Construct"])
                 del slideInfo["Concept"]
-                del slideInfo["SubConcept"]
                 del slideInfo["Construct"]
 
                 # Set up booleans.
@@ -52,9 +51,9 @@ class SlideSearchBase(object):
             {
                 # Optional
                 "permittedConstructs" : [
-                    ("permittedConcept1", "permittedSubConcept1", "PermittedConstruct1"),
-                    ("permittedConcept2", "permittedSubConcept2", "PermittedConstruct2"),
-                    ("permittedConcept3", "permittedSubConcept3", "PermittedConstruct3"),
+                    ("permittedConcept1", "PermittedConstruct1"),
+                    ("permittedConcept2", "PermittedConstruct2"),
+                    ("permittedConcept3", "PermittedConstruct3"),
                     ...
                 ],
 
@@ -74,8 +73,8 @@ class SlideSearchBase(object):
         for slideInfo in self.slideInfoSet:
             if "permittedConstructs" in queryInfo.keys():
                 found = False
-                for (concept, subConcept, construct) in queryInfo["permittedConstructs"]:
-                    if slideInfo["Concept"] == concept and slideInfo["SubConcept"] == subConcept and slideInfo["Construct"] == construct:
+                for (concept, construct) in queryInfo["permittedConstructs"]:
+                    if slideInfo["Concept"] == concept and slideInfo["Construct"] == construct:
                         found = True
                         break
                 if not found:
