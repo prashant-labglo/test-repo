@@ -13,10 +13,10 @@ while True:
     lastRefreshTimeStamp = zenCentralClient.LastRefreshTimeStamp()
 
     # Get all changes made since last update.
-    slideConstructChanges = workflowClient.getChanges(lastRefreshTimeStamp)
+    slideTypeChanges = workflowClient.getChanges(lastRefreshTimeStamp)
 
     # Apply all changes into Slide Search Engine.
-    zenCentralClient.updateIndex(slideConstructChanges)
+    zenCentralClient.updateIndex(slideTypeChanges)
 
     # Sleep for iteration period, before trying again.
     sleep(lisaConfig.IterationPeriod)

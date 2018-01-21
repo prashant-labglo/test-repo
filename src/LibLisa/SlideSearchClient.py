@@ -1,7 +1,7 @@
 """
 Slide search client is a REST API client which can make queries to ZenCentral REST API.
 """
-from RestClient import RestClient
+from LibLisa.RestClient import RestClient
 
 class SlideSearchClient(RestClient):
     def __init__(self, behaviorVersion, deploymentStage):

@@ -7,9 +7,9 @@ class Concept(models.Model):
     name = models.CharField(max_length=64)
     enabled = models.BooleanField()
 
-class Construct(models.Model):
+class SlideType(models.Model):
     name = models.CharField(max_length=64)
-    parent = models.ForeignKey(Concept, related_name="constructs", on_delete=models.CASCADE)
+    parent = models.ForeignKey(Concept, related_name="slideTypes", on_delete=models.CASCADE)
     enabled = models.BooleanField()
 
 class LayoutChoices(Enum):
@@ -25,7 +25,7 @@ class VisualStyleChoices(Enum):
     Enhanced = 1
 
 class Slide(models.Model):
-    parent = models.ForeignKey(Construct, related_name="slides", on_delete=models.CASCADE)
+    parent = models.ForeignKey(SlideType, related_name="slides", on_delete=models.CASCADE)
     pptFile = models.FileField(upload_to='uploads/')
     tags = TaggableManager()
 

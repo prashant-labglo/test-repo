@@ -2,9 +2,9 @@ import json, os, re, sys
 
 from LibLisa import lastCallProfile
 
-from Word2VecDistanceModel import Word2vecDistanceModel
-from SlideSearchWord2vec import SlideSearchW2V
-from SlideSearchLambdaMART import SlideSearchLambdaMart
+from SlideSearch.Word2VecDistanceModel import Word2vecDistanceModel
+from SlideSearch.SlideSearchWord2vec import SlideSearchW2V
+from SlideSearch.SlideSearchLambdaMART import SlideSearchLambdaMart
 
 if __name__ == "__main__":
     # Model to find word distances using word2vec.

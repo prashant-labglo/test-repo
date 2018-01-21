@@ -8,7 +8,7 @@ import django.contrib.auth.views
 
 import app, app.views, app.forms
 from SlideDB.urls import router as slideDbRouter
-from SlideSearch.urls import router as slideSearchRouter
+from Search.urls import router as searchRouter
 
 # Uncomment the next lines to enable the admin:
 # from django.conf.urls import include
@@ -47,5 +47,5 @@ urlpatterns = [
 
     # SlideDB URLs
     url(r'^slidedb/', include(slideDbRouter.urls)),
-    url(r'^slidesearch/', include(slideSearchRouter.urls)),
+    url(r'^search/', include(searchRouter.urls)),
 ]

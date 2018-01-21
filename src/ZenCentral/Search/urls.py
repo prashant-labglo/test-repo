@@ -1,5 +1,5 @@
 from rest_framework import routers
-from SlideSearch.views import SearchResultViewSet, SearchQueryViewSet, SearchSessionViewSet
+from Search.views import SearchResultViewSet, SearchQueryViewSet, SearchSessionViewSet
 
 # Create router for SlideDB URLs.
 router = routers.DefaultRouter()

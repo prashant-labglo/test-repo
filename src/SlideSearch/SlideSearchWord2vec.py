@@ -13,7 +13,7 @@ import json
 import gensim
 
 from LibLisa import lisaConfig, methodProfiler, blockProfiler, lastCallProfile
-from SlideSearchBase import SlideSearchBase
+from SlideSearch.SlideSearchBase import SlideSearchBase
 
 class SlideSearchW2V(SlideSearchBase):
     """

@@ -53,19 +53,20 @@
     </Compile>
     <Compile Include="SlideDB\views.py" />
     <Compile Include="SlideDB\__init__.py" />
-    <Compile Include="SlideSearch\admin.py" />
-    <Compile Include="SlideSearch\apps.py" />
-    <Compile Include="SlideSearch\migrations\__init__.py" />
-    <Compile Include="SlideSearch\models.py" />
-    <Compile Include="SlideSearch\serializer.py">
+    <Compile Include="Search\admin.py" />
+    <Compile Include="Search\apps.py" />
+    <Compile Include="Search\migrations\__init__.py" />
+    <Compile Include="Search\models.py" />
+    <Compile Include="Search\searchIndex.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="SlideSearch\tests.py" />
-    <Compile Include="SlideSearch\urls.py">
+    <Compile Include="Search\serializers.py" />
+    <Compile Include="Search\tests.py" />
+    <Compile Include="Search\urls.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="SlideSearch\views.py" />
-    <Compile Include="SlideSearch\__init__.py" />
+    <Compile Include="Search\views.py" />
+    <Compile Include="Search\__init__.py" />
     <Compile Include="ZenCentral\__init__.py" />
     <Compile Include="ZenCentral\settings.py" />
     <Compile Include="ZenCentral\urls.py" />
@@ -84,9 +85,9 @@
     <Folder Include="SlideDB\" />
     <Folder Include="SlideDB\migrations\" />
     <Folder Include="SlideDB\templates\" />
-    <Folder Include="SlideSearch\" />
-    <Folder Include="SlideSearch\migrations\" />
-    <Folder Include="SlideSearch\templates\" />
+    <Folder Include="Search\" />
+    <Folder Include="Search\migrations\" />
+    <Folder Include="Search\templates\" />
     <Folder Include="ZenCentral\" />
   </ItemGroup>
   <ItemGroup>
@@ -121,7 +122,7 @@
     <Content Include="app\templates\app\login.html" />
     <Content Include="app\templates\app\loginpartial.html" />
     <Content Include="SlideDB\templates\index.html" />
-    <Content Include="SlideSearch\templates\index.html" />
+    <Content Include="Search\templates\index.html" />
   </ItemGroup>
   <ItemGroup>
     <None Include="readme.html">

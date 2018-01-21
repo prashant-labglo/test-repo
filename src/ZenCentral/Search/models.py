@@ -8,6 +8,7 @@ from SlideDB.models import Slide
 class SearchResult(models.Model):
     slide = models.ForeignKey(Slide, on_delete=models.CASCADE)
     rank = models.IntegerField()
+    # Add rating.
 
 class SearchQuery(models.Model):
     # Session linking.

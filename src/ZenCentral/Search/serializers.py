@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from SlideSearch.models import SearchResult, SearchQuery, SearchSession
+from Search.models import SearchResult, SearchQuery, SearchSession
 
 class SearchResultSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -7,6 +7,11 @@ class SearchResultSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('slide', 'rank')
 
 class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
+    # queryJSON, being a custom model field type, needs a custom invocation of the field serializer.
+    queryJson = serializers.JSONField()
+
+    # Making results read only in the API.
+    results = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name="queryJson")
     class Meta:
         model = SearchQuery
         fields = ('session', 'queryJson', 'created', 'results')

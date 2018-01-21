@@ -13,8 +13,8 @@ import gensim, pyltr
 from itertools import accumulate
 
 from LibLisa import lisaConfig, methodProfiler, blockProfiler, lastCallProfile
-from SlideSearchBase import SlideSearchBase
-from SectionModel import SectionModel
+from SlideSearch.SlideSearchBase import SlideSearchBase
+from SlideSearch.SectionModel import SectionModel
 
 class SlideSearchLambdaMart(SlideSearchBase):
     """
@@ -38,11 +38,11 @@ class SlideSearchLambdaMart(SlideSearchBase):
             slideTagCorpora = [slideInfo["Tags"] for slideInfo in self.slideInfoSet]
             self.slideTagModel = SectionModel(slideTagCorpora, self.dictionary, word2vecDistanceModel)
 
-            # Build corpora for construct paths.
-            constructsPathCorpora = set([slideInfo["Path"] for slideInfo in self.slideInfoSet])
-            self.constructsPathList = [list(constructsPath) for constructsPath in constructsPathCorpora]
-            self.constructsPathToIndex = { tuple(path):index for (index, path) in enumerate(self.constructsPathList) }
-            self.constructsPathModel = SectionModel(self.constructsPathList, self.dictionary, word2vecDistanceModel)
+            # Build corpora for slideType paths.
+            slideTypePathCorpora = set([slideInfo["Path"] for slideInfo in self.slideInfoSet])
+            self.slideTypePathList = [list(slideTypePath) for slideTypePath in slideTypePathCorpora]
+            self.slideTypePathToIndex = { tuple(path):index for (index, path) in enumerate(self.slideTypePathList) }
+            self.slideTypePathModel = SectionModel(self.slideTypePathList, self.dictionary, word2vecDistanceModel)
 
     @methodProfiler
     def features(self, queryInfo, permittedSlides=None):
@@ -56,16 +56,16 @@ class SlideSearchLambdaMart(SlideSearchBase):
         else:
             permittedIndices = [slideInfo["Index"] for slideInfo in permittedSlides]
 
-        # Create construct feature array from path model.
-        constructsFtrArray = self.constructsPathModel.get_features(queryInfo)
+        # Create slideType feature array from path model.
+        slideTypeFtrArray = self.slideTypePathModel.get_features(queryInfo)
 
-        # Use construct level features as initial slide level features.
+        # Use slideType level features as initial slide level features.
         slideFtrArray = []
         for slideInfo in permittedSlides:
-            # Get construct level features for the current slide.
-            constructsFtr = constructsFtrArray[self.constructsPathToIndex[slideInfo["Path"]]]
+            # Get slideType level features for the current slide.
+            slideTypeFtr = slideTypeFtrArray[self.slideTypePathToIndex[slideInfo["Path"]]]
             # Append a copy of features into the slide feature array.
-            slideFtrArray.append(list(constructsFtr))
+            slideFtrArray.append(list(slideTypeFtr))
 
         # To the features already built, append features corresponding to slide tag model.
         slideFtrArray = self.slideTagModel.get_features(queryInfo, slideFtrArray, permittedIndices)

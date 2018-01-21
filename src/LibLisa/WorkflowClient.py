@@ -2,8 +2,8 @@
 Workflow client is a REST API client which can make queries to the Workflow REST API service.
 """
 
-from behaviors import Behavior
-from RestClient import RestClient
+from LibLisa.behaviors import Behavior
+from LibLisa.RestClient import RestClient
 
 class WorkflowClient(RestClient):
     def __init__(self, behaviorVersion, deploymentStage):

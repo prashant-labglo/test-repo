@@ -13,6 +13,9 @@ class SlideSearchBase(object):
             with open(slideInfoFilepath, "r", encoding="utf8") as fp:
                 slideInfoSet = json.load(fp)
                 slideInfoSet = slideInfoSet["results"]
+                for slideInfo in slideInfoSet:
+                    slideInfo["SlideType"] = slideInfo["Construct"]
+                    del slideInfo["Construct"]
 
             # Check for duplicate slide records, for the same slide file.
             slidePaths = set([slideInfo["Slide"] for slideInfo in slideInfoSet])
@@ -32,9 +35,9 @@ class SlideSearchBase(object):
 
             for (index, slideInfo) in enumerate(self.slideInfoSet):
                 # Replace path elements with path.
-                slideInfo["Path"] = (slideInfo["Concept"], slideInfo["Construct"])
+                slideInfo["Path"] = (slideInfo["Concept"], slideInfo["SlideType"])
                 del slideInfo["Concept"]
-                del slideInfo["Construct"]
+                del slideInfo["SlideType"]
 
                 # Set up booleans.
                 for booleanAttr in ["Icon", "Image"]:
@@ -50,10 +53,10 @@ class SlideSearchBase(object):
             queryInfo filters can be as below.
             {
                 # Optional
-                "permittedConstructs" : [
-                    ("permittedConcept1", "PermittedConstruct1"),
-                    ("permittedConcept2", "PermittedConstruct2"),
-                    ("permittedConcept3", "PermittedConstruct3"),
+                "permittedSlideTypes" : [
+                    ("permittedConcept1", "PermittedSlideType1"),
+                    ("permittedConcept2", "PermittedSlideType2"),
+                    ("permittedConcept3", "PermittedSlideType3"),
                     ...
                 ],
 
@@ -71,10 +74,10 @@ class SlideSearchBase(object):
             }
         """
         for slideInfo in self.slideInfoSet:
-            if "permittedConstructs" in queryInfo.keys():
+            if "permittedSlideTypes" in queryInfo.keys():
                 found = False
-                for (concept, construct) in queryInfo["permittedConstructs"]:
-                    if slideInfo["Concept"] == concept and slideInfo["Construct"] == construct:
+                for (concept, slideType) in queryInfo["permittedSlideTypes"]:
+                    if slideInfo["Concept"] == concept and slideInfo["SlideType"] == slideType:
                         found = True
                         break
                 if not found:

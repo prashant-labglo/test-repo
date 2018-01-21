@@ -1,7 +1,7 @@
-from SlideSearchClient import SlideSearchClient
-from WorkflowClient import WorkflowClient
-from config import LisaConfig
-from behaviors import Behavior
+from LibLisa.SlideSearchClient import SlideSearchClient
+from LibLisa.WorkflowClient import WorkflowClient
+from LibLisa.config import LisaConfig
+from LibLisa.behaviors import Behavior
 import time
 
 lisaConfig = LisaConfig()

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from SlideDB.models import Concept, Construct, Slide
+from SlideDB.models import Concept, SlideType, Slide
 from taggit_serializer.serializers import TagListSerializerField, TaggitSerializer
 
 class ConceptSerializer(serializers.HyperlinkedModelSerializer):
@@ -7,9 +7,9 @@ class ConceptSerializer(serializers.HyperlinkedModelSerializer):
         model = Concept
         fields = ('name', 'enabled')
 
-class ConstructSerializer(serializers.HyperlinkedModelSerializer):
+class SlideTypeSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = Construct
+        model = SlideType
         fields = ('name', 'parent', 'enabled')
 
 class SlideSerializer(TaggitSerializer, serializers.HyperlinkedModelSerializer):

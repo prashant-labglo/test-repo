@@ -34,7 +34,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'app',
     'SlideDB',
-    'SlideSearch',
+    'Search',
 
     # Add your apps here to enable them
     'django.contrib.admin',
