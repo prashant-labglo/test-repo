@@ -1,6 +1,7 @@
 from django.utils import timezone
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.core.validators import MaxValueValidator, MinValueValidator
 from jsonfield import JSONField
 from SlideDB.models import Slide
 
@@ -8,7 +9,11 @@ from SlideDB.models import Slide
 class SearchResult(models.Model):
     slide = models.ForeignKey(Slide, on_delete=models.CASCADE)
     rank = models.IntegerField()
+
     # Add rating.
+    rating = models.IntegerField(
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(5)])
 
 class SearchQuery(models.Model):
     # Session linking.
@@ -16,6 +21,8 @@ class SearchQuery(models.Model):
 
     # Query definition.
     queryJson = JSONField()
+
+    searchAlgo = models.TextField()
 
     # TimeStamps
     created = models.DateTimeField(editable=False)

@@ -1,6 +1,8 @@
 from rest_framework import viewsets
-from SlideDB.models import Concept, SlideType, Slide
-from SlideDB.serializers import ConceptSerializer, SlideTypeSerializer, SlideSerializer
+from rest_framework.decorators import detail_route, list_route
+from rest_framework.response import Response
+from SlideDB.models import Concept, SubConcept, Construct, Slide
+from SlideDB.serializers import ConceptSerializer, SubConceptSerializer, ConstructSerializer, SlideSerializer
 from django.shortcuts import render
 
 # Create your views here.
@@ -11,12 +13,19 @@ class ConceptViewSet(viewsets.ModelViewSet):
     queryset = Concept.objects.all()
     serializer_class = ConceptSerializer
 
-class SlideTypeViewSet(viewsets.ModelViewSet):
+class SubConceptViewSet(viewsets.ModelViewSet):
     """
-    API endpoint that allows slideTypes to be viewed or edited.
+    API endpoint that allows concepts to be viewed or edited.
     """
-    queryset = SlideType.objects.all()
-    serializer_class = SlideTypeSerializer
+    queryset = SubConcept.objects.all()
+    serializer_class = SubConceptSerializer
+
+class ConstructViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows constructs to be viewed or edited.
+    """
+    queryset = Construct.objects.all()
+    serializer_class = ConstructSerializer
 
 class SlideViewSet(viewsets.ModelViewSet):
     """

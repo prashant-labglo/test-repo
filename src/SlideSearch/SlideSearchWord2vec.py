@@ -20,20 +20,20 @@ class SlideSearchW2V(SlideSearchBase):
     Search engine object for slides.
     The similarity is measured by simply taking a dot product between the two word vectors.
     """
-    def __init__(self, slideInfoFilepath, word2vecDistanceModel):
+    def __init__(self, dataToIndex, config, word2vecDistanceModel):
         """
         Constructor for SlideSearchIndex takes the path of slide contents file as input.
         """
         # Invoke base class constructor.
-        super().__init__(slideInfoFilepath)
+        super().__init__(dataToIndex, config)
 
         self.word2vecDistanceModel = word2vecDistanceModel
 
     @methodProfiler
     def slideSimilarity(self, queryInfo, permittedSlides):
         retval = {}
-        for slideInfo in permittedSlides:
-            slideScore = self.word2vecDistanceModel.queryPhrase2TagsetSimilarity(queryInfo["Keywords"], slideInfo["Tags"])
-            retval[slideInfo["Index"]] = slideScore
+        for slide in permittedSlides:
+            slideScore = self.word2vecDistanceModel.queryPhrase2TagsetSimilarity(queryInfo["Keywords"], slide["tags"])
+            retval[slide["Index"]] = slideScore
         return retval
 

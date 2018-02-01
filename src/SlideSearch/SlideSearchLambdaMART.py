@@ -13,59 +13,66 @@ import gensim, pyltr
 from itertools import accumulate
 
 from LibLisa import lisaConfig, methodProfiler, blockProfiler, lastCallProfile
-from SlideSearch.SlideSearchBase import SlideSearchBase
+from SlideSearch.SlideSearchBase import SlideSearchBase, getPath
 from SlideSearch.SectionModel import SectionModel
 
 class SlideSearchLambdaMart(SlideSearchBase):
     """
     Search engine object for slides, using LambdaMART.
     """
-    def __init__(self, slideInfoFilepath, word2vecDistanceModel):
+    def __init__(self, dataToIndex, config, word2vecDistanceModel):
         """
         Constructor for SlideSearchIndex takes the path of slide contents file as input.
         """
         with blockProfiler("SlideSearchLambdaMart.__init__"):
             # Invoke base class constructor.
-            super().__init__(slideInfoFilepath)
+            super().__init__(dataToIndex, config)
 
             # Build the word corpus.
-            completeCorpus = [extractCorpus(slide) for slide in self.slideInfoSet]
+            if not self.dataToIndex["Slides"]:
+                self.dictionary = None
+                self.slideTagModel = None
+                self.constructPathList = []
+                self.constructPathToIndex = {}
+                self.constructPathModel = None
+            else:
+                completeCorpus = [extractCorpus(slide) for slide in self.dataToIndex["Slides"]]
 
-            # Create a word dictionary for use in vector building.
-            self.dictionary = gensim.corpora.Dictionary(completeCorpus)
+                # Create a word dictionary for use in vector building.
+                self.dictionary = gensim.corpora.Dictionary(completeCorpus)
 
-            # Build section wise corpora and model for slide tags.
-            slideTagCorpora = [slideInfo["Tags"] for slideInfo in self.slideInfoSet]
-            self.slideTagModel = SectionModel(slideTagCorpora, self.dictionary, word2vecDistanceModel)
+                # Build section wise corpora and model for slide tags.
+                slideTagCorpora = [slide["tags"] for slide in self.dataToIndex["Slides"]]
+                self.slideTagModel = SectionModel(slideTagCorpora, self.dictionary, word2vecDistanceModel)
 
-            # Build corpora for slideType paths.
-            slideTypePathCorpora = set([slideInfo["Path"] for slideInfo in self.slideInfoSet])
-            self.slideTypePathList = [list(slideTypePath) for slideTypePath in slideTypePathCorpora]
-            self.slideTypePathToIndex = { tuple(path):index for (index, path) in enumerate(self.slideTypePathList) }
-            self.slideTypePathModel = SectionModel(self.slideTypePathList, self.dictionary, word2vecDistanceModel)
+                # Build corpora for construct paths.
+                constructPathCorpora = set([getPath(slide) for slide in self.dataToIndex["Slides"]])
+                self.constructPathList = [list(constructPath) for constructPath in constructPathCorpora]
+                self.constructPathToIndex = { tuple(path):index for (index, path) in enumerate(self.constructPathList) }
+                self.constructPathModel = SectionModel(self.constructPathList, self.dictionary, word2vecDistanceModel)
 
     @methodProfiler
     def features(self, queryInfo, permittedSlides=None):
         """
         Computes feature vector, one for eacg slides in DB.
-        ftrVec(queryInfo, slideInfo) will determine the rating score of slideInfo, when querying for slideInfo.
+        ftrVec(queryInfo, slide) will determine the rating score of slide, when querying for slide.
         """
         if permittedSlides is None:
-            permittedSlides = self.slideInfoSet
-            permittedIndices = range(len(self.slideInfoSet))
+            permittedSlides = self.dataToIndex["Slides"]
+            permittedIndices = range(len(self.dataToIndex["Slides"]))
         else:
-            permittedIndices = [slideInfo["Index"] for slideInfo in permittedSlides]
+            permittedIndices = [slide["Index"] for slide in permittedSlides]
 
-        # Create slideType feature array from path model.
-        slideTypeFtrArray = self.slideTypePathModel.get_features(queryInfo)
+        # Create construct feature array from path model.
+        constructFtrArray = self.constructPathModel.get_features(queryInfo)
 
-        # Use slideType level features as initial slide level features.
+        # Use construct level features as initial slide level features.
         slideFtrArray = []
-        for slideInfo in permittedSlides:
-            # Get slideType level features for the current slide.
-            slideTypeFtr = slideTypeFtrArray[self.slideTypePathToIndex[slideInfo["Path"]]]
+        for slide in permittedSlides:
+            # Get construct level features for the current slide.
+            constructFtr = constructFtrArray[self.constructPathToIndex[getPath(slide)]]
             # Append a copy of features into the slide feature array.
-            slideFtrArray.append(list(slideTypeFtr))
+            slideFtrArray.append(list(constructFtr))
 
         # To the features already built, append features corresponding to slide tag model.
         slideFtrArray = self.slideTagModel.get_features(queryInfo, slideFtrArray, permittedIndices)
@@ -97,7 +104,7 @@ class SlideSearchLambdaMart(SlideSearchBase):
                     continue
                 maxGapIndex = gaps.index(max(gaps))
                 selectedSlides = []
-                for (index, (slideScore, slideInfo)) in enumerate(results):
+                for (index, (slideScore, slide)) in enumerate(results):
                     if (abs(index - maxGapIndex) >= 5):
                         # Ignore results, which are very far.
                         continue
@@ -106,7 +113,7 @@ class SlideSearchLambdaMart(SlideSearchBase):
                     else:
                         Ty.append(0)
 
-                    selectedSlides.append(slideInfo)
+                    selectedSlides.append(slide)
                     Tqids.append(word)
 
             with blockProfiler("buildSeedTrainingSet.FeatureComputation."+word):
@@ -147,8 +154,8 @@ class SlideSearchLambdaMart(SlideSearchBase):
         # Retval is a dictionary from "original index" of a slide to its score.
         retval = {}
         for (index, score) in enumerate(self.LambdaMartModel.predict(ftrVec)):
-            slideInfo = permittedSlides[index]
-            originalSlideIndex = slideInfo["Index"]
+            slide = permittedSlides[index]
+            originalSlideIndex = slide["Index"]
             retval[originalSlideIndex] = score
 
         # Return the result.

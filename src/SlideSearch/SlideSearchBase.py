@@ -1,62 +1,31 @@
 import json
 from LibLisa import textCleanUp, methodProfiler, blockProfiler, lastCallProfile
+from LibLisa.config import lisaConfig
 
 class SlideSearchBase(object):
     """
     Base class of slide search engines.
     """
-    def __init__(self, slideInfoFilepath):
+    def __init__(self, dataToIndex, config):
         """
         Constructor for SlideSearchW2V takes the path of slide contents file as input.
         """
-        with blockProfiler("SlideSearchBase.__init__"):
-            with open(slideInfoFilepath, "r", encoding="utf8") as fp:
-                slideInfoSet = json.load(fp)
-                slideInfoSet = slideInfoSet["results"]
-                for slideInfo in slideInfoSet:
-                    slideInfo["SlideType"] = slideInfo["Construct"]
-                    del slideInfo["Construct"]
-
-            # Check for duplicate slide records, for the same slide file.
-            slidePaths = set([slideInfo["Slide"] for slideInfo in slideInfoSet])
-            pathToSlideIds = {slidePath:[] for slidePath in slidePaths}
-            for slideInfo in slideInfoSet:
-                pathToSlideIds[slideInfo["Slide"]].append(slideInfo["ID"])
-            self.duplicateSlideIds = [(k, v) for (k, v) in pathToSlideIds.items() if len(v) != 1]
-            json.dump(self.duplicateSlideIds, open("debugDuplicateSlideIDs.json", "w"), indent=2)
-
-            # Cleanup text and build a set of bad strings and all strings.
-            badStrings = set()
-            allStrings = set()
-            self.slideInfoSet = textCleanUp(slideInfoSet, badStrings, allStrings)
-            self.badStrings = badStrings
-            for badString in badStrings:
-                print(badString)
-
-            for (index, slideInfo) in enumerate(self.slideInfoSet):
-                # Replace path elements with path.
-                slideInfo["Path"] = (slideInfo["Concept"], slideInfo["SlideType"])
-                del slideInfo["Concept"]
-                del slideInfo["SlideType"]
-
-                # Set up booleans.
-                for booleanAttr in ["Icon", "Image"]:
-                    slideInfo[booleanAttr] = True if (slideInfo[booleanAttr] == "yes") else False
-
-                slideInfo["Index"] = index
-            json.dump(self.slideInfoSet, open(slideInfoFilepath + "Cleaned.json", "w"), indent=2)
+        self.dataToIndex = dataToIndex
+        for (index, slide) in enumerate(self.dataToIndex["Slides"]):
+            slide["Index"] = index
+        self.config = config
 
     @methodProfiler
     def permittedSlides(self, queryInfo):
         """
-            queryInfo contains filters, which are applied on slides in slideInfoSet. Remaining slides are returned.
+            queryInfo contains filters, which are applied on slides in self.dataToIndex["Slides"]. Remaining slides are returned.
             queryInfo filters can be as below.
             {
                 # Optional
-                "permittedSlideTypes" : [
-                    ("permittedConcept1", "PermittedSlideType1"),
-                    ("permittedConcept2", "PermittedSlideType2"),
-                    ("permittedConcept3", "PermittedSlideType3"),
+                "permittedConstructs" : [
+                    ("permittedConcept1", "PermittedConstruct1"),
+                    ("permittedConcept2", "PermittedConstruct2"),
+                    ("permittedConcept3", "PermittedConstruct3"),
                     ...
                 ],
 
@@ -73,11 +42,11 @@ class SlideSearchBase(object):
                 "permittedVisualStyle"  : True | False
             }
         """
-        for slideInfo in self.slideInfoSet:
-            if "permittedSlideTypes" in queryInfo.keys():
+        for slide in self.dataToIndex["Slides"]:
+            if "permittedConstructs" in queryInfo.keys():
                 found = False
-                for (concept, slideType) in queryInfo["permittedSlideTypes"]:
-                    if slideInfo["Concept"] == concept and slideInfo["SlideType"] == slideType:
+                for (concept, construct) in queryInfo["permittedConstructs"]:
+                    if slide["Concept"] == concept and slide["Construct"] == construct:
                         found = True
                         break
                 if not found:
@@ -85,30 +54,30 @@ class SlideSearchBase(object):
                     continue
 
             if "permittedIcon" in queryInfo.keys():
-                if slideInfo["Icon"] != queryInfo["permittedIcon"]:
+                if slide["Icon"] != queryInfo["permittedIcon"]:
                     # Constraints not met. No Similarity.
                     continue
 
             if "permittedImage" in queryInfo.keys():
-                if slideInfo["Image"] != queryInfo["permittedImage"]:
+                if slide["Image"] != queryInfo["permittedImage"]:
                     # Constraints not met. No Similarity.
                     continue
 
             if "permittedLayout" in queryInfo.keys():
-                if slideInfo["Layout"] not in queryInfo["permittedLayouts"]:
+                if slide["Layout"] not in queryInfo["permittedLayouts"]:
                     # Constraints not met. No Similarity.
                     continue
 
             if "permittedStyle" in queryInfo.keys():
-                if slideInfo["Style"] not in queryInfo["permittedStyle"]:
+                if slide["Style"] not in queryInfo["permittedStyle"]:
                     # Constraints not met. No Similarity.
                     continue
 
             if "permittedVisualStyle" in queryInfo.keys():
-                if slideInfo["VisualStyle"] not in queryInfo["permittedVisualStyle"]:
+                if slide["VisualStyle"] not in queryInfo["permittedVisualStyle"]:
                     # Constraints not met. No Similarity.
                     continue
-            yield slideInfo
+            yield slide
 
     def slideSimilarity(self, queryInfo, permittedSlides):
         raise NotImplementedError("Derived classes must define this function.")
@@ -128,12 +97,17 @@ class SlideSearchBase(object):
         slideScores = self.slideSimilarity(queryInfo, resultList)
 
         # Drop slides with negative score.
-        resultList = [slideInfo for slideInfo in resultList if slideScores[slideInfo["Index"]] > 0]
+        resultList = [slide for slide in resultList if slideScores[slide["Index"]] > 0]
 
         # Sort remaining permitted slides according to score.
-        resultList.sort(key = lambda slideInfo : -slideScores[slideInfo["Index"]])
+        resultList.sort(key = lambda slide : -slideScores[slide["Index"]])
 
         # Append scores with items in resultList.
-        resultList = [(slideScores[slideInfo["Index"]], slideInfo) for slideInfo in resultList]
+        resultList = [(slideScores[slide["Index"]], slide) for slide in resultList]
 
         return resultList
+
+def getPath(slide):
+    return (slide["parent"]["name"],
+            slide["parent"]["parent"]["name"],
+            slide["parent"]["parent"]["parent"]["name"])
