@@ -129,14 +129,24 @@ class LisaPhpClient(RestClient):
         json.dump(duplicateSlideIds, open(lisaConfig.dataFolderPath + "debugDuplicateSlideIDs.json", "w"), indent=2)
 
         for slide in zeptoData["Slides"]:
-            slideTags = [tag.split(",") for tag in slide["Tags"]]
+            slideTagLists = []
+            for tag in slide["Tags"]:
+                tag = tag.strip().lower()
+                if tag.count(",") >= 3:
+                    slideTagLists.append(tag.split(","))
+                elif tag.count(" ") >= 3:
+                    slideTagLists.append(tag.split(" "))
+                else:
+                    slideTagLists.append([tag])
+
+            # Force unqiueness.
             slideTagsSet = set()
-            for tagList in slideTags:
+            for tagList in slideTagLists:
                 for tag in tagList:
                     if tag:
                         slideTagsSet.add(tag)
 
-            slide["Tags"] = [tag.lower().strip() for tag in slideTagsSet]
+            slide["Tags"] = [tag.strip() for tag in slideTagsSet]
         return zeptoData
 def textCleanUp(jsonObject, badStrings=None, allStrings=None):
     """
