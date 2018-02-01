@@ -2,7 +2,7 @@
 Slide Indexer periodically wakes up and downloads all fresh or modified slides. All modified slides are then uploaded into ZenCentral service.
 """
 
-import threading
+import threading, time
 from LibLisa import lisaConfig, LisaPhpClient, SlideDbClient, SearchClient
 
 # Instantiate refresh timestamps.
@@ -33,6 +33,6 @@ def syncFromLisaPhp():
         slideDbClient.syncWithZepto(latestDataTransformed)
 
         # Sleep for iteration period, before trying again.
-        sleep(lisaConfig.IterationPeriod)
+        time.sleep(lisaConfig.IterationPeriod)
 
 syncFromLisaPhp()

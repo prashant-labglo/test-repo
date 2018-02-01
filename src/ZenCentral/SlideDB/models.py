@@ -33,6 +33,7 @@ class LayoutChoices(Enum):
 class StyleChoices(Enum):
     Basic = 0
     Enhanced = 1
+    Extensive = 2
 
 class VisualStyleChoices(Enum):
     Basic = 0

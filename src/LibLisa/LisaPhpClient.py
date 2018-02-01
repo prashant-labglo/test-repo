@@ -55,7 +55,7 @@ class LisaPhpClient(RestClient):
             # transformedSlide["parent"] = self.baseURL + "slidedb/constructs/" + str(latestSlide["ConstructId"]) + "/"
             # zeptoSlideForAtto["enabled"] = slide["Enabled"]
             transformedConcept["enabled"] = True if latestConcept["Enabled"] == "Y" else False
-            transformedConcept["name"] = latestConcept["Name"]
+            transformedConcept["name"] = latestConcept["Name"].strip()
             transformedConcept["zeptoId"] = latestConcept["NumId"]
 
             conceptsDict[transformedConcept["zeptoId"]] = transformedConcept
@@ -70,7 +70,7 @@ class LisaPhpClient(RestClient):
             # ID at the server can be obtained from zeptoId attribute.
             transformedSubConcept["parent"] = conceptsDict[int(latestSubConcept["Parent"])]
             transformedSubConcept["enabled"] = True if latestSubConcept["Enabled"] == "Y" else False
-            transformedSubConcept["name"] = latestSubConcept["Name"]
+            transformedSubConcept["name"] = latestSubConcept["Name"].strip()
             transformedSubConcept["zeptoId"] = latestSubConcept["NumId"]
 
             subConceptsDict[transformedSubConcept["zeptoId"]] = transformedSubConcept
@@ -87,7 +87,7 @@ class LisaPhpClient(RestClient):
             # ID at the server can be obtained from zeptoId attribute.
             transformedConstruct["parent"] = subConceptsDict[int(latestConstruct["Parent"])]
             transformedConstruct["enabled"] = True if latestConstruct["Enabled"] == "Y" else False
-            transformedConstruct["name"] = latestConstruct["Name"]
+            transformedConstruct["name"] = latestConstruct["Name"].strip()
             transformedConstruct["zeptoId"] = latestConstruct["NumId"]
 
             constructsDict[transformedConstruct["zeptoId"]] = transformedConstruct
@@ -128,7 +128,16 @@ class LisaPhpClient(RestClient):
         duplicateSlideIds = [(k, v) for (k, v) in pathToSlideIds.items() if len(v) != 1]
         json.dump(duplicateSlideIds, open(lisaConfig.dataFolderPath + "debugDuplicateSlideIDs.json", "w"), indent=2)
 
+        # Slides with "enhaced" style.
+        slidesWithEnhaced = [slide["NumId"] for slide in zeptoData["Slides"] if slide["Style"] == "Enhaced"]
+        json.dump(slidesWithEnhaced, open(lisaConfig.dataFolderPath + "slidesWithEnhacedStyle.json", "w"), indent=2)
+
         for slide in zeptoData["Slides"]:
+            # Style has Enhanced mis-spelled as Enhaced for some slides.
+            if slide["Style"] == "Enhaced":
+                slide["Style"] = "Enhanced"
+
+            # Parts of tag data are corrupted. Fixing.
             slideTagLists = []
             for tag in slide["Tags"]:
                 tag = tag.strip().lower()
@@ -146,7 +155,8 @@ class LisaPhpClient(RestClient):
                     if tag:
                         slideTagsSet.add(tag)
 
-            slide["Tags"] = [tag.strip() for tag in slideTagsSet]
+            # Keep the list in canonical form.
+            slide["Tags"] = sorted([tag.strip() for tag in slideTagsSet])
         return zeptoData
 def textCleanUp(jsonObject, badStrings=None, allStrings=None):
     """

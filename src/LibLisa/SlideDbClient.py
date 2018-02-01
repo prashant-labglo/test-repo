@@ -67,7 +67,14 @@ class SlideDbClient(object):
                     zeptoModelCopy = dict(zeptoModel)
                     if modelName != "Concepts":
                         zeptoModelCopy["parent"] = getModelUrl(zeptoModel["parent"])
-                    changes = { key:value for (key, value) in zeptoModelCopy.items() if value != attoModel[key]}
+                    changes = {}
+                    for (key, value) in zeptoModelCopy.items():
+                        if key == "tags":
+                            if set(value) != set(attoModel[key]):
+                                changes[key] = value
+                        else:
+                            if value != attoModel[key]:
+                                changes[key] = value
 
                     if changes:
                         changes["id"] = attoModel["id"]
