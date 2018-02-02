@@ -1,3 +1,6 @@
+"""
+SectionModel is used to build a model 
+"""
 import gensim
 
 from LibLisa import methodProfiler, blockProfiler, lastCallProfile

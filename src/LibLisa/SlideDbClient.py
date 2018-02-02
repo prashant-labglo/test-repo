@@ -1,5 +1,6 @@
 """
-Workflow client is a REST API client which can make queries to the Workflow REST API service.
+SlideDB client is a REST API client which can make queries to the 
+Django based REST API service to do CRUD operations of slide hierarchy.
 """
 
 import requests, coreapi, time
@@ -10,16 +11,23 @@ from LibLisa.RestClient import RestClient
 from LibLisa.config import lisaConfig
 
 class SlideDbClient(object):
+    """
+        SlideDB client is a REST API client which can make queries to the 
+        Django based REST API service to do CRUD operations of slide hierarchy.
+    """
     def __init__(self):
         """
-        Params:
-            deploymentStage is the stage of deployment. It can be any of dev, int, test, ppe, prod etc.
+        Constructor
         """
         self.config = lisaConfig.slideDb
         self.baseURL = self.config.BaseUrl
         self.schemaURL = self.baseURL + "schema"
 
     def login(self):
+        """
+        Logs into SlideDB backed. 
+        It is required to be called, before we download any data.
+        """
         #self.auth = coreapi.auth.BasicAuthentication(
         #    username=self.config.Username,
         #    password=self.config.Password
@@ -30,7 +38,7 @@ class SlideDbClient(object):
 
     def syncWithZepto(self, zeptoData):
         """
-        Push all zepto entries into Atto DB.
+        All Lisa PHP data can be pushed into ZenClient SlideDB using this call.
         """
         def getModelUrl(modelObj):
             if "parent" not in modelObj.keys():

@@ -1,3 +1,7 @@
+"""
+SlideSearch is a python module which focus purely on ML algorithm aspects of searching for
+slides.
+"""
 import json, os, re, sys
 
 from LibLisa import lastCallProfile, lisaConfig, LisaPhpClient
@@ -6,6 +10,7 @@ from SlideSearch.Word2VecDistanceModel import Word2vecDistanceModel
 from SlideSearch.SlideSearchWord2vec import SlideSearchW2V
 from SlideSearch.SlideSearchLambdaMART import SlideSearchLambdaMart
 
+# Test code.
 if __name__ == "__main__":
     # Get a Lisa PHP client.
     lisaPhPClient = LisaPhpClient()

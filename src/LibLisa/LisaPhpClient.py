@@ -1,7 +1,6 @@
 """
-Workflow client is a REST API client which can make queries to the Workflow REST API service.
+This is a REST API client which talks with the Lisa-PHP web-service.
 """
-
 import requests, json
 from lxml import html
 from functools import reduce
@@ -11,10 +10,13 @@ from LibLisa.RestClient import RestClient
 from LibLisa.config import lisaConfig
 
 class LisaPhpClient(RestClient):
+    """
+    Lisa-PHP is the legacy Lisa service. This client connects with Lisa-PHP and can download
+    all its data.
+    """
     def __init__(self):
         """
-        Params:
-            deploymentStage is the stage of deployment. It can be any of dev, int, test, ppe, prod etc.
+        Constructor
         """
         self.config = lisaConfig.lisaPhp
         self.baseURL = self.config.BaseUrl
@@ -23,6 +25,9 @@ class LisaPhpClient(RestClient):
         super().__init__(self.baseURL)
 
     def login(self):
+        """
+        Logs into Lisa-PHP. Required, before we download any data.
+        """
         self.session = requests.session()
 
         # Lie about the user agent because Lisa PHP doesn't work without it.
@@ -35,6 +40,10 @@ class LisaPhpClient(RestClient):
             raise ConnectionError("Unable to login.")
 
     def getLatestData(self):
+        """
+        Call this to get the latest data on Lisa-PHP.
+        Returns a single JSON.
+        """
         jsonText = self.session.get(self.jsonURL).text
 
         # Somehow, the output I am getting has some garbage at the beginning.
@@ -43,7 +52,58 @@ class LisaPhpClient(RestClient):
         latestData = json.loads(jsonText)
         return latestData
 
+    def repairZeptoData(self, zeptoData):
+        """
+        There are lots of inconsistencies in the Zepto data. This function call
+        finds and logs these inconsistencies. It also repairs some of the issues.
+        """
+        # Check for duplicate slide records, for the same slide file.
+        slidePaths = set([slide["Slide"] for slide in zeptoData["Slides"]])
+        pathToSlideIds = {slidePath:[] for slidePath in slidePaths}
+        for slide in zeptoData["Slides"]:
+            pathToSlideIds[slide["Slide"]].append(slide["NumId"])
+
+        duplicateSlideIds = [(k, v) for (k, v) in pathToSlideIds.items() if len(v) != 1]
+        json.dump(duplicateSlideIds, open(lisaConfig.dataFolderPath + "debugDuplicateSlideIDs.json", "w"), indent=2)
+
+        # Slides with "enhaced" style.
+        slidesWithEnhaced = [slide["NumId"] for slide in zeptoData["Slides"] if slide["Style"] == "Enhaced"]
+        json.dump(slidesWithEnhaced, open(lisaConfig.dataFolderPath + "slidesWithEnhacedStyle.json", "w"), indent=2)
+
+        for slide in zeptoData["Slides"]:
+            # Style has Enhanced mis-spelled as Enhaced for some slides.
+            if slide["Style"] == "Enhaced":
+                slide["Style"] = "Enhanced"
+
+            # Parts of tag data are corrupted. Fixing.
+            slideTagLists = []
+            for tag in slide["Tags"]:
+                tag = tag.strip().lower()
+                if tag.count(",") >= 3:
+                    slideTagLists.append(tag.split(","))
+                elif tag.count(" ") >= 3:
+                    slideTagLists.append(tag.split(" "))
+                else:
+                    slideTagLists.append([tag])
+
+            # Force unqiueness.
+            slideTagsSet = set()
+            for tagList in slideTagLists:
+                for tag in tagList:
+                    if tag:
+                        slideTagsSet.add(tag)
+
+            # Keep the list in canonical form.
+            slide["Tags"] = sorted([tag.strip() for tag in slideTagsSet])
+        return zeptoData
+
     def transformZeptoData(self, zeptoData):
+        """
+        The data from Lisa PHP is not directly compatible with new Django based ZenCentral
+        slidedb backend.
+
+        This function transforms the LisaPHP data to make it compatible.
+        """
         retval = {}
         # Make all the latest concepts compatible with SlideDB system.
         transformedConcepts = []
@@ -118,46 +178,6 @@ class LisaPhpClient(RestClient):
 
         return retval
 
-    def repairZeptoData(self, zeptoData):
-        # Check for duplicate slide records, for the same slide file.
-        slidePaths = set([slide["Slide"] for slide in zeptoData["Slides"]])
-        pathToSlideIds = {slidePath:[] for slidePath in slidePaths}
-        for slide in zeptoData["Slides"]:
-            pathToSlideIds[slide["Slide"]].append(slide["NumId"])
-
-        duplicateSlideIds = [(k, v) for (k, v) in pathToSlideIds.items() if len(v) != 1]
-        json.dump(duplicateSlideIds, open(lisaConfig.dataFolderPath + "debugDuplicateSlideIDs.json", "w"), indent=2)
-
-        # Slides with "enhaced" style.
-        slidesWithEnhaced = [slide["NumId"] for slide in zeptoData["Slides"] if slide["Style"] == "Enhaced"]
-        json.dump(slidesWithEnhaced, open(lisaConfig.dataFolderPath + "slidesWithEnhacedStyle.json", "w"), indent=2)
-
-        for slide in zeptoData["Slides"]:
-            # Style has Enhanced mis-spelled as Enhaced for some slides.
-            if slide["Style"] == "Enhaced":
-                slide["Style"] = "Enhanced"
-
-            # Parts of tag data are corrupted. Fixing.
-            slideTagLists = []
-            for tag in slide["Tags"]:
-                tag = tag.strip().lower()
-                if tag.count(",") >= 3:
-                    slideTagLists.append(tag.split(","))
-                elif tag.count(" ") >= 3:
-                    slideTagLists.append(tag.split(" "))
-                else:
-                    slideTagLists.append([tag])
-
-            # Force unqiueness.
-            slideTagsSet = set()
-            for tagList in slideTagLists:
-                for tag in tagList:
-                    if tag:
-                        slideTagsSet.add(tag)
-
-            # Keep the list in canonical form.
-            slide["Tags"] = sorted([tag.strip() for tag in slideTagsSet])
-        return zeptoData
 def textCleanUp(jsonObject, badStrings=None, allStrings=None):
     """
     Removes unnecessary whitespace and makes everything lowercase for an arbitrary JSON.

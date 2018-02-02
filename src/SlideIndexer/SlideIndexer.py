@@ -1,18 +1,22 @@
 """
-Slide Indexer periodically wakes up and downloads all fresh or modified slides. All modified slides are then uploaded into ZenCentral service.
+Slide Indexer periodically wakes up and downloads latest slide hierarchy from LisaPHP.
+All modified slides are then uploaded into ZenCentral SlideDB service.
 """
 
 import threading, time
 from LibLisa import lisaConfig, LisaPhpClient, SlideDbClient, SearchClient
 
-# Instantiate refresh timestamps.
+# Instantiate REST clients.
 lisaPhpClient = LisaPhpClient()
 slideDbClient = SlideDbClient()
-searchClient = SearchClient()
+# searchClient = SearchClient()
 
 def syncFromLisaPhp():
     """
-    Sync data from Lisa PHP.
+    Downloads data from Lisa PHP.
+    Uploads the same into ZenClient SlideDB REST API.
+    Removes any entries from ZenClient SlideDB REST API which are not found in downloaded
+    Lisa PHP.
     """
     # Login into REST clients.
     lisaPhpClient.login()
@@ -33,6 +37,6 @@ def syncFromLisaPhp():
         slideDbClient.syncWithZepto(latestDataTransformed)
 
         # Sleep for iteration period, before trying again.
-        time.sleep(lisaConfig.IterationPeriod)
+        time.sleep(lisaConfig.slideIndexer.IterationPeriod)
 
 syncFromLisaPhp()

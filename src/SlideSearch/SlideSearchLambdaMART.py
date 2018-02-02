@@ -124,6 +124,13 @@ class SlideSearchLambdaMart(SlideSearchBase):
 
     @methodProfiler
     def fit(self, Tx, Ty, Tqids):
+        """
+        Tx: Vector computed for each pair of query and one result row in the DB.
+        Ty: Rating numbers for how good or bad the match for above pair is.
+        Tqids: Query ID column. Query string can be same for many of the rows in Tx above.
+            Tqid can be used to determine if the training rows correspond to same query
+            string or different.
+        """
         # Use NDCG metric.
         self.LambdaMartMetric = pyltr.metrics.NDCG(k=10)
         
@@ -147,6 +154,10 @@ class SlideSearchLambdaMart(SlideSearchBase):
 
     @methodProfiler
     def slideSimilarity(self, queryInfo, permittedSlides):
+        """
+        This method computes similarity scores for all slides in permittedSlides.
+        Query made in queryInfo.
+        """
         # Calculate feature vector for all slides in the DB.
         ftrVec = self.features(queryInfo, permittedSlides)
 

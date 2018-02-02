@@ -31,6 +31,9 @@ class SlideSearchW2V(SlideSearchBase):
 
     @methodProfiler
     def slideSimilarity(self, queryInfo, permittedSlides):
+        """
+        Method to compute similarity score for all slides listed in the permittedSlides.
+        """
         retval = {}
         for slide in permittedSlides:
             slideScore = self.word2vecDistanceModel.queryPhrase2TagsetSimilarity(queryInfo["Keywords"], slide["tags"])
