@@ -1,36 +1,77 @@
-from SlideSearchClient import SlideSearchClient
-from WorkflowClient import WorkflowClient
-from config import LisaConfig
-from behaviors import Behavior
+"""
+Init file for LibLisa module.
+This module contains code which is useful to all Python projects within the solution scope..
+"""
+import time
 
-lisaConfig = LisaConfig()
+from LibLisa.SearchClient import SearchClient
+from LibLisa.SlideDbClient import SlideDbClient
+from LibLisa.LisaPhpClient import LisaPhpClient, textCleanUp
+from LibLisa.config import lisaConfig
+from LibLisa.behaviors import Behavior
 
-def textCleanUp(jsonObject, badStrings=None):
+# When profiling function calls for performance, this object stores the timing information
+# for later retrieval.
+profilingData = [{"Label":"Root", "BreakUp":[]}]
+
+def lastCallProfile():
     """
-    Removes unnecessary whitespace and makes everything lowercase for an arbitrary JSON.
+    This method returns the profiling information of last profiler call made.
     """
-    if (isinstance(jsonObject, str)):
-        if badStrings is not None and (" " in jsonObject or "," in jsonObject):
-            badStrings.add(jsonObject)
-        return jsonObject.lower().strip().replace(" ", "_")
-    if (isinstance(jsonObject, list)):
-        # Some of the strings are of kind "a, b". They should be flattened into list.
-        if any([isinstance(item, str) and "," in item for item in jsonObject]):
-            badStrings.add(jsonObject[0])
-            jsonObject = ",".join(jsonObject).split(",")
+    return profilingData[-1]["BreakUp"][-1]
 
-        # If we are not dealing with list of strings, then we need to clean them up, recursively.
-        jsonObject = [textCleanUp(item, badStrings) for item in jsonObject]
+def methodProfiler(method):
+    """
+    Decorator to profile each call of a method.
+    To use this profiler, annotate the function with this decorator.
+    Then, every call to that method will get profiled and data stored in profilingData
+    variable above. The data can be retrieved by using lastCallProfile() function.
 
-        # Remove empty string
-        jsonObject = [item for item in jsonObject if item]
+    @methodProfiler
+    def funcToProfile():
+        pass
 
-        # Remove duplicates if we are dealing with list of strings.
-        if all([isinstance(item, str) for item in jsonObject]):
-            jsonObject = list(set(jsonObject))
-        return jsonObject
+    """
+    def wrapper(*args, **kw):
+        with blockProfiler(method.__name__):
+            result = method(*args, **kw)
+        return result
+    return wrapper
 
-    if (isinstance(jsonObject, dict)):
-        return {key:textCleanUp(value, badStrings) for (key, value) in jsonObject.items()}
-    return jsonObject
+class blockProfiler(object):
+    """
+    Any code block can be profiled by using blockProfiler class.
+    Use it as follows.
 
+    with blockProfiler("labelOfBlock"):
+        CodeBeingProfiled1()
+        CodeBeingProfiled2()
+    """
+    def __init__(self, label):
+        """
+        Initialization.
+        """
+        self.curNode = { "BreakUp":[], "Label": label}
+
+    def __enter__(self):
+        """
+        When we enter the with block, this code is executed.
+        """
+        # Append cur node
+        profilingData.append(self.curNode)
+        # Start the timer.
+        self.start = time.time()
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        """
+        When we exit the with block, this code is executed.
+        """
+        # Stop the timer.
+        end = time.time()
+
+        # Record time measurement.
+        self.curNode["TotalTime"] = int((end - self.start) * 1000)
+
+        # Curnode building complete. Now remove from stack and insert it under the calling last node.
+        profilingData.pop()
+        profilingData[-1]["BreakUp"].append(self.curNode)

@@ -33,6 +33,8 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'app',
+    'SlideDB',
+    'Search',
 
     # Add your apps here to enable them
     'django.contrib.admin',
@@ -42,6 +44,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'taggit',
+    'taggit_serializer',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -126,3 +130,5 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 STATIC_ROOT = posixpath.join(*(BASE_DIR.split(os.path.sep) + ['static']))
+
+FORCE_LOWERCASE_TAGS = True
