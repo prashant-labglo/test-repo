@@ -1,8 +1,9 @@
 from rest_framework import viewsets
 from Search.models import SearchResult, SearchQuery, SearchSession
 from Search.serializers import SearchResultSerializer, SearchQuerySerializer, SearchSessionSerializer
+from Search.searchIndexView import SearchIndexViewSet
+
 from django.shortcuts import render
-from Search.searchIndex import slideSearchIndex
 
 # Create your views here.
 class SearchResultViewSet(viewsets.ModelViewSet):

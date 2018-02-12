@@ -38,7 +38,7 @@ class SectionModel(object):
             permittedIndices = range(len(self.corpus))
 
         if ftrArray is None:
-            ftrArray = [[] for i in range(len(permittedIndices))]
+            ftrArray = [[] for _ in permittedIndices]
 
         curIndex = 0
         for corpusIndex in permittedIndices:
@@ -66,4 +66,3 @@ class SectionModel(object):
 
             curIndex += 1
         return ftrArray
-

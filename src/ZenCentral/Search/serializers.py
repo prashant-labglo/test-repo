@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from Search.models import SearchResult, SearchQuery, SearchSession
+from Search.models import SearchResult, SearchQuery, SearchSession, SearchIndex
 
 class SearchResultSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -19,4 +19,9 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
 class SearchSessionSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = SearchSession
+        fields = ('created',)
+
+class SearchIndexSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = SearchIndex
         fields = ('created',)

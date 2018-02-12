@@ -35,7 +35,12 @@ if __name__ == "__main__":
     word2vecDistanceModel = Word2vecDistanceModel()
     print("Profiling data for building Word2vecDistanceModel:\n {0}".format(json.dumps(lastCallProfile(), indent=4)))
 
+    # Assign indices to all slides.
+    for (index, slide) in enumerate(latestZeptoDataTransformed["Slides"]):
+        slide.id = index
+
     # Slide search using LambdaMART.
+    lisaConfig["slideSearch"].isDjangoModel = False
     slideSearchIndex = SlideSearchLambdaMart(latestZeptoDataTransformed, lisaConfig.slideSearch, word2vecDistanceModel)
 
     # See if we have already created training data.

@@ -46,3 +46,14 @@ class SearchSession(models.Model):
         if not self.id:
             self.created = timezone.now()
         return super().save(*args, **kwargs)
+
+class SearchIndex(models.Model):
+    created = models.DateTimeField(editable=False)
+
+    def save(self, *args, **kwargs):
+        """
+        On save, we may update timestamps.
+        """
+        if not self.id:
+            self.created = timezone.now()
+        return super().save(*args, **kwargs)

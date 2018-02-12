@@ -2,6 +2,7 @@
 This is a REST API client which talks with the Lisa-PHP web-service.
 """
 import requests, json
+from attrdict import AttrDict
 from lxml import html
 from functools import reduce
 import urllib.parse
@@ -157,7 +158,7 @@ class LisaPhpClient(RestClient):
         # Make all the latest slides compatible with SlideDB system.
         transformedSlides = []
         for latestSlide in zeptoData["Slides"]:
-            transformedSlide = {}
+            transformedSlide = AttrDict()
 
             # ID at the server can be obtained from zeptoId attribute.
             transformedSlide["parent"] = constructsDict[int(latestSlide["Parent"])]
@@ -191,9 +192,10 @@ def textCleanUp(jsonObject, badStrings=None, allStrings=None):
     elif (isinstance(jsonObject, list)):
         # Some of the strings are of kind "a, b". They should be flattened into list.
         if any([isinstance(item, str) and "," in item for item in jsonObject]):
-            for item in jsonObject:
-                if "," in item:
-                    badStrings.add(item)
+            if badStrings is not None:
+                for item in jsonObject:
+                    if "," in item:
+                        badStrings.add(item)
             jsonObject = ",".join(jsonObject).split(",")
         else:
             # If we are not dealing with list of strings, then we need to clean them up, recursively.
