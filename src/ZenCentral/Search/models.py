@@ -1,4 +1,5 @@
 from jsonfield import JSONField
+from enumfields import Enum, EnumField
 from django.utils import timezone
 from django.db import models
 from django.contrib.auth import get_user_model
@@ -49,10 +50,17 @@ class SearchQuery(models.Model):
             self.created = timezone.now()
         return super().save(*args, **kwargs)
 
+class IndexTypeChoices(Enum):
+    TrainingSeed = 0
+    LambdaMART = 1
+
 class SearchIndex(models.Model):
     created = models.DateTimeField(editable=False)
 
-    searchAlgo = models.TextField(null=True, blank=True)
+    indexType = EnumField(IndexTypeChoices, default=IndexTypeChoices.LambdaMART)
+
+    # All Rankings made for rankingSources are also available for rankings for this search index.
+    rankingSources = models.ManyToManyField('SearchIndex', blank=True)
 
     def save(self, *args, **kwargs):
         """

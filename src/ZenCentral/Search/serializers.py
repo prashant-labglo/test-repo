@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from Search.models import SearchResult, SearchResultRating, SearchQuery, SearchIndex
+from Search.models import IndexTypeChoices
+from ZenCentral import fields
 
 class SearchResultRatingSerializer(serializers.HyperlinkedModelSerializer):
     user = serializers.PrimaryKeyRelatedField(
@@ -25,6 +27,8 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
         fields = ('index', 'queryJson', 'created', 'results')
 
 class SearchIndexSerializer(serializers.HyperlinkedModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    indexType = fields.EnumSerializerField(IndexTypeChoices)
     class Meta:
         model = SearchIndex
-        fields = ('created', 'searchAlgo')
+        fields = ('id', 'created', 'indexType', 'rankingSources')
