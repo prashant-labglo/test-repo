@@ -1,5 +1,13 @@
 from rest_framework import serializers
-from Search.models import SearchResult, SearchQuery, SearchSession, SearchIndex
+from Search.models import SearchResult, SearchResultRating, SearchQuery, SearchIndex
+
+class SearchResultRatingSerializer(serializers.HyperlinkedModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(
+        read_only=True,
+        default=serializers.CurrentUserDefault())
+    class Meta:
+        model = SearchResultRating
+        fields = ('rating', 'user', 'result')
 
 class SearchResultSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -14,14 +22,9 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
     results = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name="queryJson")
     class Meta:
         model = SearchQuery
-        fields = ('session', 'queryJson', 'created', 'results')
-
-class SearchSessionSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = SearchSession
-        fields = ('created',)
+        fields = ('index', 'queryJson', 'created', 'results')
 
 class SearchIndexSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = SearchIndex
-        fields = ('created',)
+        fields = ('created', 'searchAlgo')

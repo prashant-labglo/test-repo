@@ -81,10 +81,15 @@ class SlideSearchLambdaMart(SlideSearchBase):
         # Use construct level features as initial slide level features.
         slideFtrArray = []
         for slide in permittedSlides:
+            toAppend = []
             # Get construct level features for the current slide.
-            constructFtr = constructFtrArray[self.constructPathToIndex[getPath(slide)]]
+            toAppend.extend(constructFtrArray[self.constructPathToIndex[getPath(slide)]])
+
+            # Add zeptoDownloads count as a feature.
+            toAppend.append(slide.zeptoDownloads)
+
             # Append a copy of features into the slide feature array.
-            slideFtrArray.append(list(constructFtr))
+            slideFtrArray.append(toAppend)
 
         # To the features already built, append features corresponding to slide tag model.
         slideFtrArray = self.slideTagModel.get_features(queryInfo, slideFtrArray, permittedIndices)

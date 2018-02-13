@@ -64,3 +64,6 @@ class Slide(models.Model):
 
     # Zepto ID is used to cross reference with corresponding entry in Lisa-Zepto.
     zeptoId = models.IntegerField(unique=True)
+
+    # Number of downloads of this slide made on Zepto site.
+    zeptoDownloads = models.IntegerField()

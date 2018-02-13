@@ -1,9 +1,20 @@
 from rest_framework import viewsets
-from Search.models import SearchResult, SearchQuery, SearchSession
-from Search.serializers import SearchResultSerializer, SearchQuerySerializer, SearchSessionSerializer
+from Search.models import SearchResult, SearchResultRating, SearchQuery
+from Search.serializers import SearchResultSerializer, SearchResultRatingSerializer, SearchQuerySerializer
 from Search.searchIndexView import SearchIndexViewSet
 
 from django.shortcuts import render
+
+# Create your views here.
+class SearchResultRatingViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows SearchResults to be viewed or edited.
+    """
+    queryset = SearchResultRating.objects.all()
+    serializer_class = SearchResultRatingSerializer
+
+    # Post list route.
+    # When a query is made, the search results are created and returned.
 
 # Create your views here.
 class SearchResultViewSet(viewsets.ModelViewSet):
@@ -33,10 +44,3 @@ class SearchQueryViewSet(viewsets.ModelViewSet):
 
         # Create the query instance by calling parent method.
         super().create(self, request)
-
-class SearchSessionViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows SearchSessions to be viewed or edited.
-    """
-    queryset = SearchSession.objects.all()
-    serializer_class = SearchSessionSerializer

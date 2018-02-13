@@ -174,6 +174,7 @@ class LisaPhpClient(RestClient):
             transformedSlide["style"] = latestSlide["Style"]
             transformedSlide["visualStyle"] = latestSlide["VisualStyle"]
             transformedSlide["zeptoId"] = latestSlide["NumId"]
+            transformedSlide["zeptoDownloads"] = latestSlide["Downloads"]
             transformedSlides.append(transformedSlide)
         retval["Slides"] = transformedSlides
 
