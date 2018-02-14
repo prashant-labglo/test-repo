@@ -17,6 +17,7 @@ class SearchResultSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('slide', 'rank')
 
 class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
+    id = serializers.IntegerField(read_only=True)
     # queryJSON, being a custom model field type, needs a custom invocation of the field serializer.
     queryJson = serializers.JSONField()
 
@@ -24,7 +25,7 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
     results = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name="queryJson")
     class Meta:
         model = SearchQuery
-        fields = ('index', 'queryJson', 'created', 'results')
+        fields = ('id', 'index', 'queryJson', 'created', 'results')
 
 class SearchIndexSerializer(serializers.HyperlinkedModelSerializer):
     id = serializers.IntegerField(read_only=True)
