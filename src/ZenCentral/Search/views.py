@@ -3,7 +3,7 @@ from rest_framework import viewsets
 from rest_framework import status
 from rest_framework.response import Response
 from Search.models import SearchResult, SearchResultRating, SearchQuery
-from Search.serializers import SearchResultSerializer, SearchResultRatingSerializer, SearchQuerySerializer
+from Search.serializers import NestedSearchResultSerializer, SearchResultSerializer, SearchResultRatingSerializer, SearchQuerySerializer
 from Search.searchIndexView import SearchIndexViewSet
 from LibLisa import lastCallProfile, lisaConfig, textCleanUp, methodProfiler, blockProfiler
 
@@ -40,6 +40,8 @@ class SearchQueryViewSet(viewsets.ModelViewSet):
 
     def create(self, request):
         # Create the query instance by calling parent method.
+        queryJson = request.data
+
         retval = super().create(request)
         if retval.status_code != status.HTTP_201_CREATED:
             return retval
@@ -51,11 +53,18 @@ class SearchQueryViewSet(viewsets.ModelViewSet):
             if searchIndexBackend.fittingDone is None:
                 queryObj.index.fit()
 
-            if "count" not in queryObj.queryJson.keys():
-                queryObj.queryJson["count"] = 500
-                queryObj.save()
-
             result = searchIndexBackend.innerIndex.slideSearch(queryObj.queryJson)
+
+            for (index, (score, slide)) in enumerate(result):
+                searchResult = SearchResult(slide=slide, rank=index, query=queryObj, score=score)
+                searchResult.save()
+
+            # QueryObj may have now changed.
+            queryObj = SearchQuery.objects.get(pk=retval.data["id"])
+
+            # Update retval with new data and return.
+            retval.data = SearchQuerySerializer(queryObj, context={'request': request}).data
+            return retval
 
             resultCurated = []
             for (index, (score, slide)) in enumerate(result):

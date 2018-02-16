@@ -14,6 +14,7 @@ import os
 import posixpath
 
 from LibLisa import lisaConfig
+from ZenCentral.middleware import ThreadLocalMiddleware
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -48,6 +49,10 @@ INSTALLED_APPS = [
     'rest_framework',
     'taggit',
     'taggit_serializer',
+]
+
+MIDDLEWARE = [
+    'ZenCentral.middleware.ThreadLocalMiddleware',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -110,6 +115,14 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 100
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/

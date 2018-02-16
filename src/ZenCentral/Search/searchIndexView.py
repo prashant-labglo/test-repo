@@ -83,4 +83,7 @@ class SearchIndexViewSet(viewsets.ModelViewSet):
             searchIndexObj.fit()
             return Response({"Done" : 1})
         elif request.method == "GET":
+            if searchIndexObj.backend.innerIndex is None:
+                return Response("Inner Index of Search Index with pk={0} not loaded/created".format(pk), status=status.HTTP_404_NOT_FOUND)
+
             return Response(searchIndexObj.backend.innerIndex.json())

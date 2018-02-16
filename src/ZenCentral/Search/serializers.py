@@ -3,18 +3,41 @@ from Search.models import SearchResult, SearchResultRating, SearchQuery, SearchI
 from Search.models import IndexTypeChoices
 from ZenCentral import fields
 
-class SearchResultRatingSerializer(serializers.HyperlinkedModelSerializer):
+from django.contrib.auth import get_user_model
+
+class SearchResultRatingSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(
         read_only=True,
         default=serializers.CurrentUserDefault())
     class Meta:
         model = SearchResultRating
-        fields = ('rating', 'user', 'result')
+        fields = ('rated', 'user', 'result')
 
-class SearchResultSerializer(serializers.HyperlinkedModelSerializer):
+class SearchResultSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    myRating = serializers.IntegerField(read_only=False)
     class Meta:
         model = SearchResult
-        fields = ('slide', 'rank')
+        fields = ('id', 'slide', 'rank', 'query', 'ratings', 'myRating')
+        read_only_fields = ('id', 'slide', 'rank', 'query', 'ratings')
+
+class NestedSearchResultRatingSerializer(serializers.ModelSerializer):
+    #user = serializers.PrimaryKeyRelatedField(
+    #    read_only=True,
+    #    default=serializers.CurrentUserDefault())
+    class Meta:
+        model = SearchResultRating
+        fields = ('rated', 'user')
+
+class NestedSearchResultSerializer(serializers.ModelSerializer):
+    avgRating = serializers.FloatField(read_only=True)
+    myRating = serializers.IntegerField(read_only=False)
+    id = serializers.IntegerField(read_only=True)
+    def __init__(self, *argv, **kargv):
+        super().__init__(*argv, **kargv)
+    class Meta:
+        model = SearchResult
+        fields = ('id', 'slide', 'avgRating', 'myRating', 'score')
 
 class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
     id = serializers.IntegerField(read_only=True)
@@ -22,7 +45,8 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
     queryJson = serializers.JSONField()
 
     # Making results read only in the API.
-    results = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name="queryJson")
+    results = NestedSearchResultSerializer(many=True, read_only=True)
+
     class Meta:
         model = SearchQuery
         fields = ('id', 'index', 'queryJson', 'created', 'results')

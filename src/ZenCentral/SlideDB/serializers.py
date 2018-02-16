@@ -26,7 +26,7 @@ class SlideSerializer(TaggitSerializer, serializers.HyperlinkedModelSerializer):
     tags = TagListSerializerField()
     layout = fields.EnumSerializerField(LayoutChoices)
     style = fields.EnumSerializerField(StyleChoices)
-    visualStyle = fields.EnumSerializerField(VisualStyleChoices)
+    visualStyle = fields.EnumSerializerField(VisualStyleChoices, read_only=True)
 
     class Meta:
         model = Slide
