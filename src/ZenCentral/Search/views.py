@@ -64,6 +64,11 @@ class SearchQueryViewSet(viewsets.ModelViewSet):
 
             # Update retval with new data and return.
             retval.data = SearchQuerySerializer(queryObj, context={'request': request}).data
+            paginatedResults = retval.data["results"]
+            if paginatedResults["next"] is not None:
+                paginatedResults["next"] = paginatedResults["next"].replace("?", str(queryObj.id) + "/?")
+            if paginatedResults["previous"] is not None:
+                paginatedResults["previous"] = paginatedResults["previous"].replace("?", str(queryObj.id) + "/?")
             return retval
 
             resultCurated = []
