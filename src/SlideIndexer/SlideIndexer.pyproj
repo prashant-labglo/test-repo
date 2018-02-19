@@ -22,6 +22,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="SlideIndexer.py" />
+    <Compile Include="ZeptoSync.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LibLisa\LibLisa.pyproj">

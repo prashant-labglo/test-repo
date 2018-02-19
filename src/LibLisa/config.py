@@ -48,6 +48,7 @@ def LisaConfig():
         slideSearchConfig.BaseUrl = "http://localhost:8000/"
         slideSearchConfig.Username = "test"
         slideSearchConfig.Password = "test"
+        slideSearchConfig.isDjangoModel = True
         retval.slideSearch = slideSearchConfig
 
         # Build and set SlideIndexer config.

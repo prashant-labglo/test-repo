@@ -57,7 +57,7 @@
     <Compile Include="Search\apps.py" />
     <Compile Include="Search\migrations\__init__.py" />
     <Compile Include="Search\models.py" />
-    <Compile Include="Search\searchIndex.py">
+    <Compile Include="Search\searchIndexView.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Search\serializers.py" />
@@ -68,6 +68,7 @@
     <Compile Include="Search\views.py" />
     <Compile Include="Search\__init__.py" />
     <Compile Include="ZenCentral\fields.py" />
+    <Compile Include="ZenCentral\middleware.py" />
     <Compile Include="ZenCentral\__init__.py" />
     <Compile Include="ZenCentral\settings.py" />
     <Compile Include="ZenCentral\urls.py" />

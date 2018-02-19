@@ -20,33 +20,43 @@ class SlideSearchLambdaMart(SlideSearchBase):
     """
     Search engine object for slides, using LambdaMART.
     """
-    def __init__(self, dataToIndex, config, word2vecDistanceModel):
+    def __init__(self, dataForIndexing, config, word2vecDistanceModel):
         """
         Constructor for SlideSearchIndex takes the path of slide contents file as input.
         """
+        isDjangoModel = config["isDjangoModel"]
         with blockProfiler("SlideSearchLambdaMart.__init__"):
             # Invoke base class constructor.
-            super().__init__(dataToIndex, config)
+            super().__init__(dataForIndexing, config)
 
             # Build the word corpus.
-            if not self.dataToIndex["Slides"]:
+            if not self.dataForIndexing["Slides"]:
                 self.dictionary = None
                 self.slideTagModel = None
                 self.constructPathList = []
                 self.constructPathToIndex = {}
                 self.constructPathModel = None
             else:
-                completeCorpus = [extractCorpus(slide) for slide in self.dataToIndex["Slides"]]
+                allSlides = self.dataForIndexing["Slides"]
+                def getTags(slide):
+                    return slide.tags.names() if isDjangoModel else slide.tags
+                def extractSlideCorpus(slide):
+                    retval = []
+                    retval.extend(getTags(slide))
+                    return retval
+
+                completeCorpus = [extractSlideCorpus(slide) for slide in allSlides]
 
                 # Create a word dictionary for use in vector building.
                 self.dictionary = gensim.corpora.Dictionary(completeCorpus)
 
                 # Build section wise corpora and model for slide tags.
-                slideTagCorpora = [slide["tags"] for slide in self.dataToIndex["Slides"]]
+                slideTagCorpora = [getTags(slide) for slide in allSlides]
+
                 self.slideTagModel = SectionModel(slideTagCorpora, self.dictionary, word2vecDistanceModel)
 
                 # Build corpora for construct paths.
-                constructPathCorpora = set([getPath(slide) for slide in self.dataToIndex["Slides"]])
+                constructPathCorpora = set([getPath(slide) for slide in allSlides])
                 self.constructPathList = [list(constructPath) for constructPath in constructPathCorpora]
                 self.constructPathToIndex = { tuple(path):index for (index, path) in enumerate(self.constructPathList) }
                 self.constructPathModel = SectionModel(self.constructPathList, self.dictionary, word2vecDistanceModel)
@@ -57,11 +67,13 @@ class SlideSearchLambdaMart(SlideSearchBase):
         Computes feature vector, one for eacg slides in DB.
         ftrVec(queryInfo, slide) will determine the rating score of slide, when querying for slide.
         """
+        allSlides = self.dataForIndexing["Slides"]
         if permittedSlides is None:
-            permittedSlides = self.dataToIndex["Slides"]
-            permittedIndices = range(len(self.dataToIndex["Slides"]))
+            permittedSlides = allSlides
+            permittedIndices = range(len(allSlides))
         else:
-            permittedIndices = [slide["Index"] for slide in permittedSlides]
+            slideToIndexMap = { slide:index for (index, slide) in enumerate(allSlides) }
+            permittedIndices = [slideToIndexMap[slide] for slide in permittedSlides]
 
         # Create construct feature array from path model.
         constructFtrArray = self.constructPathModel.get_features(queryInfo)
@@ -69,10 +81,15 @@ class SlideSearchLambdaMart(SlideSearchBase):
         # Use construct level features as initial slide level features.
         slideFtrArray = []
         for slide in permittedSlides:
+            toAppend = []
             # Get construct level features for the current slide.
-            constructFtr = constructFtrArray[self.constructPathToIndex[getPath(slide)]]
+            toAppend.extend(constructFtrArray[self.constructPathToIndex[getPath(slide)]])
+
+            # Add zeptoDownloads count as a feature.
+            toAppend.append(slide.zeptoDownloads)
+
             # Append a copy of features into the slide feature array.
-            slideFtrArray.append(list(constructFtr))
+            slideFtrArray.append(toAppend)
 
         # To the features already built, append features corresponding to slide tag model.
         slideFtrArray = self.slideTagModel.get_features(queryInfo, slideFtrArray, permittedIndices)
@@ -85,42 +102,68 @@ class SlideSearchLambdaMart(SlideSearchBase):
         To train LambdaMART model, we need to first build a basic training set.
         This training set should work for the case when true rating data is not available.
         """
-        (Tx, Ty, Tqids) = ([], [], [])
+        # Build a word occurence dictionary mapping words to slides where they occur.
+        wordToMatchingSlides = {}
+        for slide in self.dataForIndexing["Slides"]:
+            slideTags = slide.tags.names() if self.config["isDjangoModel"] else slide.tags
+            for tag in slideTags:
+                if re.search("[0-9]", tag):
+                    # Tags with digits are not interesting for search.
+                    continue
+                if tag in wordToMatchingSlides:
+                    wordToMatchingSlides[tag].append(slide)
+                else:
+                    wordToMatchingSlides[tag] = [slide]
+        wordToMatchingSlides = list(wordToMatchingSlides.items())
 
-        for (wordIndex, word) in self.dictionary.items():
-            if re.search("[0-9]", word):
-                # Words with digits are not interesting for search.
-                continue
-            print("{0}: Processing word {1}.".format(wordIndex, word))
+        # Sort words according to the # of slides they occur in.
+        wordToMatchingSlides.sort(key = lambda tuple:len(tuple[1]))
+        # Save word occurence dictionary.
+        with open(lisaConfig.dataFolderPath + "trainingWords.json", "w") as fp:
+            wordToMatchingSlideIds = {}
+            for (word, matchingSlides) in wordToMatchingSlides:
+                wordToMatchingSlideIds[word] = list(map(lambda slide:slide.id, matchingSlides))
+            json.dump(wordToMatchingSlideIds, fp, indent=4)
+
+        # Only retain words with frequency less than 1% of total slides.
+        freqThreshold = int(0.01 * len(self.dataForIndexing["Slides"]))
+        nonMatchingSlideCount = int(0.02 * len(self.dataForIndexing["Slides"]))
+        wordToMatchingSlides = [(word, matchingSlides) for (word, matchingSlides) in wordToMatchingSlides if len(matchingSlides) < freqThreshold]
+
+        (Tx, Ty, Tqids, TresultIds) = ([], [], [], [])
+        for (index, (word, matchingSlides)) in enumerate(wordToMatchingSlides):
+            print("{0}: Processing word {1}, occuring in {2}.".format(index, word, wordToMatchingSlideIds[word]))
             simulatedQuery = {"Keywords" : [word]}
             results = seedDataBuilder.slideSearch(simulatedQuery)
             print("Profiling data for slideSearch:\n {0}".format(json.dumps(lastCallProfile(), indent=4)))
 
-            with blockProfiler("buildSeedTrainingSet.QueryCollationFromResults."+word):
-                # Only retain top 10.
-                results = results[0:30]
-                gaps = [(results[i+1][0] - results[i][0]) for i in range(len(results)-1)]
-                if not gaps:
-                    continue
-                maxGapIndex = gaps.index(max(gaps))
-                selectedSlides = []
-                for (index, (slideScore, slide)) in enumerate(results):
-                    if (abs(index - maxGapIndex) >= 5):
-                        # Ignore results, which are very far.
-                        continue
-                    if (index < maxGapIndex):
-                        Ty.append(4)
-                    else:
-                        Ty.append(0)
+            # Now, find slides, which are close but are not matching.
+            closeButNotMatchingSlides = []
+            i = 0
+            while len(closeButNotMatchingSlides) < nonMatchingSlideCount:
+                if results[i][1] not in matchingSlides:
+                    closeButNotMatchingSlides.append(results[i][1])
+                i += 1
 
-                    selectedSlides.append(slide)
-                    Tqids.append(word)
+            selectedSlides = []
+            for slide in matchingSlides:
+                Ty.append(4)
+                selectedSlides.append(slide)
+                Tqids.append(word)
+                TresultIds.append(slide.id)
+
+            for slide in closeButNotMatchingSlides:
+                Ty.append(0)
+                selectedSlides.append(slide)
+                Tqids.append(word)
+                TresultIds.append(slide.id)
 
             with blockProfiler("buildSeedTrainingSet.FeatureComputation."+word):
                 Tx.extend(self.features(simulatedQuery, selectedSlides))
+
             print("Profiling data for query collation:\n {0}".format(json.dumps(lastCallProfile(), indent=4)))
 
-        return (Tx, Ty, Tqids)
+        return (Tx, Ty, Tqids, TresultIds)
 
     @methodProfiler
     def fit(self, Tx, Ty, Tqids):
@@ -152,6 +195,15 @@ class SlideSearchLambdaMart(SlideSearchBase):
         # Fit the model.
         self.LambdaMartModel.fit(Tx, Ty, Tqids, monitor=self.LambdaMartMonitor)
 
+    def json(self):
+        retval = {}
+        retval["feature_importances_"] = self.LambdaMartModel.feature_importances_
+        retval["oob_improvement_"] = self.LambdaMartModel.oob_improvement_
+        retval["train_score_"] = self.LambdaMartModel.train_score_
+        #retval["estimators_"] = self.LambdaMartModel.estimators_
+        retval["estimators_fitted_"] = self.LambdaMartModel.estimators_fitted_
+        return retval
+
     @methodProfiler
     def slideSimilarity(self, queryInfo, permittedSlides):
         """
@@ -166,8 +218,7 @@ class SlideSearchLambdaMart(SlideSearchBase):
         retval = {}
         for (index, score) in enumerate(self.LambdaMartModel.predict(ftrVec)):
             slide = permittedSlides[index]
-            originalSlideIndex = slide["Index"]
-            retval[originalSlideIndex] = score
+            retval[index] = score
 
         # Return the result.
         return retval

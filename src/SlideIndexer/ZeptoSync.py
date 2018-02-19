@@ -10,7 +10,7 @@ from LibLisa import lisaConfig, LisaPhpClient, SlideDbClient, SearchClient
 slideDbClient = SlideDbClient()
 searchClient = SearchClient()
 
-def searchIndexCreatorThreadFunc():
+def syncFromLisaPhp():
     """
     Downloads data from Lisa PHP.
     Uploads the same into ZenClient SlideDB REST API.
@@ -18,16 +18,16 @@ def searchIndexCreatorThreadFunc():
     Lisa PHP.
     """
     # Login into REST clients.
+    lisaPhpClient.login()
     slideDbClient.login()
-    searchClient.login()
 
     # Main loop.
     while True:
         # Get all changes made since last update.
-        slideHierarchy = slideDbClient.getLatestData()
+        latestData = lisaPhpClient.getLatestData()
 
         # Repair faulty zepto data.
-        trainingData = slideDbClient.getTrainingData()
+        latestDataRepaired = lisaPhpClient.repairZeptoData(latestData)
 
         # Prepare data to index
         latestDataTransformed = lisaPhpClient.transformZeptoData(latestDataRepaired)
@@ -38,4 +38,4 @@ def searchIndexCreatorThreadFunc():
         # Sleep for iteration period, before trying again.
         time.sleep(lisaConfig.slideIndexer.IterationPeriod)
 
-searchIndexCreatorThreadFunc()
+syncFromLisaPhp()

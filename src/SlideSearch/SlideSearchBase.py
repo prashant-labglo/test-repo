@@ -6,19 +6,17 @@ class SlideSearchBase(object):
     """
     Base class of slide search engines.
     """
-    def __init__(self, dataToIndex, config):
+    def __init__(self, dataForIndexing, config):
         """
         Constructor for SlideSearchW2V takes the path of slide contents file as input.
         """
-        self.dataToIndex = dataToIndex
-        for (index, slide) in enumerate(self.dataToIndex["Slides"]):
-            slide["Index"] = index
+        self.dataForIndexing = dataForIndexing
         self.config = config
 
     @methodProfiler
     def permittedSlides(self, queryInfo):
         """
-            queryInfo contains filters, which are applied on slides in self.dataToIndex["Slides"]. Remaining slides are returned.
+            queryInfo contains filters, which are applied on slides in self.dataForIndexing["Slides"]. Remaining slides are returned.
             queryInfo filters can be as below.
             {
                 # Optional
@@ -42,7 +40,7 @@ class SlideSearchBase(object):
                 "permittedVisualStyle"  : True | False
             }
         """
-        for slide in self.dataToIndex["Slides"]:
+        for slide in self.dataForIndexing["Slides"]:
             if "permittedConstructs" in queryInfo.keys():
                 found = False
                 for (concept, construct) in queryInfo["permittedConstructs"]:
@@ -91,23 +89,26 @@ class SlideSearchBase(object):
         queryInfo = textCleanUp(queryInfo)
 
         # Apply filter part of queryInfo.
-        resultList = list(self.permittedSlides(queryInfo))
+        permittedSlides = list(self.permittedSlides(queryInfo))
 
         # Compute scores of remaining slides.
-        slideScores = self.slideSimilarity(queryInfo, resultList)
+        slideScores = self.slideSimilarity(queryInfo, permittedSlides)
+
+        # Start building resultList
+        resultList = list(enumerate(permittedSlides))
 
         # Drop slides with negative score.
-        resultList = [slide for slide in resultList if slideScores[slide["Index"]] > 0]
+        # resultList = [(index, slide) for (index, slide) in resultList if slideScores[index] > 0]
 
         # Sort remaining permitted slides according to score.
-        resultList.sort(key = lambda slide : -slideScores[slide["Index"]])
+        resultList.sort(key = lambda tuple : -slideScores[tuple[0]])
 
         # Append scores with items in resultList.
-        resultList = [(slideScores[slide["Index"]], slide) for slide in resultList]
+        resultList = [(slideScores[index], slide) for (index, slide) in resultList]
 
         return resultList
 
 def getPath(slide):
-    return (slide["parent"]["name"],
-            slide["parent"]["parent"]["name"],
-            slide["parent"]["parent"]["parent"]["name"])
+    return (slide.parent.name,
+            slide.parent.parent.name,
+            slide.parent.parent.parent.name)

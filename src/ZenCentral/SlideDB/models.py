@@ -60,7 +60,23 @@ class Slide(models.Model):
     hasImage = models.BooleanField()
     layout = EnumField(LayoutChoices, default=LayoutChoices.Basic)
     style = EnumField(StyleChoices, default=StyleChoices.Basic)
-    visualStyle = EnumField(VisualStyleChoices, default=VisualStyleChoices.Basic)
+    @property
+    def visualStyle(self):
+        """
+        Visual style is a derived attribute of a slide.
+        Defined as a property, so that it is availble to serializers.
+        """
+        if   self.style == StyleChoices.Basic and self.layout == LayoutChoices.Basic:
+            return VisualStyleChoices.Basic
+        elif self.style == StyleChoices.Basic and self.layout == LayoutChoices.Enhanced:
+            return VisualStyleChoices.Edgy
+        elif self.style == StyleChoices.Enhanced and self.layout == LayoutChoices.Basic:
+            return VisualStyleChoices.Slick
+        elif self.style == StyleChoices.Enhanced and self.layout == LayoutChoices.Enhanced:
+            return VisualStyleChoices.Fancy
 
     # Zepto ID is used to cross reference with corresponding entry in Lisa-Zepto.
     zeptoId = models.IntegerField(unique=True)
+
+    # Number of downloads of this slide made on Zepto site.
+    zeptoDownloads = models.IntegerField()
