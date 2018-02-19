@@ -8,14 +8,17 @@ from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 
 class SearchResultRatingSerializer(serializers.ModelSerializer):
-    #user = serializers.PrimaryKeyRelatedField(
-    #    read_only=True,
-    #    default=serializers.CurrentUserDefault())
+    """
+    Serializer for /search/ratings
+    """
     class Meta:
         model = SearchResultRating
         fields = ('rated', 'result', 'user')
 
 class SearchResultSerializer(serializers.ModelSerializer):
+    """
+    Serializer for /search/results
+    """
     id = serializers.IntegerField(read_only=True)
     myRating = serializers.IntegerField(read_only=False)
     ratings = SearchResultRatingSerializer(many=True)
@@ -25,6 +28,12 @@ class SearchResultSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'slide', 'rank', 'query', 'ratings')
 
 class NestedSearchResultRatingSerializer(serializers.ModelSerializer):
+    """
+    In /search/queries, we directly serialize search results under each query.
+    Each result has a number of ratings.
+    This class helps serialize rating object, when it appears under a query's result
+    in /search/queries.
+    """
     user = serializers.PrimaryKeyRelatedField(
         read_only=True,
         default=serializers.CurrentUserDefault())
@@ -33,6 +42,11 @@ class NestedSearchResultRatingSerializer(serializers.ModelSerializer):
         fields = ('rated', 'user')
 
 class NestedSearchResultSerializer(serializers.ModelSerializer):
+    """
+    In /search/queries, we directly serialize search results under each query.
+    This class helps serialize search result object, when it appears under a query.
+    in /search/queries.
+    """
     avgRating = serializers.FloatField(read_only=True)
     myRating = serializers.IntegerField(read_only=False)
     id = serializers.IntegerField(read_only=True)
@@ -41,6 +55,28 @@ class NestedSearchResultSerializer(serializers.ModelSerializer):
         fields = ('id', 'slide', 'avgRating', 'myRating', 'score')
 
 class PaginatedSearchResultListSerializer(serializers.ListSerializer):
+    """
+    This class makes the pagination possible for search results serialized by
+    NestedSearchResultSerializer.
+
+    NestedSearchResultSerializer does this by over-riding its list serializer.
+    Job of a list-serializer is to serialize/de-serialize list of underlying objects.
+    This class is THE over-ridden list-serializer for NestedSearchResultSerializer.
+
+    It inserts and de-inserts pagination informatoin in the serialization pipeline.
+
+    originalResults = [....]
+            |
+            |
+           \ /
+            |
+    paginatedResults = {
+        "next" : "http://....&page=#",
+        "prev" : "http://....&page=#",
+        "count" : #Count,
+        "results" : originalResultsArray[pageNo:pageNo+100]
+    }
+    """
     def to_representation(self, page):
         """Convert `username` to lowercase."""
         paginationObj = self.context["paginationObj"]
@@ -56,14 +92,40 @@ class PaginatedSearchResultListSerializer(serializers.ListSerializer):
 
     @property
     def data(self):
+        """
+        Overriding the data property is also required. Somewhat unfortunate.
+        """
         ret = super(serializers.ListSerializer, self).data
         return ret
 
 class PaginatedSearchResultSerializer(NestedSearchResultSerializer):
+    """
+    In /search/queries, when we are serializing paginated search results,
+    the pagination information(see diag below) needs to be inserted and
+    de-inserted in the serialization pipeline.
+
+    originalResults = [....]
+            |
+            |
+           \ /
+            |
+    paginatedResults = {
+        "next" : "http://....&page=#",
+        "prev" : "http://....&page=#",
+        "count" : #Count,
+        "results" : originalResultsArray[pageNo:pageNo+100]
+    }
+    
+    This class achieves the above insertion/removal of pagination information by
+    overriding list_serializer_class of NestedSearchResultSerializer.
+    """
     class Meta(NestedSearchResultSerializer.Meta):
         list_serializer_class=PaginatedSearchResultListSerializer
 
 class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
+    """
+    Serializer for /search/queries.
+    """
     id = serializers.IntegerField(read_only=True)
     # queryJSON, being a custom model field type, needs a custom invocation of the field serializer.
     queryJson = serializers.JSONField()
@@ -76,6 +138,9 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
         fields = ('id', 'index', 'queryJson', 'created', 'results')
 
     def paginated_results(self, obj):
+        """
+        The results are serialized/de-serialized using a method.
+        """
         querySet = SearchResult.objects.filter(query=obj)
         paginationObj = pagination.PageNumberPagination()
         paginationObj.page_size_query_param = "page_size"
@@ -85,6 +150,9 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
         return serializer.data
 
 class SearchIndexSerializer(serializers.HyperlinkedModelSerializer):
+    """
+    Serializer for /search/indices.
+    """
     id = serializers.IntegerField(read_only=True)
     indexType = fields.EnumSerializerField(IndexTypeChoices)
     class Meta:

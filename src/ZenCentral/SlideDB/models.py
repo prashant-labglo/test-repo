@@ -62,6 +62,10 @@ class Slide(models.Model):
     style = EnumField(StyleChoices, default=StyleChoices.Basic)
     @property
     def visualStyle(self):
+        """
+        Visual style is a derived attribute of a slide.
+        Defined as a property, so that it is availble to serializers.
+        """
         if   self.style == StyleChoices.Basic and self.layout == LayoutChoices.Basic:
             return VisualStyleChoices.Basic
         elif self.style == StyleChoices.Basic and self.layout == LayoutChoices.Enhanced:

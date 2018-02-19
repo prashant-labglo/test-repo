@@ -39,7 +39,7 @@ class SlideSearchLambdaMart(SlideSearchBase):
             else:
                 allSlides = self.dataForIndexing["Slides"]
                 def getTags(slide):
-                    return slide.tags.names() if isDjangoModel else slide["tags"]
+                    return slide.tags.names() if isDjangoModel else slide.tags
                 def extractSlideCorpus(slide):
                     retval = []
                     retval.extend(getTags(slide))
@@ -105,7 +105,7 @@ class SlideSearchLambdaMart(SlideSearchBase):
         # Build a word occurence dictionary mapping words to slides where they occur.
         wordToMatchingSlides = {}
         for slide in self.dataForIndexing["Slides"]:
-            slideTags = slide.tags.names() if self.config["isDjangoModel"] else slide["tags"]
+            slideTags = slide.tags.names() if self.config["isDjangoModel"] else slide.tags
             for tag in slideTags:
                 if re.search("[0-9]", tag):
                     # Tags with digits are not interesting for search.

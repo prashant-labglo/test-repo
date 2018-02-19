@@ -16,6 +16,11 @@ from ZenCentral.middleware import get_current_user
 UserModel = get_user_model()
 
 class SearchResultRating(models.Model):
+    """
+    Model for rating search results.
+    
+    Each user can rate the result differently. So rating object is kept outside result.
+    """
     rated = models.IntegerField(
         default=0,
         validators=[MaxValueValidator(3), MinValueValidator(-3)]
@@ -28,6 +33,9 @@ class SearchResultRating(models.Model):
 
 # Create your models here.
 class SearchResult(models.Model):
+    """
+    Each search query may output a large number of search results shown to the user.
+    """
     slide = models.ForeignKey(Slide, on_delete=models.CASCADE)
     rank = models.IntegerField()
     query = models.ForeignKey('SearchQuery', related_name="results", on_delete=models.CASCADE)
@@ -40,6 +48,12 @@ class SearchResult(models.Model):
 
     @property
     def myRating(self):
+        """
+        For the current result object, this method finds the rating of the
+        "current user" and returns it.
+
+        This property is used by Search result serializers for the REST API.
+        """
         curUser = get_current_user()
         if curUser.is_anonymous:
             return None
@@ -50,6 +64,12 @@ class SearchResult(models.Model):
 
     @myRating.setter
     def myRating(self, newRating):
+        """
+        For the current result object, this method 'sets' the rating of the
+        "current user".
+
+        This property is used by Search result serializers for the REST API.
+        """
         curUser = get_current_user()
         if not curUser.is_anonymous:
             ratingObj = SearchResultRating.objects.get(result=self, user=curUser)
@@ -63,6 +83,12 @@ class SearchResult(models.Model):
 
     @property
     def avgRating(self):
+        """
+        For the current result object, this method finds the average rating of
+        among users and returns it.
+
+        This property is used by Search result serializers for the REST API.
+        """
         sumRatings = 1
         countRatings = 0
         for ratingObj in SearchResultRating.objects.filter(result=self):
@@ -73,6 +99,9 @@ class SearchResult(models.Model):
         return sumRatings/countRatings
 
 class SearchQuery(models.Model):
+    """
+    Model class for any query made by any user.
+    """
     # Session linking.
     index = models.ForeignKey("SearchIndex", related_name="queries", on_delete=models.CASCADE)
 
@@ -85,7 +114,7 @@ class SearchQuery(models.Model):
     @classmethod
     def pre_save(cls, sender, instance, *args, **kwargs):
         """
-        On save, we may update timestamps and populate other values.
+        Upon save, we update timestamps and populate other values, if missing.
         """
         if not instance.id:
             instance.created = timezone.now()
@@ -98,10 +127,16 @@ class SearchQuery(models.Model):
             instance.queryJson["count"] = 100
 
 class IndexTypeChoices(Enum):
+    """
+    Enum class for type of search index being created.
+    """
     TrainingSeed = 0
     LambdaMART = 1
 
 class SearchIndex(models.Model):
+    """
+    Database model for slide search index.
+    """
     created = models.DateTimeField(editable=False)
     indexType = EnumField(IndexTypeChoices, default=IndexTypeChoices.LambdaMART)
     # All Rankings made for rankingSources are also available for rankings for this search index.
@@ -109,13 +144,35 @@ class SearchIndex(models.Model):
 
     # Model to find word distances using word2vec.
     word2vecDistanceModel = Word2vecDistanceModel()
-    print("Profiling data for building Word2vecDistanceModel:\n {0}".format(json.dumps(lastCallProfile(), indent=4)))
 
-    # Initialize inner index to None.
+    # Cache object is used to select which search index data structures to
+    # keep in memory. A maximum of 3 are kept in memory at a time.
     searchIndexCache = LRUCache(maxsize=3)
 
     @property
     def backend(self):
+        """
+        At a time, any number of django model objects corresponding to the
+        same DB instance can be in memory.
+
+        1 db instance of search engine  <-----> 10 model instances in memory.
+
+        However, in case of model objects of the search engine, we allocate a large
+        memory foot print when we load it into memory. Those big data structures
+        should exist as a single instance in memory.
+
+        1 db instance of search engine  <-----> 10 model instances in memory.
+                                                      \   \   \  |  /  /  /
+                                                         searchIndexCache
+                                                                |
+                                          1 instance of searchIndexModelObj.backend                     
+
+        SearchIndex.searchIndexCache acts as the cache for dictionary objects, 
+        which are per-index-unique.
+
+        And searchIndexModelObj.backend returns the per-index-unique dictionary object
+        with all necessary data structures required for the search index.
+        """
         modelInstance = SearchIndex.searchIndexCache.get(self.id)
         if modelInstance is not None:
             # Set initial cached attributes
@@ -233,4 +290,5 @@ class SearchIndex(models.Model):
         self.backend.innerIndex.fit(self.backend.Tx, self.backend.Ty, self.backend.Tqids)
         self.backend.fittingDone = True
 
+# Connects pre_save signal of SearchQuery.
 pre_save.connect(SearchQuery.pre_save, sender=SearchQuery) 

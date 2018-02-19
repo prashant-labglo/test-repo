@@ -39,6 +39,9 @@ class SearchQueryViewSet(viewsets.ModelViewSet):
     serializer_class = SearchQuerySerializer
 
     def create(self, request):
+        """
+        Method called when we are create a query instance using a POST method.
+        """
         # Create the query instance by calling parent method.
         queryJson = request.data
 
@@ -64,24 +67,13 @@ class SearchQueryViewSet(viewsets.ModelViewSet):
 
             # Update retval with new data and return.
             retval.data = SearchQuerySerializer(queryObj, context={'request': request}).data
+
+            # Next and previous URLs in the pagination class work for GET queries.
+            # However, they are incorrect for post queries.
+            # A "slight" hack to modify these links so that they work for the current POST query.
             paginatedResults = retval.data["results"]
             if paginatedResults["next"] is not None:
                 paginatedResults["next"] = paginatedResults["next"].replace("?", str(queryObj.id) + "/?")
             if paginatedResults["previous"] is not None:
                 paginatedResults["previous"] = paginatedResults["previous"].replace("?", str(queryObj.id) + "/?")
             return retval
-
-            resultCurated = []
-            for (index, (score, slide)) in enumerate(result):
-                curatedSlide = { "id":slide.id, "KeywordsFound":[]}
-                tags = slide.tags.names()
-                for keyword in queryObj.queryJson["Keywords"]:
-                    if keyword in tags:
-                        curatedSlide["KeywordsFound"].append(keyword)
-                resultCurated.append((score, curatedSlide))
-                if index >= queryObj.queryJson["count"]:
-                    break
-
-            with open(lisaConfig.dataFolderPath + "queryResponse.json", "w") as fp:
-                json.dump({"query":request.data, "result":resultCurated}, fp, indent=4)
-            return Response(resultCurated)

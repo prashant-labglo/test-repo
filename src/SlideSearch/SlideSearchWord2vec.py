@@ -36,7 +36,7 @@ class SlideSearchW2V(SlideSearchBase):
         """
         retval = {}
         for (index, slide) in enumerate(permittedSlides):
-            slideTags = slide.tags.names() if self.config["isDjangoModel"] else slide["tags"]
+            slideTags = slide.tags.names() if self.config["isDjangoModel"] else slide.tags
             slideScore = self.word2vecDistanceModel.queryPhrase2TagsetSimilarity(queryInfo["Keywords"], slideTags)
             retval[index] = slideScore
         return retval
