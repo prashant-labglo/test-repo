@@ -62,9 +62,9 @@ def LisaConfig():
         retval.dataFolderPath = "C:/Users/NishantSharma/source/repos/lisa/data/"
         
     elif retval.hostname in ["lisa-dev"]:
-        retval.word2vecModelPath = "~/repos/word2vec-slim/GoogleNews-vectors-negative300-SLIM.bin"
-        # retval.word2vecModelPath = "~/repos/word2vec/GoogleNews-vectors-negative300.bin"
-        retval.dataFolderPath = "~/repos/lisa/data/"
+        retval.word2vecModelPath = "/home/nishant/repos/word2vec-slim/GoogleNews-vectors-negative300-SLIM.bin"
+        # retval.word2vecModelPath = "/home/nishant/repos/word2vec/GoogleNews-vectors-negative300.bin"
+        retval.dataFolderPath = "/home/nishant/repos/lisa/data/"
  
         zenCentralConfig["allowedHosts"].append("52.165.226.255")
     return retval
