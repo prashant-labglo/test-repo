@@ -8,7 +8,7 @@ from LibLisa import lisaConfig, LisaPhpClient, SlideDbClient, SearchClient
 
 # Instantiate REST clients.
 slideDbClient = SlideDbClient()
-searchClient = SearchClient()
+lisaPhpClient = LisaPhpClient()
 
 def syncFromLisaPhp():
     """

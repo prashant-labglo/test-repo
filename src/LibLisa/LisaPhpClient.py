@@ -172,7 +172,6 @@ class LisaPhpClient(RestClient):
             transformedSlide["hasImage"] = True if latestSlide["Image"].lower() == "yes" else False
             transformedSlide["layout"] = latestSlide["Layout"]
             transformedSlide["style"] = latestSlide["Style"]
-            transformedSlide["visualStyle"] = latestSlide["VisualStyle"]
             transformedSlide["zeptoId"] = latestSlide["NumId"]
             transformedSlide["zeptoDownloads"] = latestSlide["Downloads"]
             transformedSlides.append(transformedSlide)

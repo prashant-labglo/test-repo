@@ -29,7 +29,7 @@ SECRET_KEY = '3c4c53f6-9f7a-4e21-bd4b-123474d7830e'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = lisaConfig.zenCentral.allowedHosts 
 
 
 # Application definition
