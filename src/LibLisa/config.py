@@ -23,38 +23,50 @@ def LisaConfig():
 
     retval.hostname = gethostname().lower()
 
+    retval.deploymentStage = DeploymentStage.Dev
+    # Build and set LisaPhp client config.
+    lisaPhpConfig = AttrDict()
+    lisaPhpConfig.BaseUrl = "http://www.prezentium.com/tools/"
+    lisaPhpConfig.Username = "admin"
+    lisaPhpConfig.Password = "$kpres!A@417"
+    retval.lisaPhp = lisaPhpConfig
+
+    # Build and set SlideDbClient config.
+    slideDbConfig = AttrDict()
+    slideDbConfig.BaseUrl = "http://localhost:8000/"
+    slideDbConfig.Username = "test"
+    slideDbConfig.Password = "test"
+    retval.slideDb = slideDbConfig
+
+    # Build and set SlideSearch config.
+    slideSearchConfig = AttrDict()
+    slideSearchConfig.BaseUrl = "http://localhost:8000/"
+    slideSearchConfig.Username = "test"
+    slideSearchConfig.Password = "test"
+    slideSearchConfig.isDjangoModel = True
+    retval.slideSearch = slideSearchConfig
+
+    # Build and set SlideIndexer config.
+    slideIndexerConfig = AttrDict()
+    slideIndexerConfig.IterationPeriod = 9000
+    retval.slideIndexer = slideIndexerConfig
+
+    # Build and set ZenCentral config.
+    zenCentralConfig = AttrDict()
+    zenCentralConfig.allowedHosts = ["localhost"]
+    retval.zenCentral = zenCentralConfig
+
     if retval.hostname in ["preze-ntpc", "desktop-fk2ht4j"]:
-        retval.deploymentStage = DeploymentStage.Dev
         retval.word2vecModelPath = "C:/Users/NishantSharma/source/repos/word2vec-slim/GoogleNews-vectors-negative300-SLIM.bin"
         # retval.word2vecModelPath = "C:/Users/NishantSharma/source/repos/word2vec/GoogleNews-vectors-negative300.bin"
         retval.dataFolderPath = "C:/Users/NishantSharma/source/repos/lisa/data/"
-
-        # Build and set LisaPhp client config.
-        lisaPhpConfig = AttrDict()
-        lisaPhpConfig.BaseUrl = "http://www.prezentium.com/tools/"
-        lisaPhpConfig.Username = "admin"
-        lisaPhpConfig.Password = "$kpres!A@417"
-        retval.lisaPhp = lisaPhpConfig
-
-        # Build and set SlideDbClient config.
-        slideDbConfig = AttrDict()
-        slideDbConfig.BaseUrl = "http://localhost:8000/"
-        slideDbConfig.Username = "test"
-        slideDbConfig.Password = "test"
-        retval.slideDb = slideDbConfig
-
-        # Build and set SlideSearch config.
-        slideSearchConfig = AttrDict()
-        slideSearchConfig.BaseUrl = "http://localhost:8000/"
-        slideSearchConfig.Username = "test"
-        slideSearchConfig.Password = "test"
-        slideSearchConfig.isDjangoModel = True
-        retval.slideSearch = slideSearchConfig
-
-        # Build and set SlideIndexer config.
-        slideIndexerConfig = AttrDict()
-        slideIndexerConfig.IterationPeriod = 9000
-        retval.slideIndexer = slideIndexerConfig
+        
+    elif retval.hostname in ["lisa-dev"]:
+        retval.word2vecModelPath = "~/repos/word2vec-slim/GoogleNews-vectors-negative300-SLIM.bin"
+        # retval.word2vecModelPath = "~/repos/word2vec/GoogleNews-vectors-negative300.bin"
+        retval.dataFolderPath = "~/repos/lisa/data/"
+ 
+        zenCentralConfig["allowedHosts"].append("52.165.226.255")
     return retval
 
 lisaConfig = LisaConfig()
