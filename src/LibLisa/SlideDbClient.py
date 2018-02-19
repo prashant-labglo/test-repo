@@ -65,11 +65,7 @@ class SlideDbClient(object):
                     break
 
             # Convert the read models into a dictionary mapping from model's zepto id to model instance.
-            try:
-                attoModels = {attoModel["zeptoId"] : attoModel for attoModel in attoModels}
-            except:
-                import pdb;pdb.set_trace()
-
+            attoModels = {attoModel["zeptoId"] : attoModel for attoModel in attoModels}
             zeptoModelsDict = {zeptoModel["zeptoId"] : zeptoModel for zeptoModel in zeptoData[modelName] }
 
             # Update all model instances, that already exist on Atto side.
