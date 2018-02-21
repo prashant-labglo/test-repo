@@ -1,4 +1,5 @@
 import json
+from attrdict import AttrDict
 from LibLisa import textCleanUp, methodProfiler, blockProfiler, lastCallProfile
 from LibLisa.config import lisaConfig
 
@@ -21,9 +22,9 @@ class SlideSearchBase(object):
             {
                 # Optional
                 "permittedConstructs" : [
-                    ("permittedConcept1", "PermittedConstruct1"),
-                    ("permittedConcept2", "PermittedConstruct2"),
-                    ("permittedConcept3", "PermittedConstruct3"),
+                    ("permittedConcept1", "permittedSubConcept1", "PermittedConstruct1"),
+                    ("permittedConcept2", "permittedSubConcept2", "PermittedConstruct2"),
+                    ("permittedConcept3", "permittedSubConcept3", "PermittedConstruct3"),
                     ...
                 ],
 
@@ -81,7 +82,7 @@ class SlideSearchBase(object):
         raise NotImplementedError("Derived classes must define this function.")
 
     @methodProfiler
-    def slideSearch(self, queryInfo):
+    def slideSearch(self, queryInfo, getIDs=False):
         """
         Gets a query JSON as input. Computes similarity of the query JSON with all indexed slides and 
         returns all of them sorted in the order of best match.
@@ -104,11 +105,25 @@ class SlideSearchBase(object):
         resultList.sort(key = lambda tuple : -slideScores[tuple[0]])
 
         # Append scores with items in resultList.
-        resultList = [(slideScores[index], slide) for (index, slide) in resultList]
+        if getIDs:
+            resultList = [(slideScores[index], slide["id"]) for (index, slide) in resultList]
+        else:
+            resultList = [(slideScores[index], slide) for (index, slide) in resultList]
 
         return resultList
 
-def getPath(slide):
-    return (slide.parent.name,
-            slide.parent.parent.name,
-            slide.parent.parent.parent.name)
+    def getPath(self, slide):
+        if self.config["isDjangoModel"]:
+            return (slide.parent.name,
+                    slide.parent.parent.name,
+                    slide.parent.parent.parent.name)
+        else:
+            return (slide["parent"]["name"],
+                    slide["parent"]["parent"]["name"],
+                    slide["parent"]["parent"]["parent"]["name"])
+
+    def getTags(self, slide):
+        if self.config["isDjangoModel"]:
+            return slide.tags.names()
+        else:
+            return slide["tags"]

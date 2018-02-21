@@ -24,16 +24,17 @@ def LisaConfig():
     retval.hostname = gethostname().lower()
 
     retval.deploymentStage = DeploymentStage.Dev
-    # Build and set LisaPhp client config.
-    lisaPhpConfig = AttrDict()
-    lisaPhpConfig.BaseUrl = "http://www.prezentium.com/tools/"
-    lisaPhpConfig.Username = "admin"
-    lisaPhpConfig.Password = "$kpres!A@417"
-    retval.lisaPhp = lisaPhpConfig
+    # Build and set LisaZepto client config.
+    lisaZeptoConfig = AttrDict()
+    lisaZeptoConfig.BaseUrl = "http://www.prezentium.com/tools/"
+    lisaZeptoConfig.Username = "admin"
+    lisaZeptoConfig.Password = "$kpres!A@417"
+    retval.lisaZepto = lisaZeptoConfig
 
     # Build and set SlideDbClient config.
     slideDbConfig = AttrDict()
     slideDbConfig.BaseUrl = "http://localhost:8000/"
+    slideDbConfig.appName = "slidedb"
     slideDbConfig.Username = "test"
     slideDbConfig.Password = "test"
     retval.slideDb = slideDbConfig
@@ -41,6 +42,7 @@ def LisaConfig():
     # Build and set SlideSearch config.
     slideSearchConfig = AttrDict()
     slideSearchConfig.BaseUrl = "http://localhost:8000/"
+    slideSearchConfig.appName = "search"
     slideSearchConfig.Username = "test"
     slideSearchConfig.Password = "test"
     slideSearchConfig.isDjangoModel = True
@@ -48,6 +50,7 @@ def LisaConfig():
 
     # Build and set SlideIndexer config.
     slideIndexerConfig = AttrDict()
+    slideIndexerConfig.isDjangoModel = False
     slideIndexerConfig.IterationPeriod = 9000
     retval.slideIndexer = slideIndexerConfig
 

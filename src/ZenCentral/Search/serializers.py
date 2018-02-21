@@ -24,7 +24,7 @@ class SearchResultSerializer(serializers.ModelSerializer):
     ratings = SearchResultRatingSerializer(many=True)
     class Meta:
         model = SearchResult
-        fields = ('id', 'slide', 'rank', 'query', 'ratings', 'myRating')
+        fields = ('id', 'slide', 'rank', 'query', 'ratings', 'myRating', 'avgRating')
         read_only_fields = ('id', 'slide', 'rank', 'query', 'ratings')
 
 class NestedSearchResultRatingSerializer(serializers.ModelSerializer):
@@ -157,4 +157,4 @@ class SearchIndexSerializer(serializers.HyperlinkedModelSerializer):
     indexType = fields.EnumSerializerField(IndexTypeChoices)
     class Meta:
         model = SearchIndex
-        fields = ('id', 'created', 'indexType', 'rankingSources')
+        fields = ('id', 'created', 'indexType', 'rankingSources', 'schemaVersion', 'pickledModelFile')

@@ -1,4 +1,4 @@
-import json, os
+import json, os, pickle
 from attrdict import AttrDict
 from cachetools import LRUCache
 from jsonfield import JSONField
@@ -44,7 +44,7 @@ class SearchResult(models.Model):
     score = models.FloatField()
     
     class Meta:
-        ordering = ('rank', )
+        ordering = ('query', 'rank', )
 
     @property
     def myRating(self):
@@ -120,7 +120,9 @@ class SearchQuery(models.Model):
             instance.created = timezone.now()
 
         if "Keywords" not in instance.queryJson or not instance.queryJson["Keywords"]:
-            instance.queryJson = {"Keywords":["agenda"]}
+            instance.queryJson["Keywords"] = ["agenda"]
+        elif isinstance(instance.queryJson["Keywords"], str):
+            instance.queryJson["Keywords"] = [instance.queryJson["Keywords"]]
 
         instance.queryJson["Keywords"] = [word.lower() for word in instance.queryJson["Keywords"]]
         if "count" not in instance.queryJson.keys():
@@ -130,18 +132,23 @@ class IndexTypeChoices(Enum):
     """
     Enum class for type of search index being created.
     """
-    TrainingSeed = 0
-    LambdaMART = 1
+    SimulatedRatings = 0
+    UserRatings = 1
 
 class SearchIndex(models.Model):
     """
     Database model for slide search index.
     """
     created = models.DateTimeField(editable=False)
-    indexType = EnumField(IndexTypeChoices, default=IndexTypeChoices.LambdaMART)
-    # All Rankings made for rankingSources are also available for rankings for this search index.
-    rankingSources = models.ManyToManyField('SearchIndex', blank=True)
 
+    indexType = EnumField(IndexTypeChoices, default=IndexTypeChoices.UserRatings)
+
+    # All Rankings made for rankingSources are also available for rankings for this search index.
+    rankingSources = models.ManyToManyField('SearchQuery', blank=True)
+
+    pickledModelFile = models.FileField(upload_to="searchIndices")
+
+    schemaVersion = models.IntegerField()
     # Model to find word distances using word2vec.
     word2vecDistanceModel = Word2vecDistanceModel()
 
@@ -178,18 +185,7 @@ class SearchIndex(models.Model):
             # Set initial cached attributes
             return modelInstance
         else:
-            modelInstance = AttrDict()
-
-            # Set initial cached attributes.
-            modelInstance.innerIndex = None
-            modelInstance.Tx = None
-            modelInstance.Ty = None
-            modelInstance.Tqids = None
-            modelInstance.fittingDone = None
-
-            self.searchIndexCache[self.id] = modelInstance
-
-        return modelInstance
+            return pickle.load(self.pickledModelFile)
 
     def save(self, *args, **kwargs):
         """
@@ -199,96 +195,9 @@ class SearchIndex(models.Model):
             self.created = timezone.now()
         return super().save(*args, **kwargs)
 
-    def prepareSlideHierarchy(self):
-        """
-        Prepare slide hierarchy in SlideDB for indexing.
-
-        Builds self.innerIndex using the current slide hierarchy data in ZenCentral SlideDB.
-        self.innerIndex can then be used to make and answer slide search queries.
-        """
-        # Build data to index.
-        dataForIndexing = {}
-        print("Starting prepareSlideHierarchy")
-        for model in [Concept, SubConcept, Construct, Slide]:
-            # serializedData = serializer(model.objects.all(), many=True, context={'request': request}).data
-            dataForIndexing[model.__name__ + "s"] = model.objects.all()
-
-        print("Data to index extracted.")
-
-        # Slide search using LambdaMART.
-        lisaConfig.slideSearch.isDjangoModel = True
-        self.backend.dataForIndexing = dataForIndexing
-        self.backend.innerIndex = SlideSearchLambdaMart(
-            dataForIndexing,
-            lisaConfig.slideSearch,
-            self.word2vecDistanceModel)
-        print("Inner index prepared.")
-
-    def prepareTrainingData(self, forceCreate=False):
-        """
-        Ranking slides is done using a ML based Learning-To-Rank approach.
-        This means that rankings change basde on learning.
-        Now, learning requires training data. This method loads or builds the training data.
-        """
-        print("Starting prepareTrainingData")
-        if self.backend.innerIndex is None:
-            self.prepareSlideHierarchy()
-
-        # Find the location of file to save.
-        trainingDataFilePath = lisaConfig.dataFolderPath + "{0}/trainingData.json".format(self.id)
-        os.makedirs(os.path.dirname(trainingDataFilePath), exist_ok=True)
-
-        if forceCreate or not(os.path.exists(trainingDataFilePath)):
-            # Training data does not exist. Must be created from scratch.
-            slideSearchIndexSeed = SlideSearchW2V(
-                self.backend.dataForIndexing,
-                lisaConfig.slideSearch,
-                self.word2vecDistanceModel)
-            (Tx, Ty, Tqids, TresultIds) = self.backend.innerIndex.buildSeedTrainingSet(slideSearchIndexSeed)
-            with open(trainingDataFilePath, "w") as fp:
-                json.dump(
-                    {"Tx":Tx, "Ty":Ty, "Tqids":Tqids, "TresultIds":TresultIds},
-                    fp,
-                    indent=4)
-            self.backend.Tx = Tx
-            self.backend.Ty = Ty
-            self.backend.Tqids = Tqids
-            self.backend.TresultIds = TresultIds
-        else:
-            with open(trainingDataFilePath, "r") as fp:
-                trainingData = json.load(fp)
-            self.backend.Tx = trainingData["Tx"]
-            self.backend.Ty = trainingData["Ty"]
-            self.backend.Tqids = trainingData["Tqids"]
-            self.backend.TresultIds = trainingData["TresultIds"]
-    def getTrainingData(self):
-        if self.backend.Tx is None:
-            return Response({"Status" : "Not Loaded"})
-        else:
-            retval = []
-            for i in range(len(self.backend.Tx)):
-                retval.append({
-                        "Tqids" : self.backend.Tqids[i],
-                        "Tx": self.backend.Tx[i],
-                        "Ty": self.backend.Ty[i],
-                        "TresultIds": self.backend.TresultIds[i]})
-            trainingDataFormattedFilePath = lisaConfig.dataFolderPath + "{0}/trainingDataFormatted.json".format(pk)
-            with open(trainingDataFormattedFilePath, "w") as fp:
-                json.dump(retval, fp, indent=4)
-
-            return retval
-
-    def fit(self):
-        """
-        We call this to build model parameters from training data.
-        """
-        print("Starting prepareTrainingData")
-        if self.backend.Tx is None:
-            self.prepareTrainingData()
-
-        # LambdaMART index is now trained using the training data.
-        self.backend.innerIndex.fit(self.backend.Tx, self.backend.Ty, self.backend.Tqids)
-        self.backend.fittingDone = True
+    def slideSearch(self, queryObj):
+        searchIndexBackend = queryObj.index.backend
+        return searchIndexBackend.slideSearch(queryObj.queryJson, getIDs=True)
 
 # Connects pre_save signal of SearchQuery.
 pre_save.connect(SearchQuery.pre_save, sender=SearchQuery) 

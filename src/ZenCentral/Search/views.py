@@ -2,9 +2,9 @@ import json
 from rest_framework import viewsets
 from rest_framework import status
 from rest_framework.response import Response
-from Search.models import SearchResult, SearchResultRating, SearchQuery
-from Search.serializers import NestedSearchResultSerializer, SearchResultSerializer, SearchResultRatingSerializer, SearchQuerySerializer
-from Search.searchIndexView import SearchIndexViewSet
+from Search.models import SearchResult, SearchResultRating, SearchQuery, SearchIndex
+from SlideDB.models import Slide
+from Search.serializers import NestedSearchResultSerializer, SearchResultSerializer, SearchResultRatingSerializer, SearchQuerySerializer, SearchIndexSerializer
 from LibLisa import lastCallProfile, lisaConfig, textCleanUp, methodProfiler, blockProfiler
 
 from django.shortcuts import render
@@ -50,15 +50,11 @@ class SearchQueryViewSet(viewsets.ModelViewSet):
             return retval
         else:
             queryObj = SearchQuery.objects.get(pk=retval.data["id"])
+            searchIndex = queryObj.index
+            result = searchIndex.slideSearch(queryObj)
 
-            searchIndexBackend = queryObj.index.backend
-
-            if searchIndexBackend.fittingDone is None:
-                queryObj.index.fit()
-
-            result = searchIndexBackend.innerIndex.slideSearch(queryObj.queryJson)
-
-            for (index, (score, slide)) in enumerate(result):
+            for (index, (score, slideId)) in enumerate(result):
+                slide = Slide.objects.get(id=slideId)
                 searchResult = SearchResult(slide=slide, rank=index, query=queryObj, score=score)
                 searchResult.save()
 
@@ -77,3 +73,11 @@ class SearchQueryViewSet(viewsets.ModelViewSet):
             if paginatedResults["previous"] is not None:
                 paginatedResults["previous"] = paginatedResults["previous"].replace("?", str(queryObj.id) + "/?")
             return retval
+
+class SearchIndexViewSet(viewsets.ModelViewSet):
+    """
+    Class to build a view for the slide search index. 
+    Commands can be issued over a REST API to re-index slide-db for search.
+    """
+    queryset = SearchIndex.objects.all()
+    serializer_class = SearchIndexSerializer
