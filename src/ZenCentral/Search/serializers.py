@@ -11,6 +11,9 @@ class SearchResultRatingSerializer(serializers.ModelSerializer):
     """
     Serializer for /search/ratings
     """
+    user = serializers.PrimaryKeyRelatedField(
+        read_only=True,
+        default=serializers.CurrentUserDefault())
     class Meta:
         model = SearchResultRating
         fields = ('rated', 'result', 'user')
