@@ -1,4 +1,5 @@
 import json
+from attrdict import AttrDict
 from LibLisa import textCleanUp, methodProfiler, blockProfiler, lastCallProfile
 from LibLisa.config import lisaConfig
 
@@ -16,72 +17,68 @@ class SlideSearchBase(object):
     @methodProfiler
     def permittedSlides(self, queryInfo):
         """
-            queryInfo contains filters, which are applied on slides in self.dataForIndexing["Slides"]. Remaining slides are returned.
-            queryInfo filters can be as below.
+            queryJson contains filters, which are applied on slides in self.dataForIndexing["Slides"]. Remaining slides are returned.
+            queryJson schema can be as below.
             {
-                # Optional
-                "permittedConstructs" : [
-                    ("permittedConcept1", "PermittedConstruct1"),
-                    ("permittedConcept2", "PermittedConstruct2"),
-                    ("permittedConcept3", "PermittedConstruct3"),
-                    ...
-                ],
+                # Mandatory
+                "Keywords" : ["keyword1", "keyword2", "keyword3", ...]
 
                 # Optional
-                "permittedIcon"  : True | False,
+                "Constructs" : [permittedConstructId1, permittedConstructId2, ...],
 
                 # Optional
-                "permittedImage"  : True | False,
+                "HasIcon"  : True | False,
 
                 # Optional
-                "permittedStyle"  : True | False,
+                "HasImage"  : True | False,
 
                 # Optional
-                "permittedVisualStyle"  : True | False
+                "Layout"  : ["permittedLayout1", ...],
+
+                # Optional
+                "Style"  : ["permittedStyle1", ...],
+
+                # Optional
+                "VisualStyle"  : ["permittedVisualStyle1", ...],
             }
         """
         for slide in self.dataForIndexing["Slides"]:
-            if "permittedConstructs" in queryInfo.keys():
-                found = False
-                for (concept, construct) in queryInfo["permittedConstructs"]:
-                    if slide["Concept"] == concept and slide["Construct"] == construct:
-                        found = True
-                        break
-                if not found:
+            if "Constructs" in queryInfo.keys():
+                if slide["parent"]["id"] not in queryInfo["Constructs"]:
+                    continue
+
+            if "HasIcon" in queryInfo.keys():
+                if slide["hasIcon"] != queryInfo["HasIcon"]:
                     # Constraints not met. No Similarity.
                     continue
 
-            if "permittedIcon" in queryInfo.keys():
-                if slide["Icon"] != queryInfo["permittedIcon"]:
+            if "HasImage" in queryInfo.keys():
+                if slide["hasImage"] != queryInfo["HasImage"]:
                     # Constraints not met. No Similarity.
                     continue
 
-            if "permittedImage" in queryInfo.keys():
-                if slide["Image"] != queryInfo["permittedImage"]:
+            if "Layout" in queryInfo.keys():
+                if slide["layout"] not in queryInfo["Layout"]:
                     # Constraints not met. No Similarity.
                     continue
 
-            if "permittedLayout" in queryInfo.keys():
-                if slide["Layout"] not in queryInfo["permittedLayouts"]:
+            if "Style" in queryInfo.keys():
+                if slide["style"] not in queryInfo["Style"]:
                     # Constraints not met. No Similarity.
                     continue
 
-            if "permittedStyle" in queryInfo.keys():
-                if slide["Style"] not in queryInfo["permittedStyle"]:
+            if "VisualStyle" in queryInfo.keys():
+                if slide["visualStyle"] not in queryInfo["VisualStyle"]:
                     # Constraints not met. No Similarity.
                     continue
 
-            if "permittedVisualStyle" in queryInfo.keys():
-                if slide["VisualStyle"] not in queryInfo["permittedVisualStyle"]:
-                    # Constraints not met. No Similarity.
-                    continue
             yield slide
 
     def slideSimilarity(self, queryInfo, permittedSlides):
         raise NotImplementedError("Derived classes must define this function.")
 
     @methodProfiler
-    def slideSearch(self, queryInfo):
+    def slideSearch(self, queryInfo, getIDs=False):
         """
         Gets a query JSON as input. Computes similarity of the query JSON with all indexed slides and 
         returns all of them sorted in the order of best match.
@@ -104,11 +101,31 @@ class SlideSearchBase(object):
         resultList.sort(key = lambda tuple : -slideScores[tuple[0]])
 
         # Append scores with items in resultList.
-        resultList = [(slideScores[index], slide) for (index, slide) in resultList]
+        if getIDs:
+            resultList = [(slideScores[index], slide["id"]) for (index, slide) in resultList]
+        else:
+            resultList = [(slideScores[index], slide) for (index, slide) in resultList]
 
         return resultList
 
-def getPath(slide):
-    return (slide.parent.name,
-            slide.parent.parent.name,
-            slide.parent.parent.parent.name)
+    def getParent(self, slide):
+        if self.config["isDjangoModel"]:
+            return slide.parent
+        else:
+            return slide["parent"]
+
+    def getPath(self, slide):
+        if self.config["isDjangoModel"]:
+            return (slide.parent.name,
+                    slide.parent.parent.name,
+                    slide.parent.parent.parent.name)
+        else:
+            return (slide["parent"]["name"],
+                    slide["parent"]["parent"]["name"],
+                    slide["parent"]["parent"]["parent"]["name"])
+
+    def getTags(self, slide):
+        if self.config["isDjangoModel"]:
+            return slide.tags.names()
+        else:
+            return slide["tags"]

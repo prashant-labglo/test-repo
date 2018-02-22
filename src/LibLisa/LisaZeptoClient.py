@@ -1,5 +1,5 @@
 """
-This is a REST API client which talks with the Lisa-PHP web-service.
+This is a REST API client which talks with the Lisa-Zepto web-service.
 """
 import requests, json
 from attrdict import AttrDict
@@ -10,16 +10,16 @@ from LibLisa.behaviors import Behavior
 from LibLisa.RestClient import RestClient
 from LibLisa.config import lisaConfig
 
-class LisaPhpClient(RestClient):
+class LisaZeptoClient(RestClient):
     """
-    Lisa-PHP is the legacy Lisa service. This client connects with Lisa-PHP and can download
+    Lisa-Zepto is the legacy Lisa service. This client connects with Lisa-Zepto and can download
     all its data.
     """
     def __init__(self):
         """
         Constructor
         """
-        self.config = lisaConfig.lisaPhp
+        self.config = lisaConfig.lisaZepto
         self.baseURL = self.config.BaseUrl
         self.loginURL = self.baseURL + "prezentiumadmin/"
         self.jsonURL = self.baseURL + "prezentiumadmin/prezentiumslide/slidelist_json"
@@ -27,11 +27,11 @@ class LisaPhpClient(RestClient):
 
     def login(self):
         """
-        Logs into Lisa-PHP. Required, before we download any data.
+        Logs into Lisa-Zepto. Required, before we download any data.
         """
         self.session = requests.session()
 
-        # Lie about the user agent because Lisa PHP doesn't work without it.
+        # Lie about the user agent because Lisa Zepto doesn't work without it.
         self.session.headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:57.0) Gecko/20100101 Firefox/57.0"
 
         loginPayload = {"admin_user" : self.config.Username, "admin_password" : self.config.Password}
@@ -42,7 +42,7 @@ class LisaPhpClient(RestClient):
 
     def getLatestData(self):
         """
-        Call this to get the latest data on Lisa-PHP.
+        Call this to get the latest data on Lisa-Zepto.
         Returns a single JSON.
         """
         jsonText = self.session.get(self.jsonURL).text
@@ -100,10 +100,10 @@ class LisaPhpClient(RestClient):
 
     def transformZeptoData(self, zeptoData):
         """
-        The data from Lisa PHP is not directly compatible with new Django based ZenCentral
+        The data from Lisa Zepto is not directly compatible with new Django based ZenCentral
         slidedb backend.
 
-        This function transforms the LisaPHP data to make it compatible.
+        This function transforms the LisaZepto data to make it compatible.
         """
         retval = {}
         # Make all the latest concepts compatible with SlideDB system.

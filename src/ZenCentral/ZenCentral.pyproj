@@ -57,9 +57,6 @@
     <Compile Include="Search\apps.py" />
     <Compile Include="Search\migrations\__init__.py" />
     <Compile Include="Search\models.py" />
-    <Compile Include="Search\searchIndexView.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Search\serializers.py" />
     <Compile Include="Search\tests.py" />
     <Compile Include="Search\urls.py">

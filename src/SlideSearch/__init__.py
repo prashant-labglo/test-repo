@@ -4,7 +4,7 @@ slides.
 """
 import json, os, re, sys
 
-from LibLisa import lastCallProfile, lisaConfig, LisaPhpClient
+from LibLisa import lastCallProfile, lisaConfig, LisaZeptoClient
 
 from SlideSearch.Word2VecDistanceModel import Word2vecDistanceModel
 from SlideSearch.SlideSearchWord2vec import SlideSearchW2V
@@ -12,22 +12,22 @@ from SlideSearch.SlideSearchLambdaMART import SlideSearchLambdaMart
 
 # Test code.
 if __name__ == "__main__":
-    # Get a Lisa PHP client.
-    lisaPhPClient = LisaPhpClient()
-    lisaPhPClient.login()
+    # Get a Lisa Zepto client.
+    lisaZeptoClient = LisaZeptoClient()
+    lisaZeptoClient.login()
 
     # Load Zepto data and save it into file for future reference.
-    latestZeptoData = lisaPhPClient.getLatestData()
+    latestZeptoData = lisaZeptoClient.getLatestData()
     with open(lisaConfig.dataFolderPath + "latestZeptoData.json", "w") as fp:
         json.dump(latestZeptoData, fp, indent=2)
 
     # Repair the Zepto data.
-    latestZeptoDataRepaired = lisaPhPClient.repairZeptoData(latestZeptoData)
+    latestZeptoDataRepaired = lisaZeptoClient.repairZeptoData(latestZeptoData)
     with open(lisaConfig.dataFolderPath + "latestZeptoDataRepaired.json", "w") as fp:
         json.dump(latestZeptoDataRepaired, fp, indent=2)
 
     # Transform Zepto data for use with SlideDB.
-    latestZeptoDataTransformed = lisaPhPClient.transformZeptoData(latestZeptoDataRepaired)
+    latestZeptoDataTransformed = lisaZeptoClient.transformZeptoData(latestZeptoDataRepaired)
     with open(lisaConfig.dataFolderPath + "latestZeptoDataTransformed.json", "w") as fp:
         json.dump(latestZeptoDataTransformed, fp, indent=2)
 
@@ -44,17 +44,17 @@ if __name__ == "__main__":
     slideSearchIndex = SlideSearchLambdaMart(latestZeptoDataTransformed, lisaConfig.slideSearch, word2vecDistanceModel)
 
     # See if we have already created training data.
-    trainingDataFilePath = lisaConfig.dataFolderPath + "trainingData.json"
-    if os.path.exists(trainingDataFilePath):
-        with open(trainingDataFilePath, "r") as fp:
-            trainingData = json.load(fp)
-            (Tx, Ty, Tqids) = (trainingData["Tx"], trainingData["Ty"], trainingData["Tqids"])
-    else:
-        # Training requires seed data. Seed data is created by applying SlideSearchW2V.
-        slideSearchIndexSeed = SlideSearchW2V(latestZeptoDataTransformed, lisaConfig.slideSearch, word2vecDistanceModel)
-        (Tx, Ty, Tqids) = slideSearchIndex.buildSeedTrainingSet(slideSearchIndexSeed)
-        with open(trainingDataFilePath, "w") as fp:
-            json.dump({"Tx":Tx, "Ty":Ty, "Tqids":Tqids}, fp, indent=4)
+    slideRatingsDataFilePath = lisaConfig.dataFolderPath + "slideRatingsData.json"
+    #if os.path.exists(slideRatingsDataFilePath):
+    #    with open(slideRatingsDataFilePath, "r") as fp:
+    #        slideRatingsData = json.load(fp)
+    #        (Tx, Ty, Tqids) = (slideRatingsData["Tx"], slideRatingsData["Ty"], slideRatingsData["Tqids"])
+    #else:
+    # Training requires seed data. Seed data is created by applying SlideSearchW2V.
+    slideSearchIndexSeed = SlideSearchW2V(latestZeptoDataTransformed, lisaConfig.slideSearch, word2vecDistanceModel)
+    (Tx, Ty, Tqids) = slideSearchIndex.buildSeedTrainingSet(slideSearchIndexSeed)
+    with open(slideRatingsDataFilePath, "w") as fp:
+        json.dump({"Tx":Tx, "Ty":Ty, "Tqids":Tqids}, fp, indent=4)
 
     # LambdaMART index is now trained using the training data.
     slideSearchIndex.fit(Tx, Ty, Tqids)

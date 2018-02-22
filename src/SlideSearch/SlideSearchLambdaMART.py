@@ -11,9 +11,10 @@ import json, re
 import gensim, pyltr
 
 from itertools import accumulate
+from attrdict import AttrDict
 
 from LibLisa import lisaConfig, methodProfiler, blockProfiler, lastCallProfile
-from SlideSearch.SlideSearchBase import SlideSearchBase, getPath
+from SlideSearch.SlideSearchBase import SlideSearchBase
 from SlideSearch.SectionModel import SectionModel
 
 class SlideSearchLambdaMart(SlideSearchBase):
@@ -38,11 +39,9 @@ class SlideSearchLambdaMart(SlideSearchBase):
                 self.constructPathModel = None
             else:
                 allSlides = self.dataForIndexing["Slides"]
-                def getTags(slide):
-                    return slide.tags.names() if isDjangoModel else slide.tags
                 def extractSlideCorpus(slide):
                     retval = []
-                    retval.extend(getTags(slide))
+                    retval.extend(self.getTags(slide))
                     return retval
 
                 completeCorpus = [extractSlideCorpus(slide) for slide in allSlides]
@@ -51,12 +50,12 @@ class SlideSearchLambdaMart(SlideSearchBase):
                 self.dictionary = gensim.corpora.Dictionary(completeCorpus)
 
                 # Build section wise corpora and model for slide tags.
-                slideTagCorpora = [getTags(slide) for slide in allSlides]
+                slideTagCorpora = [self.getTags(slide) for slide in allSlides]
 
                 self.slideTagModel = SectionModel(slideTagCorpora, self.dictionary, word2vecDistanceModel)
 
                 # Build corpora for construct paths.
-                constructPathCorpora = set([getPath(slide) for slide in allSlides])
+                constructPathCorpora = set([self.getPath(slide) for slide in allSlides])
                 self.constructPathList = [list(constructPath) for constructPath in constructPathCorpora]
                 self.constructPathToIndex = { tuple(path):index for (index, path) in enumerate(self.constructPathList) }
                 self.constructPathModel = SectionModel(self.constructPathList, self.dictionary, word2vecDistanceModel)
@@ -72,8 +71,8 @@ class SlideSearchLambdaMart(SlideSearchBase):
             permittedSlides = allSlides
             permittedIndices = range(len(allSlides))
         else:
-            slideToIndexMap = { slide:index for (index, slide) in enumerate(allSlides) }
-            permittedIndices = [slideToIndexMap[slide] for slide in permittedSlides]
+            slideToIndexMap = { slide["id"]:index for (index, slide) in enumerate(allSlides) }
+            permittedIndices = [slideToIndexMap[slide["id"]] for slide in permittedSlides]
 
         # Create construct feature array from path model.
         constructFtrArray = self.constructPathModel.get_features(queryInfo)
@@ -83,10 +82,10 @@ class SlideSearchLambdaMart(SlideSearchBase):
         for slide in permittedSlides:
             toAppend = []
             # Get construct level features for the current slide.
-            toAppend.extend(constructFtrArray[self.constructPathToIndex[getPath(slide)]])
+            toAppend.extend(constructFtrArray[self.constructPathToIndex[self.getPath(slide)]])
 
             # Add zeptoDownloads count as a feature.
-            toAppend.append(slide.zeptoDownloads)
+            toAppend.append(slide["zeptoDownloads"])
 
             # Append a copy of features into the slide feature array.
             slideFtrArray.append(toAppend)
@@ -105,8 +104,7 @@ class SlideSearchLambdaMart(SlideSearchBase):
         # Build a word occurence dictionary mapping words to slides where they occur.
         wordToMatchingSlides = {}
         for slide in self.dataForIndexing["Slides"]:
-            slideTags = slide.tags.names() if self.config["isDjangoModel"] else slide.tags
-            for tag in slideTags:
+            for tag in self.getTags(slide):
                 if re.search("[0-9]", tag):
                     # Tags with digits are not interesting for search.
                     continue
@@ -122,7 +120,7 @@ class SlideSearchLambdaMart(SlideSearchBase):
         with open(lisaConfig.dataFolderPath + "trainingWords.json", "w") as fp:
             wordToMatchingSlideIds = {}
             for (word, matchingSlides) in wordToMatchingSlides:
-                wordToMatchingSlideIds[word] = list(map(lambda slide:slide.id, matchingSlides))
+                wordToMatchingSlideIds[word] = list(map(lambda slide:slide["id"], matchingSlides))
             json.dump(wordToMatchingSlideIds, fp, indent=4)
 
         # Only retain words with frequency less than 1% of total slides.
@@ -130,40 +128,42 @@ class SlideSearchLambdaMart(SlideSearchBase):
         nonMatchingSlideCount = int(0.02 * len(self.dataForIndexing["Slides"]))
         wordToMatchingSlides = [(word, matchingSlides) for (word, matchingSlides) in wordToMatchingSlides if len(matchingSlides) < freqThreshold]
 
-        (Tx, Ty, Tqids, TresultIds) = ([], [], [], [])
+        retval = []
         for (index, (word, matchingSlides)) in enumerate(wordToMatchingSlides):
             print("{0}: Processing word {1}, occuring in {2}.".format(index, word, wordToMatchingSlideIds[word]))
-            simulatedQuery = {"Keywords" : [word]}
-            results = seedDataBuilder.slideSearch(simulatedQuery)
-            print("Profiling data for slideSearch:\n {0}".format(json.dumps(lastCallProfile(), indent=4)))
+            simulatedQuery = {"id" : word}
+            simulatedQuery["queryJson"] = {"Keywords" : [word]}
 
             # Now, find slides, which are close but are not matching.
             closeButNotMatchingSlides = []
             i = 0
+            results = seedDataBuilder.slideSearch(simulatedQuery["queryJson"])
             while len(closeButNotMatchingSlides) < nonMatchingSlideCount:
                 if results[i][1] not in matchingSlides:
                     closeButNotMatchingSlides.append(results[i][1])
                 i += 1
 
-            selectedSlides = []
+            simulatedQueryResults = []
+            simulatedQuery["results"] = simulatedQueryResults
+
+            # Build positive results.
             for slide in matchingSlides:
-                Ty.append(4)
-                selectedSlides.append(slide)
-                Tqids.append(word)
-                TresultIds.append(slide.id)
+                simulatedQueryResult = {
+                        "avgRating" : 3,
+                        "slide" : slide["id"],
+                    }
+                simulatedQueryResults.append(simulatedQueryResult)
 
+            # Build negative results.
             for slide in closeButNotMatchingSlides:
-                Ty.append(0)
-                selectedSlides.append(slide)
-                Tqids.append(word)
-                TresultIds.append(slide.id)
+                simulatedQueryResult = {
+                        "avgRating" : -3,
+                        "slide" : slide["id"],
+                    }
+                simulatedQueryResults.append(simulatedQueryResult)
 
-            with blockProfiler("buildSeedTrainingSet.FeatureComputation."+word):
-                Tx.extend(self.features(simulatedQuery, selectedSlides))
-
-            print("Profiling data for query collation:\n {0}".format(json.dumps(lastCallProfile(), indent=4)))
-
-        return (Tx, Ty, Tqids, TresultIds)
+            retval.append(simulatedQuery)
+        return retval
 
     @methodProfiler
     def fit(self, Tx, Ty, Tqids):

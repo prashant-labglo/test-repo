@@ -6,7 +6,7 @@ import time
 
 from LibLisa.SearchClient import SearchClient
 from LibLisa.SlideDbClient import SlideDbClient
-from LibLisa.LisaPhpClient import LisaPhpClient, textCleanUp
+from LibLisa.LisaZeptoClient import LisaZeptoClient, textCleanUp
 from LibLisa.config import lisaConfig
 from LibLisa.behaviors import Behavior
 
