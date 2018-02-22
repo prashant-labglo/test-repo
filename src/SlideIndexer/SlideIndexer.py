@@ -83,7 +83,7 @@ def searchIndexCreatorThreadFunc():
             slideRatingsData = slideSearchIndex.buildSeedTrainingSet(slideSearchIndexSeed)
             with open(simulatedSlideRatingsDataFilePath, "w") as fp:
                 json.dump(slideRatingsData, fp, indent=4)
-            rankingSources = None
+            rankingSources = [] 
         else:
             indexType = "UserRatings"
             rankingSources = [queryObj["id"] for queryObj in slideRatingsData]
