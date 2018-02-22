@@ -8,6 +8,9 @@ from LibLisa.config import lisaConfig
 from coreapi.utils import File as CoreApiFile
 
 class SearchClient(CoreApiRestClient):
+    """
+    SearchClient is a REST API client which can make search queries to ZenCentral REST API for slide search.
+    """
     def __init__(self):
         """
         Constructor

@@ -13,6 +13,10 @@ slideDbClient = SlideDbClient()
 searchClient = SearchClient()
 
 def getSlideRatingVecs(slideSearchIndex, slideRatingsData, slideHierarchy):
+    """
+    Downloads all the slide rating data which is used to train a local PYLTR model for
+    slide rankings.
+    """
     (Tx, Ty, Tqids, TresultIds) = ([], [], [], [])
     for (index, ratedQuery) in enumerate(slideRatingsData):
         print("{0}: Processing query({1}) searching for keywords({2}).".format(

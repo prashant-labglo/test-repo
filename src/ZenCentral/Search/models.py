@@ -106,7 +106,7 @@ class SearchQuery(models.Model):
     index = models.ForeignKey("SearchIndex", related_name="queries", on_delete=models.CASCADE)
 
     # Query definition.
-    queryJson = JSONField(default={"Keywords":["agenda"]})
+    queryJson = JSONField(default={"Keywords":[]})
 
     # TimeStamps
     created = models.DateTimeField(editable=False)
@@ -120,9 +120,15 @@ class SearchQuery(models.Model):
             instance.created = timezone.now()
 
         if "Keywords" not in instance.queryJson or not instance.queryJson["Keywords"]:
-            instance.queryJson["Keywords"] = ["agenda"]
+            instance.queryJson["Keywords"] = []
         elif isinstance(instance.queryJson["Keywords"], str):
             instance.queryJson["Keywords"] = [instance.queryJson["Keywords"]]
+
+        if "HasIcon" in instance.queryJson:
+            instance.queryJson["HasIcon"] = True if instance.queryJson["HasIcon"] else False
+
+        if "HasImage" in instance.queryJson:
+            instance.queryJson["HasImage"] = True if instance.queryJson["HasImage"] else False
 
         instance.queryJson["Keywords"] = [word.lower() for word in instance.queryJson["Keywords"]]
         if "count" not in instance.queryJson.keys():

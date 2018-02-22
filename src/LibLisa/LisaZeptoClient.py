@@ -31,7 +31,7 @@ class LisaZeptoClient(RestClient):
         """
         self.session = requests.session()
 
-        # Lie about the user agent because Lisa ZEPTO doesn't work without it.
+        # Lie about the user agent because Lisa Zepto doesn't work without it.
         self.session.headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:57.0) Gecko/20100101 Firefox/57.0"
 
         loginPayload = {"admin_user" : self.config.Username, "admin_password" : self.config.Password}
@@ -100,10 +100,10 @@ class LisaZeptoClient(RestClient):
 
     def transformZeptoData(self, zeptoData):
         """
-        The data from Lisa ZEPTO is not directly compatible with new Django based ZenCentral
+        The data from Lisa Zepto is not directly compatible with new Django based ZenCentral
         slidedb backend.
 
-        This function transforms the LisaZEPTO data to make it compatible.
+        This function transforms the LisaZepto data to make it compatible.
         """
         retval = {}
         # Make all the latest concepts compatible with SlideDB system.

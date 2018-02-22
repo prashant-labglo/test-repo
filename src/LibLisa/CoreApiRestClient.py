@@ -1,8 +1,16 @@
+"""
+Implements CoreApiRestClient base class. Acts as a base class to any client which
+needs to talk to Django ZenClient.
+"""
 import coreapi, os, json
 from attrdict import AttrDict
 from LibLisa.RestClient import RestClient
 
 class CoreApiRestClient(RestClient):
+    """
+    CoreApiRestClient class acts as base class to any application client which
+    needs to talk to Django ZenClient.
+    """
     def __init__(self, config):
         super().__init__(config.BaseUrl)
         self.config = config
@@ -22,6 +30,10 @@ class CoreApiRestClient(RestClient):
         self.schema = self.client.get(self.schemaURL)
 
     def getModelInstances(self, modelName):
+        """
+        Given the model name, it downloads all instances of the model, served by
+        the REST API.
+        """
         fileName = modelName + ".json"
 
         attoModels = []
