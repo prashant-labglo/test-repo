@@ -160,7 +160,16 @@ class SearchIndex(models.Model):
     # All Rankings made for rankingSources are also available for rankings for this search index.
     rankingSources = models.ManyToManyField('SearchQuery', blank=True)
 
-    pickledModelFile = models.FileField(upload_to="searchIndices")
+    def pickedFilename(instance, filename):
+        path = "uploads/"
+        filename = "Type_{0}.Compat_{1}.ID_{2}.Create_{3}.pkl".format(
+            instance.indexType,
+            instance.schemaVersion,
+            instance.id,
+            instance.created)
+        return os.path.join(path, filename)
+
+    pickledModelFile = models.FileField(upload_to=pickedFilename)
 
     schemaVersion = models.IntegerField()
     # Model to find word distances using word2vec.
