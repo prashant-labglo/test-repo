@@ -61,8 +61,8 @@ class SectionModel(object):
             ftrArray[curIndex].extend([sum_tf, sum_idf, sum_tfidf])
 
             # Append word2vec distance.
-            word2vecDistance = self.word2vecDistanceModel.queryPhrase2TagsetSimilarity(queryDoc["Keywords"], corpusDoc)
-            ftrArray[curIndex].append(word2vecDistance)
+            # word2vecDistance = self.word2vecDistanceModel.queryPhrase2TagsetSimilarity(queryDoc["Keywords"], corpusDoc)
+            # ftrArray[curIndex].append(word2vecDistance)
 
             curIndex += 1
         return ftrArray

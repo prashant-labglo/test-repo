@@ -3,6 +3,7 @@ Init file for LibLisa module.
 This module contains code which is useful to all Python projects within the solution scope..
 """
 import time
+from collections import OrderedDict
 
 from LibLisa.SearchClient import SearchClient
 from LibLisa.SlideDbClient import SlideDbClient
@@ -12,13 +13,17 @@ from LibLisa.behaviors import Behavior
 
 # When profiling function calls for performance, this object stores the timing information
 # for later retrieval.
-profilingData = [{"Label":"Root", "BreakUp":[]}]
+profilingData = [OrderedDict({ "Label": "Root", "BreakUp":[] })]
 
-def lastCallProfile():
+def lastCallProfile(doPop=False):
     """
     This method returns the profiling information of last profiler call made.
     """
-    return profilingData[-1]["BreakUp"][-1]
+    retval = profilingData[-1]["BreakUp"][-1]
+    if doPop:
+        profilingData[-1]["BreakUp"].pop()
+
+    return retval
 
 def methodProfiler(method):
     """
@@ -33,7 +38,7 @@ def methodProfiler(method):
 
     """
     def wrapper(*args, **kw):
-        with blockProfiler(method.__name__):
+        with blockProfiler(method.__qualname__):
             result = method(*args, **kw)
         return result
     return wrapper
@@ -51,7 +56,7 @@ class blockProfiler(object):
         """
         Initialization.
         """
-        self.curNode = { "BreakUp":[], "Label": label}
+        self.curNode = OrderedDict({ "Label": label, "BreakUp":[] })
 
     def __enter__(self):
         """
@@ -70,7 +75,8 @@ class blockProfiler(object):
         end = time.time()
 
         # Record time measurement.
-        self.curNode["TotalTime"] = int((end - self.start) * 1000)
+        self.curNode["MilliSeconds"] = int((end - self.start) * 1000)
+        self.curNode.move_to_end("BreakUp")
 
         # Curnode building complete. Now remove from stack and insert it under the calling last node.
         profilingData.pop()

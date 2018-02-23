@@ -160,7 +160,16 @@ class SearchIndex(models.Model):
     # All Rankings made for rankingSources are also available for rankings for this search index.
     rankingSources = models.ManyToManyField('SearchQuery', blank=True)
 
-    pickledModelFile = models.FileField(upload_to="searchIndices")
+    def pickFilename(instance, filename):
+        path = "uploads/"
+        filename = "Type_{0}.Compat_{1}.ID_{2}.Create_{3}.pkl".format(
+            instance.indexType,
+            instance.schemaVersion,
+            instance.id,
+            instance.created)
+        return os.path.join(path, filename)
+
+    pickledModelFile = models.FileField(upload_to=pickFilename)
 
     schemaVersion = models.IntegerField()
     # Model to find word distances using word2vec.
@@ -171,6 +180,7 @@ class SearchIndex(models.Model):
     searchIndexCache = LRUCache(maxsize=3)
 
     @property
+    @methodProfiler
     def backend(self):
         """
         At a time, any number of django model objects corresponding to the
@@ -195,11 +205,11 @@ class SearchIndex(models.Model):
         with all necessary data structures required for the search index.
         """
         modelInstance = SearchIndex.searchIndexCache.get(self.id)
-        if modelInstance is not None:
-            # Set initial cached attributes
-            return modelInstance
-        else:
-            return pickle.load(self.pickledModelFile)
+        if modelInstance is None:
+            # Load and cache model instance.
+            modelInstance = pickle.load(self.pickledModelFile)
+            SearchIndex.searchIndexCache[self.id] = modelInstance
+        return modelInstance
 
     def save(self, *args, **kwargs):
         """
@@ -209,9 +219,12 @@ class SearchIndex(models.Model):
             self.created = timezone.now()
         return super().save(*args, **kwargs)
 
+    @methodProfiler
     def slideSearch(self, queryObj):
         searchIndexBackend = queryObj.index.backend
-        return searchIndexBackend.slideSearch(queryObj.queryJson, getIDs=True)
+        retval = searchIndexBackend.slideSearch(queryObj.queryJson, getIDs=True)
+
+        return retval
 
 # Connects pre_save signal of SearchQuery.
 pre_save.connect(SearchQuery.pre_save, sender=SearchQuery) 

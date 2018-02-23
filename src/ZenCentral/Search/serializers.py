@@ -66,7 +66,7 @@ class PaginatedSearchResultListSerializer(serializers.ListSerializer):
     Job of a list-serializer is to serialize/de-serialize list of underlying objects.
     This class is THE over-ridden list-serializer for NestedSearchResultSerializer.
 
-    It inserts and de-inserts pagination informatoin in the serialization pipeline.
+    It inserts and de-inserts pagination information in the serialization pipeline.
 
     originalResults = [....]
             |
@@ -81,7 +81,9 @@ class PaginatedSearchResultListSerializer(serializers.ListSerializer):
     }
     """
     def to_representation(self, page):
-        """Convert `username` to lowercase."""
+        """
+        Insert pagination information.
+        """
         paginationObj = self.context["paginationObj"]
         retval = OrderedDict([
             ('count', page.paginator.count),
@@ -91,6 +93,9 @@ class PaginatedSearchResultListSerializer(serializers.ListSerializer):
         ])
         return retval
     def to_internal_value(self, data):
+        """
+        Remove pagination data and return.
+        """
         return super().to_internal_value(data["results"])
 
     @property
