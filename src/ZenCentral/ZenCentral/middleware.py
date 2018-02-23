@@ -23,13 +23,11 @@ class ThreadLocalMiddleware(object):
         self.get_response = get_response
 
     def __call__(self, request):
-        _thread_locals.request = request
+        self.process_request(request)
 
         response = self.get_response(request)
 
-        if hasattr(_thread_locals, 'request'):
-            del _thread_locals.request
-        return response
+        return self.process_response(request, response)
 
     def process_request(self, request):
         _thread_locals.request = request
