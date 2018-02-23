@@ -47,6 +47,14 @@ class SearchResult(models.Model):
         ordering = ('query', 'rank', )
 
     @property
+    def thumbnailFile(self):
+        return self.slide.thumbnailFile
+
+    @property
+    def pptFile(self):
+        return self.slide.pptFile
+
+    @property
     def myRating(self):
         """
         For the current result object, this method finds the rating of the

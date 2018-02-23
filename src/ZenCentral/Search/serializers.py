@@ -11,6 +11,9 @@ class SearchResultRatingSerializer(serializers.ModelSerializer):
     """
     Serializer for /search/ratings
     """
+    user = serializers.PrimaryKeyRelatedField(
+        read_only=True,
+        default=serializers.CurrentUserDefault())
     class Meta:
         model = SearchResultRating
         fields = ('rated', 'result', 'user')
@@ -52,7 +55,7 @@ class NestedSearchResultSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
     class Meta:
         model = SearchResult
-        fields = ('id', 'slide', 'avgRating', 'myRating', 'score')
+        fields = ('id', 'slide', 'avgRating', 'myRating', 'score', 'pptFile', 'thumbnailFile')
 
 class PaginatedSearchResultListSerializer(serializers.ListSerializer):
     """

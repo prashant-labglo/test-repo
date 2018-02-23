@@ -68,7 +68,7 @@ class SearchClient(CoreApiRestClient):
                     "indexType":indexType,
                     "rankingSources" : rankingSources,
                     "schemaVersion" : 0,
-                    "pickedModelFile" : fp,
+                    "pickledModelFile" : fp,
                     },
                 encoding="multipart/form-data")
 

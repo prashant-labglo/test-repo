@@ -72,19 +72,19 @@ class SlideDbClient(CoreApiRestClient):
             for (attoModelZeptoId, attoModel) in attoModels.items():
                 if attoModelZeptoId not in zeptoModelsDict.keys():
                     # Delete all atto model instances, which don't have a corresponding presence in Zepto.
-                    retval = self.client.action(self.schema, [self.appName, modelName.lower(), 'delete'], {"id" : attoModel["id"]})
+                    retval = self.client.action(self.schema, [self.config.appName, modelName.lower(), 'delete'], {"id" : attoModel["id"]})
                 else:
                     # This is an atto model instance with a matching entry in zeptoModels also.
                     # We need to update the attoModel with info from zeptoModel.
                     zeptoModel = zeptoModelsDict[attoModelZeptoId]
                     zeptoModel["id"] = attoModel["id"]
-                    zeptoModelCopy = dict(zeptoModel)
-                    if modelName != "Concepts":
-                        zeptoModelCopy["parent"] = self.getModelUrl(zeptoModel["parent"])
                     changes = {}
-                    for (key, value) in zeptoModelCopy.items():
+                    for (key, value) in zeptoModel.items():
                         if key == "tags":
                             if set(value) != set(attoModel[key]):
+                                changes[key] = value
+                        elif key == "parent":
+                            if value["id"] != attoModel[key]["id"]:
                                 changes[key] = value
                         else:
                             if value != attoModel[key]:
@@ -93,7 +93,7 @@ class SlideDbClient(CoreApiRestClient):
                     if changes:
                         # Apply all changes into the atto server's copy.
                         changes["id"] = attoModel["id"]
-                        self.client.action(self.schema, [self.appName, modelName.lower(), 'partial_update'], changes)
+                        self.client.action(self.schema, [self.config.appName, modelName.lower(), 'partial_update'], changes)
 
             # Iterate over zeptoModelsDict to find newly created entries on the zepto side.
             for (zeptoModelId, zeptoModel) in zeptoModelsDict.items():
@@ -101,5 +101,5 @@ class SlideDbClient(CoreApiRestClient):
                     zeptoModelCopy = dict(zeptoModel)
                     if modelName != "Concepts":
                         zeptoModelCopy["parent"] = self.getModelUrl(zeptoModel["parent"])
-                    retval = self.client.action(self.schema, [self.appName, modelName.lower(), 'create'], zeptoModelCopy)
+                    retval = self.client.action(self.schema, [self.config.appName, modelName.lower(), 'create'], zeptoModelCopy)
                     zeptoModel['id'] = retval['id']
