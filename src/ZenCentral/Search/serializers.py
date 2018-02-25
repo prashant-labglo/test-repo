@@ -25,7 +25,7 @@ class SearchResultSerializer(serializers.ModelSerializer):
     Serializer for /search/results
     """
     id = serializers.IntegerField(read_only=True)
-    myRating = serializers.IntegerField(read_only=False)
+    myRating = serializers.IntegerField(read_only=True)
     ratings = SearchResultRatingSerializer(many=True)
     class Meta:
         model = SearchResult
