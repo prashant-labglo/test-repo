@@ -116,6 +116,9 @@ class SearchQuery(models.Model):
     # Query definition.
     queryJson = JSONField(default={"Keywords":[]})
 
+    # A list of results and their scores.
+    resultJson = JSONField(default=[])
+
     # TimeStamps
     created = models.DateTimeField(editable=False)
 
@@ -139,8 +142,6 @@ class SearchQuery(models.Model):
             instance.queryJson["HasImage"] = True if instance.queryJson["HasImage"] else False
 
         instance.queryJson["Keywords"] = [word.lower() for word in instance.queryJson["Keywords"]]
-        if "count" not in instance.queryJson.keys():
-            instance.queryJson["count"] = 100
 
 class IndexTypeChoices(Enum):
     """
