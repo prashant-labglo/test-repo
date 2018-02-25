@@ -116,7 +116,7 @@ class SearchQuery(models.Model):
     # Query definition.
     queryJson = JSONField(default={"Keywords":[]})
 
-    # Query definition.
+    # A list of results and their scores.
     resultJson = JSONField(default=[])
 
     # TimeStamps
