@@ -116,6 +116,9 @@ class SearchQuery(models.Model):
     # Query definition.
     queryJson = JSONField(default={"Keywords":[]})
 
+    # Query definition.
+    resultJson = JSONField(default=[])
+
     # TimeStamps
     created = models.DateTimeField(editable=False)
 

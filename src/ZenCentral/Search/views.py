@@ -55,15 +55,8 @@ class SearchQueryViewSet(profiledModelViewSet):
             with blockProfiler("create.GetSearchResults"):
                 queryObj = SearchQuery.objects.get(pk=retval.data["id"])
                 searchIndex = queryObj.index
-                result = searchIndex.slideSearch(queryObj)
-
-            with blockProfiler("create.InsertSearchResults"):
-                for (index, (score, slideId)) in enumerate(result):
-                    if index == queryObj.queryJson["count"]:
-                        break
-                    slide = Slide.objects.get(id=slideId)
-                    searchResult = SearchResult(slide=slide, rank=index, query=queryObj, score=score)
-                    searchResult.save()
+                queryObj.resultJson = searchIndex.slideSearch(queryObj)
+                queryObj.save()
 
             with blockProfiler("create.SerializeSearchResults"):
                 # QueryObj may have now changed.

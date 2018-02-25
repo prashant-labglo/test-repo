@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from rest_framework import serializers, pagination
+from SlideDB.models import Slide
 from Search.models import SearchResult, SearchResultRating, SearchQuery, SearchIndex
 from Search.models import IndexTypeChoices
 from ZenCentral import fields
@@ -130,6 +131,54 @@ class PaginatedSearchResultSerializer(NestedSearchResultSerializer):
     class Meta(NestedSearchResultSerializer.Meta):
         list_serializer_class=PaginatedSearchResultListSerializer
 
+class QueryResultsIteratorWithAutoInsertion(object):
+    """
+    For a query object, there can be large number of search results.
+    We want to insert results on demand, as the DB insertion is slow.
+    """
+    def __init__(self, queryObj):
+        """
+        Constructor.
+        """
+        self.queryObj = queryObj
+
+        # Needed for old queries. Build resultJson, if it doesn't exist.
+        if not self.queryObj.resultJson:
+            results = SearchResult.objects.filter(query=self.queryObj)
+            self.queryObj.resultJson = [(result.score, result.slide.id) for result in results]
+            self.queryObj.save()
+    def __len__(self):
+        """
+        Returns complete length of the results list.
+        """
+        return len(self.queryObj.resultJson)
+    def __getitem__(self, key):
+        """
+        Makes the class scriptable.
+        """
+        if isinstance(key, int):
+            #Handle negative indices
+            if key < 0 :
+                key += len( self )
+
+            # Handle out of range access.
+            if key < 0 or key >= len(self.queryObj.resultJson) :
+                raise IndexError("The index (%d) is out of range."%key)
+            try:
+                # First try pre-existing DB entries.
+                return SearchResult.objects.get(query=self.queryObj, rank=key)
+            except:
+                # Create a new entry for DB and insert it.
+                (score, slideId) = self.queryObj.resultJson[key]
+                slide = Slide.objects.get(id=slideId)
+                searchResult = SearchResult(slide=slide, rank=key, query=self.queryObj, score=score)
+                searchResult.save()
+                return searchResult
+        elif isinstance(key, slice):
+            start = key.start if key.start is None else 0
+            step = 1 if key.step is None else key.step
+            return [self[index] for index in range(start, key.stop, step)]
+
 class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
     """
     Serializer for /search/queries.
@@ -145,11 +194,12 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
         model = SearchQuery
         fields = ('id', 'index', 'queryJson', 'created', 'results')
 
-    def paginated_results(self, obj):
+    def paginated_results(self, queryObj):
         """
         The results are serialized/de-serialized using a method.
         """
-        querySet = SearchResult.objects.filter(query=obj)
+        querySet = QueryResultsIteratorWithAutoInsertion(queryObj)
+
         paginationObj = pagination.PageNumberPagination()
         paginationObj.page_size_query_param = "page_size"
         paginationObj.page_size = 10
