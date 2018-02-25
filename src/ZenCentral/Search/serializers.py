@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from rest_framework import serializers, pagination
+from LibLisa import methodProfiler
 from SlideDB.models import Slide
 from Search.models import SearchResult, SearchResultRating, SearchQuery, SearchIndex
 from Search.models import IndexTypeChoices
@@ -194,6 +195,7 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
         model = SearchQuery
         fields = ('id', 'index', 'queryJson', 'created', 'results')
 
+    @methodProfiler
     def paginated_results(self, queryObj):
         """
         The results are serialized/de-serialized using a method.

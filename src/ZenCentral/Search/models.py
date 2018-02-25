@@ -142,8 +142,6 @@ class SearchQuery(models.Model):
             instance.queryJson["HasImage"] = True if instance.queryJson["HasImage"] else False
 
         instance.queryJson["Keywords"] = [word.lower() for word in instance.queryJson["Keywords"]]
-        if "count" not in instance.queryJson.keys():
-            instance.queryJson["count"] = 100
 
 class IndexTypeChoices(Enum):
     """
