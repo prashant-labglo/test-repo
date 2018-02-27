@@ -10,6 +10,7 @@
 import json, re
 import gensim, pyltr
 
+import numpy as np
 from itertools import accumulate
 from attrdict import AttrDict
 
@@ -124,61 +125,78 @@ class SlideSearchLambdaMart(SlideSearchBase):
             json.dump(wordToMatchingSlideIds, fp, indent=4)
 
         # Only retain words with frequency less than 1% of total slides.
-        freqThreshold = int(0.01 * len(self.dataForIndexing["Slides"]))
+        freqThreshold = int(0.02 * len(self.dataForIndexing["Slides"]))
         nonMatchingSlideCount = int(0.02 * len(self.dataForIndexing["Slides"]))
         wordToMatchingSlides = [(word, matchingSlides) for (word, matchingSlides) in wordToMatchingSlides if len(matchingSlides) < freqThreshold]
 
         retval = []
         for (index, (word, matchingSlides)) in enumerate(wordToMatchingSlides):
-            print("{0}: Processing word {1}, occuring in {2}.".format(index, word, wordToMatchingSlideIds[word]))
-            simulatedQuery = {"id" : word}
-            simulatedQuery["queryJson"] = {"Keywords" : [word]}
+            with blockProfiler("buildSeedTrainingSet."+word):
+                simulatedQuery = {"id" : word}
+                simulatedQuery["queryJson"] = {"Keywords" : [word]}
 
-            # Now, find slides, which are close but are not matching.
-            closeButNotMatchingSlides = []
-            i = 0
-            results = seedDataBuilder.slideSearch(simulatedQuery["queryJson"])
-            while len(closeButNotMatchingSlides) < nonMatchingSlideCount:
-                if results[i][1] not in matchingSlides:
-                    closeButNotMatchingSlides.append(results[i][1])
-                i += 1
+                # Now, find slides, which are close but are not matching.
+                closeButNotMatchingSlides = []
+                i = 0
+                results = seedDataBuilder.slideSearch(simulatedQuery["queryJson"])
+                while len(closeButNotMatchingSlides) < nonMatchingSlideCount:
+                    if results[i][1] not in matchingSlides:
+                        closeButNotMatchingSlides.append(results[i][1])
+                    i += 1
 
-            simulatedQueryResults = []
-            simulatedQuery["results"] = simulatedQueryResults
+                simulatedQueryResults = []
+                simulatedQuery["results"] = simulatedQueryResults
 
-            # Build positive results.
-            for slide in matchingSlides:
-                simulatedQueryResult = {
-                        "avgRating" : 3,
-                        "slide" : slide["id"],
-                    }
-                simulatedQueryResults.append(simulatedQueryResult)
+                maxDownloads1 = max([slide["zeptoDownloads"] for slide in matchingSlides])
+                maxDownloads2 = max([slide["zeptoDownloads"] for slide in closeButNotMatchingSlides])
+                maxDownloads = float(max(maxDownloads1, maxDownloads2) + 0.0001)
+                # Build positive results.
+                for slide in matchingSlides:
+                    simulatedQueryResult = {
+                            "avgRating" : 5 + int(10 * slide["zeptoDownloads"]/maxDownloads),
+                            "slide" : slide["id"],
+                        }
+                    simulatedQueryResults.append(simulatedQueryResult)
 
-            # Build negative results.
-            for slide in closeButNotMatchingSlides:
-                simulatedQueryResult = {
-                        "avgRating" : -3,
-                        "slide" : slide["id"],
-                    }
-                simulatedQueryResults.append(simulatedQueryResult)
+                # Build negative results.
+                for slide in closeButNotMatchingSlides:
+                    simulatedQueryResult = {
+                            "avgRating" : -15 + int(10 * slide["zeptoDownloads"]/maxDownloads),
+                            "slide" : slide["id"],
+                        }
+                    simulatedQueryResults.append(simulatedQueryResult)
 
-            retval.append(simulatedQuery)
+                retval.append(simulatedQuery)
+            print("{0}: Processed word {1}, occuring in {2}.".format(index, word, wordToMatchingSlideIds[word]))
         return retval
 
     @methodProfiler
-    def fit(self, Tx, Ty, Tqids):
+    def fit(self, slideRatingVecs):
         """
-        Tx: Vector computed for each pair of query and one result row in the DB.
-        Ty: Rating numbers for how good or bad the match for above pair is.
-        Tqids: Query ID column. Query string can be same for many of the rows in Tx above.
-            Tqid can be used to determine if the training rows correspond to same query
+
+        slideRatingVecs:  
+            Contains feature vector computed for each pair of query and one result row in the DB.
+            Partitioned into three groups.
+                slidaRatingVecs["T"] : Slide rating vectors for training.
+                slidaRatingVecs["V"] : Slide rating vectors for validation.
+                slidaRatingVecs["E"] : Slide rating vectors for final evaluation.
+            Each of the above three have
+                slidaRatingVecs["T"]["X"] : feature vectors for the pair.
+                slidaRatingVecs["T"]["y"] : Rating values for the pair.
+                slidaRatingVecs["T"]["qids"] : Query ID for the pair.
+            qids can be used to determine if the training rows correspond to same query
             string or different.
         """
         # Use NDCG metric.
         self.LambdaMartMetric = pyltr.metrics.NDCG(k=10)
         
         # Monitor progress and stop early.
-        self.LambdaMartMonitor = pyltr.models.monitors.ValidationMonitor(Tx, Ty, Tqids, metric=self.LambdaMartMetric, stop_after=250)
+        self.LambdaMartMonitor = pyltr.models.monitors.ValidationMonitor(
+            slideRatingVecs["V"]["X"],
+            slideRatingVecs["V"]["y"],
+            slideRatingVecs["V"]["qids"],
+            metric=self.LambdaMartMetric,
+            stop_after=250)
 
         # Build model instance.
         self.LambdaMartModel = pyltr.models.LambdaMART(
@@ -193,7 +211,26 @@ class SlideSearchLambdaMart(SlideSearchBase):
         )
 
         # Fit the model.
-        self.LambdaMartModel.fit(Tx, Ty, Tqids, monitor=self.LambdaMartMonitor)
+        self.LambdaMartModel.fit(
+            slideRatingVecs["T"]["X"],
+            slideRatingVecs["T"]["y"],
+            slideRatingVecs["T"]["qids"],
+            monitor=self.LambdaMartMonitor)
+
+        Epred = self.LambdaMartModel.predict(slideRatingVecs["E"]["X"])
+        randomRankingMetric = self.LambdaMartMetric.calc_mean_random(
+            slideRatingVecs["E"]["qids"],
+            slideRatingVecs["E"]["y"])
+
+        ourModelRankingMetric = self.LambdaMartMetric.calc_mean(
+            slideRatingVecs["E"]["qids"],
+            np.array(slideRatingVecs["E"]["y"]),
+           Epred)
+
+        return {
+                    "randomRankingMetric": float(randomRankingMetric),
+                    "ourModelRankingMetric": float(ourModelRankingMetric)
+               }
 
     def json(self):
         retval = {}

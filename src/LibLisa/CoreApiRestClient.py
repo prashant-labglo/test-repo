@@ -37,13 +37,12 @@ class CoreApiRestClient(RestClient):
         fileName = modelName + ".json"
 
         attoModels = []
-        curOffset = 0
+        pageSize = 1000
         while True:
-            paramsDict = {'offset': curOffset, 'limit': 100}
+            paramsDict = {'offset': len(attoModels), 'limit': pageSize}
             response = self.client.action(self.schema, [self.config.appName, modelName.lower(), 'list'], params=paramsDict)
             if response["results"]:
                 attoModels.extend(response["results"])
-                curOffset += 100
             else:
                 break
 

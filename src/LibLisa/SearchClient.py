@@ -1,7 +1,7 @@
 """
 Slide search client is a REST API client which can make search queries to ZenCentral REST API for slide search.
 """
-import tempfile, pickle
+import tempfile, pickle, json
 from LibLisa.behaviors import Behavior
 from LibLisa.CoreApiRestClient import CoreApiRestClient
 from LibLisa.config import lisaConfig
@@ -55,7 +55,7 @@ class SearchClient(CoreApiRestClient):
 
         return qualifiedQueries
 
-    def uploadSlideSearchIndex(self, slideSearchIndex, indexType, rankingSources):
+    def uploadSlideSearchIndex(self, slideSearchIndex, indexType, rankingSources, evalResults):
         slideSearchIndexFilename = lisaConfig.dataFolderPath + "slideSearchIndex.pkl"
         with open(slideSearchIndexFilename, "wb") as fp:
             pickle.dump(slideSearchIndex, fp)
@@ -69,6 +69,7 @@ class SearchClient(CoreApiRestClient):
                     "rankingSources" : rankingSources,
                     "schemaVersion" : 0,
                     "pickledModelFile" : fp,
+                    "evalResults" : json.dumps(evalResults),
                     },
                 encoding="multipart/form-data")
 

@@ -3,41 +3,14 @@ Slide Indexer periodically wakes up and downloads latest slide hierarchy from Li
 All modified slides are then uploaded into ZenCentral SlideDB service.
 """
 
-import threading, time, json, os
+import threading, time, json, os, random
 from attrdict import AttrDict
 from LibLisa import lisaConfig, LisaZeptoClient, SlideDbClient, SearchClient, blockProfiler, lastCallProfile
-from SlideSearch import Word2vecDistanceModel, SlideSearchW2V, SlideSearchLambdaMart
+from SlideSearch import Word2vecDistanceModel, SlideSearchW2V, SlideSearchLambdaMart, getSlideRatingVecs
 
 # Instantiate REST clients.
 slideDbClient = SlideDbClient()
 searchClient = SearchClient()
-
-def getSlideRatingVecs(slideSearchIndex, slideRatingsData, slideHierarchy):
-    """
-    Downloads all the slide rating data which is used to train a local PYLTR model for
-    slide rankings.
-    """
-    (Tx, Ty, Tqids, TresultIds) = ([], [], [], [])
-    for (index, ratedQuery) in enumerate(slideRatingsData):
-        print("{0}: Processing query({1}) searching for keywords({2}).".format(
-            index, 
-            None if "id" not in ratedQuery else ratedQuery["id"],
-            ratedQuery["queryJson"]["Keywords"]))
-
-        # Build Ty and Tqids. Also build selectedSlides array to build Tx later.
-        selectedSlides = []
-        for queryResult in ratedQuery["results"]:
-            Ty.append(queryResult["avgRating"])
-            Tqids.append(ratedQuery["id"])
-            slideId = queryResult["slide"]
-            selectedSlides.append(slideHierarchy["Slides"][slideId])
-
-        with blockProfiler("buildSeedTrainingSet.FeatureComputation"):
-            Tx.extend(slideSearchIndex.features(ratedQuery["queryJson"], selectedSlides))
-
-        print("Profiling data for query collation:\n {0}".format(json.dumps(lastCallProfile(), indent=4)))
-
-    return AttrDict({"Tx":Tx, "Ty":Ty, "Tqids":Tqids, "TresultIds":TresultIds})
 
 def searchIndexCreatorThreadFunc():
     """
@@ -64,25 +37,24 @@ def searchIndexCreatorThreadFunc():
 
         # Collate slides rating data from the server.
         slideRatingsData = searchClient.getSlideRatingsData(dataForIndexing)
-
-        # File to save slideRatings data in.
-        slideRatingsDataFilePath = lisaConfig.dataFolderPath + "slideRatingsData.json"
-        with open(slideRatingsDataFilePath, "w") as fp:
+        with open(lisaConfig.slideRatingsDataFilePath, "w") as fp:
             json.dump(slideRatingsData, fp, indent=4)
 
         # If slide ratings data quantity is small, simulate it.
         if len(slideRatingsData) < 1000:
             indexType = "SimulatedRatings"
-            # Generate slide ratings data.
-            simulatedSlideRatingsDataFilePath = lisaConfig.dataFolderPath + "simulatedSlideRatingsData.json"
-            #if os.path.exists(simulatedSlideRatingsDataFilePath):
-            #    with open(simulatedSlideRatingsDataFilePath, "r") as fp:
-            #        slideRatingsData = json.load(fp)
-            #else:
-            slideSearchIndexSeed = SlideSearchW2V(dataForIndexing, lisaConfig.slideIndexer, word2vecDistanceModel)
-            slideRatingsData = slideSearchIndex.buildSeedTrainingSet(slideSearchIndexSeed)
-            with open(simulatedSlideRatingsDataFilePath, "w") as fp:
-                json.dump(slideRatingsData, fp, indent=4)
+
+            # Generate slide ratings data, unless available from cached file.
+            cachedFilePath = lisaConfig.simulatedSlideRatingsDataFilePath
+            if not os.path.exists(cachedFilePath) or cachedFilePath is None:
+                slideSearchIndexSeed = SlideSearchW2V(dataForIndexing, lisaConfig.slideIndexer, word2vecDistanceModel)
+                slideRatingsData = slideSearchIndex.buildSeedTrainingSet(slideSearchIndexSeed)
+                if cachedFilePath is not None:
+                    with open(cachedFilePath, "w") as fp:
+                        json.dump(slideRatingsData, fp, indent=4)
+            else:
+                with open(cachedFilePath, "r") as fp:
+                    slideRatingsData = json.load(fp)
             rankingSources = [] 
         else:
             indexType = "UserRatings"
@@ -92,10 +64,10 @@ def searchIndexCreatorThreadFunc():
         slideRatingVecs = getSlideRatingVecs(slideSearchIndex, slideRatingsData, dataForIndexing)
 
         # Now train LambdaMART index using the ratings data.
-        slideSearchIndex.fit(slideRatingVecs.Tx, slideRatingVecs.Ty, slideRatingVecs.Tqids)
+        evalResults = slideSearchIndex.fit(slideRatingVecs)
 
         # Upload the slide search index.
-        searchClient.uploadSlideSearchIndex(slideSearchIndex, indexType, rankingSources)
+        searchClient.uploadSlideSearchIndex(slideSearchIndex, indexType, rankingSources, evalResults)
 
         # Sleep for iteration period, before trying again.
         time.sleep(lisaConfig.slideIndexer.IterationPeriod)

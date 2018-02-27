@@ -3,7 +3,7 @@
     Using the model, we compute word distances, word to tag-set distances, and
     query phrase to tag-set distances.
 """
-import gensim
+import gensim, os, json, pylru
 from LibLisa import lisaConfig, methodProfiler, blockProfiler, lastCallProfile
 
 class Word2vecDistanceModel(object):
@@ -30,6 +30,7 @@ class Word2vecDistanceModel(object):
             # print("Key not found: {0} or {1}".format(word1, word2))
             return -2
 
+    @methodProfiler
     def word2TagsetSemanticSimilarity(self, word, tagset):
         """
         Measures semantic similarity between word and a tagset, using word2vec.
@@ -41,9 +42,9 @@ class Word2vecDistanceModel(object):
             if (tagSimilarity > maxSimilarity):
                 maxSimilarity = tagSimilarity 
                 mostSimilarTag = tag
-
         return maxSimilarity
 
+    @methodProfiler
     def queryPhrase2TagsetSimilarity(self, words, tagset):
         """
         Measures semantic similarity between a query phrase and a tagset, using word2vec.
