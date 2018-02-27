@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
             field=jsonfield.fields.JSONField(default={}),
         ),
         migrations.AddField(
-            model_name='searchresult',
+            model_name='searchresultrating',
             name='downloads',
             field=models.IntegerField(default=0, validators=[django.core.validators.MinValueValidator(0)]),
         ),

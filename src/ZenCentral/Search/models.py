@@ -22,6 +22,7 @@ class SearchResultRating(models.Model):
     Each user can rate the result differently. So rating object is kept outside result.
     """
     rated = models.IntegerField(default=0, validators=[MaxValueValidator(3), MinValueValidator(-3)])
+    downloads = models.IntegerField(default=0, validators=[MinValueValidator(0)])
 
     user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
     result = models.ForeignKey("SearchResult", related_name="ratings", on_delete=models.CASCADE)
@@ -36,7 +37,6 @@ class SearchResult(models.Model):
     slide = models.ForeignKey(Slide, on_delete=models.CASCADE)
     rank = models.IntegerField()
     query = models.ForeignKey('SearchQuery', related_name="results", on_delete=models.CASCADE)
-    downloads = models.IntegerField(default=0, validators=[MinValueValidator(0)])
 
     # Add rating.
     score = models.FloatField()
@@ -53,6 +53,12 @@ class SearchResult(models.Model):
         return self.slide.pptFile
 
     @property
+    def allDownloads(self):
+        ratings = SearchRatings.objects.get(result=self)
+        allDownloads = sum([rating.downloads for rating in ratings])
+        return allDownloads
+
+    @property
     def slideDownloadFeatures(self):
         """
         For the current result object, this method finds the rating of the
@@ -63,12 +69,48 @@ class SearchResult(models.Model):
         otherResultsWithSameSlide = SearchResult.objects.get(slide=slide)
         downloadCount = 0
         for result in otherResultsWithSameSlide:
-            downloadCount += result.downloads
+            downloadCount += result.allDownloads
 
         if downloadCount == 0:
             return (0, 0)
         else:
             return (downloadCount, downloadCount/len(otherResultsWithSameSlide))
+
+    @property
+    def myDownloads(self):
+        """
+        For the current result object, this method finds the download count of the
+        "current user" and returns it.
+
+        This property is used by Search result serializers for the REST API.
+        """
+        curUser = get_current_user()
+        if curUser.is_anonymous:
+            return None
+        ratingObj = SearchResultRating.objects.get(result=self, user=curUser)
+        if ratingObj is None:
+            return None
+        return ratingObj.downloads
+
+    @myDownloads.setter
+    def myDownloads(self, newDownloads):
+        """
+        For the current result object, this method 'increments' the downloads count
+        of the "current user".
+
+        This property is used by Search result serializers for the REST API.
+        """
+        curUser = get_current_user()
+        if not curUser.is_anonymous:
+            ratingObj = SearchResultRating.objects.get(result=self, user=curUser)
+            if ratingObj is not None:
+                if newDownloads > ratingObj.downloads:
+                    ratingObj.downloads += 1
+            else:
+                raise ValueError("Cannot increment download count, without rating the slide.")
+            ratingObj.save()
+        else:
+            raise PermissionError("Anonymous user cannot increment download count.")
 
     @property
     def myRating(self):
@@ -101,7 +143,7 @@ class SearchResult(models.Model):
                 ratingObj.rated = newRating
             else:
                 ratingObj = SearchResultRating(rated=newRating, result=self, user=curUser)
-                ratingObj.save()
+            ratingObj.save()
         else:
             raise PermissionError("Anonymous user cannot rate.")
 
