@@ -13,15 +13,15 @@ from SlideSearch.SlideSearchLambdaMART import SlideSearchLambdaMart
 
 def getSlideRatingVecs(slideSearchIndex, slideRatingsData, slideHierarchy):
     """
-    Downloads all the slide rating data which is used to train a local PYLTR model for
-    slide rankings.
+    Converts all the downloaded slide rating data into vectors which can
+    then be fed into pyltr to train a local PYLTR model for slide rankings.
     """
     retval = {}
 
     slidesDict = {slide["id"]:slide for slide in slideHierarchy["Slides"]}
 
     for label in ["T", "V", "E"]: # Training, Validatoin and Evaluation.
-        retval[label] = {"x" : [], "y" : [], "qids" : [], "resultIds": []}
+        retval[label] = {"X" : [], "y" : [], "qids" : [], "resultIds": []}
 
     for (index, ratedQuery) in enumerate(np.random.permutation(slideRatingsData)):
         # Pick label in a round robin manner on a random permutation.
@@ -41,7 +41,7 @@ def getSlideRatingVecs(slideSearchIndex, slideRatingsData, slideHierarchy):
             slideId = queryResult["slide"]
             selectedSlides.append(slidesDict[slideId])
         with blockProfiler("buildSeedTrainingSet.FeatureComputation"):
-            retval[label]["x"].extend(slideSearchIndex.features(ratedQuery["queryJson"], selectedSlides))
+            retval[label]["X"].extend(slideSearchIndex.features(ratedQuery["queryJson"], selectedSlides))
 
         print("Profiling data for query collation:\n {0}".format(json.dumps(lastCallProfile(), indent=4)))
     return retval

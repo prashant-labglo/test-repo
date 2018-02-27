@@ -64,7 +64,7 @@ class SearchResult(models.Model):
         For the current result object, this method finds the rating of the
         "current user" and returns it.
 
-        This property is used by Search result serializers for the REST API.
+        These properties are used by pyltr models to improve search quality.
         """
         otherResultsWithSameSlide = SearchResult.objects.get(slide=slide)
         downloadCount = 0

@@ -173,10 +173,18 @@ class SlideSearchLambdaMart(SlideSearchBase):
     @methodProfiler
     def fit(self, slideRatingVecs):
         """
-        Tx: Feature Vector computed for each pair of query and one result row in the DB.
-        Ty: Rating numbers for how good or bad the match for above pair is.
-        Tqids: Query ID column. Query string can be same for many of the rows in Tx above.
-            Tqid can be used to determine if the training rows correspond to same query
+
+        slideRatingVecs:  
+            Contains feature vector computed for each pair of query and one result row in the DB.
+            Partitioned into three groups.
+                slidaRatingVecs["T"] : Slide rating vectors for training.
+                slidaRatingVecs["V"] : Slide rating vectors for validation.
+                slidaRatingVecs["E"] : Slide rating vectors for final evaluation.
+            Each of the above three have
+                slidaRatingVecs["T"]["X"] : feature vectors for the pair.
+                slidaRatingVecs["T"]["y"] : Rating values for the pair.
+                slidaRatingVecs["T"]["qids"] : Query ID for the pair.
+            qids can be used to determine if the training rows correspond to same query
             string or different.
         """
         # Use NDCG metric.
@@ -184,10 +192,11 @@ class SlideSearchLambdaMart(SlideSearchBase):
         
         # Monitor progress and stop early.
         self.LambdaMartMonitor = pyltr.models.monitors.ValidationMonitor(
-            slideRatingVecs["V"]["x"],
+            slideRatingVecs["V"]["X"],
             slideRatingVecs["V"]["y"],
             slideRatingVecs["V"]["qids"],
-            metric=self.LambdaMartMetric, stop_after=250)
+            metric=self.LambdaMartMetric,
+            stop_after=250)
 
         # Build model instance.
         self.LambdaMartModel = pyltr.models.LambdaMART(
@@ -203,12 +212,12 @@ class SlideSearchLambdaMart(SlideSearchBase):
 
         # Fit the model.
         self.LambdaMartModel.fit(
-            slideRatingVecs["T"]["x"],
+            slideRatingVecs["T"]["X"],
             slideRatingVecs["T"]["y"],
             slideRatingVecs["T"]["qids"],
             monitor=self.LambdaMartMonitor)
 
-        Epred = self.LambdaMartModel.predict(slideRatingVecs["E"]["x"])
+        Epred = self.LambdaMartModel.predict(slideRatingVecs["E"]["X"])
         randomRankingMetric = self.LambdaMartMetric.calc_mean_random(
             slideRatingVecs["E"]["qids"],
             slideRatingVecs["E"]["y"])
