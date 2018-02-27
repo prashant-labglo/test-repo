@@ -176,7 +176,7 @@ class QueryResultsIteratorWithAutoInsertion(object):
                 searchResult.save()
                 return searchResult
         elif isinstance(key, slice):
-            start = key.start if key.start is None else 0
+            start = 0 if key.start is None else key.start
             step = 1 if key.step is None else key.step
             return [self[index] for index in range(start, key.stop, step)]
 
@@ -215,6 +215,10 @@ class SearchIndexSerializer(serializers.HyperlinkedModelSerializer):
     """
     id = serializers.IntegerField(read_only=True)
     indexType = fields.EnumSerializerField(IndexTypeChoices)
+
+    # evalResults, being a custom model field type, needs a custom invocation of the field serializer.
+    evalResults = serializers.JSONField()
+
     class Meta:
         model = SearchIndex
-        fields = ('id', 'created', 'indexType', 'rankingSources', 'schemaVersion', 'pickledModelFile')
+        fields = ('id', 'created', 'indexType', 'rankingSources', 'evalResults', 'schemaVersion', 'pickledModelFile')

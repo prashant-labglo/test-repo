@@ -21,10 +21,7 @@ class SearchResultRating(models.Model):
     
     Each user can rate the result differently. So rating object is kept outside result.
     """
-    rated = models.IntegerField(
-        default=0,
-        validators=[MaxValueValidator(3), MinValueValidator(-3)]
-     )
+    rated = models.IntegerField(default=0, validators=[MaxValueValidator(3), MinValueValidator(-3)])
 
     user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
     result = models.ForeignKey("SearchResult", related_name="ratings", on_delete=models.CASCADE)
@@ -39,6 +36,7 @@ class SearchResult(models.Model):
     slide = models.ForeignKey(Slide, on_delete=models.CASCADE)
     rank = models.IntegerField()
     query = models.ForeignKey('SearchQuery', related_name="results", on_delete=models.CASCADE)
+    downloads = models.IntegerField(default=0, validators=[MinValueValidator(0)])
 
     # Add rating.
     score = models.FloatField()
@@ -53,6 +51,24 @@ class SearchResult(models.Model):
     @property
     def pptFile(self):
         return self.slide.pptFile
+
+    @property
+    def slideDownloadFeatures(self):
+        """
+        For the current result object, this method finds the rating of the
+        "current user" and returns it.
+
+        This property is used by Search result serializers for the REST API.
+        """
+        otherResultsWithSameSlide = SearchResult.objects.get(slide=slide)
+        downloadCount = 0
+        for result in otherResultsWithSameSlide:
+            downloadCount += result.downloads
+
+        if downloadCount == 0:
+            return (0, 0)
+        else:
+            return (downloadCount, downloadCount/len(otherResultsWithSameSlide))
 
     @property
     def myRating(self):
@@ -160,6 +176,9 @@ class SearchIndex(models.Model):
 
     # All Rankings made for rankingSources are also available for rankings for this search index.
     rankingSources = models.ManyToManyField('SearchQuery', blank=True)
+
+    # Result of evaluation of the index.
+    evalResults = JSONField(default={})
 
     def pickFilename(instance, filename):
         path = "uploads/"

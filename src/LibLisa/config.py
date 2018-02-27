@@ -70,6 +70,15 @@ def LisaConfig():
         retval.dataFolderPath = "/home/nishant/repos/lisa/data/"
  
         zenCentralConfig["allowedHosts"].append("52.165.226.255")
+
+    # Set these file paths to save/cache results.
+    retval.slideRatingsDataFilePath = retval.dataFolderPath + "slideRatings.json"
+    if retval.hostname in ["lisa-dev"]:
+        # Don't cache any results in production.
+        retval.simulatedSlideRatingsDataFilePath = None
+    else:
+        retval.simulatedSlideRatingsDataFilePath = retval.dataFolderPath + "simulatedSlideRatings.json"
+
     return retval
 
 lisaConfig = LisaConfig()

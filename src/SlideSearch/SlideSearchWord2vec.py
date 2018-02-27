@@ -38,5 +38,6 @@ class SlideSearchW2V(SlideSearchBase):
         for (index, slide) in enumerate(permittedSlides):
             slideScore = self.word2vecDistanceModel.queryPhrase2TagsetSimilarity(queryInfo["Keywords"], self.getTags(slide))
             retval[index] = slideScore
+
         return retval
 

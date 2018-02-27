@@ -3,12 +3,48 @@ SlideSearch is a python module which focus purely on ML algorithm aspects of sea
 slides.
 """
 import json, os, re, sys
+import numpy as np
 
-from LibLisa import lastCallProfile, lisaConfig, LisaZeptoClient
+from LibLisa import lastCallProfile, lisaConfig, LisaZeptoClient, blockProfiler
 
 from SlideSearch.Word2VecDistanceModel import Word2vecDistanceModel
 from SlideSearch.SlideSearchWord2vec import SlideSearchW2V
 from SlideSearch.SlideSearchLambdaMART import SlideSearchLambdaMart
+
+def getSlideRatingVecs(slideSearchIndex, slideRatingsData, slideHierarchy):
+    """
+    Downloads all the slide rating data which is used to train a local PYLTR model for
+    slide rankings.
+    """
+    retval = {}
+
+    slidesDict = {slide["id"]:slide for slide in slideHierarchy["Slides"]}
+
+    for label in ["T", "V", "E"]: # Training, Validatoin and Evaluation.
+        retval[label] = {"x" : [], "y" : [], "qids" : [], "resultIds": []}
+
+    for (index, ratedQuery) in enumerate(np.random.permutation(slideRatingsData)):
+        # Pick label in a round robin manner on a random permutation.
+        label = ["T", "V", "E"][(index % 3)]
+
+        print("{0}: Processing query({1}) searching for keywords({2}) as {3}.",
+            index, 
+            None if "id" not in ratedQuery else ratedQuery["id"],
+            ratedQuery["queryJson"]["Keywords"],
+            label)
+
+        # Build Ty and Tqids. Also build selectedSlides array to build Tx later.
+        selectedSlides = []
+        for queryResult in ratedQuery["results"]:
+            retval[label]["y"].append(queryResult["avgRating"])
+            retval[label]["qids"].append(ratedQuery["id"])
+            slideId = queryResult["slide"]
+            selectedSlides.append(slidesDict[slideId])
+        with blockProfiler("buildSeedTrainingSet.FeatureComputation"):
+            retval[label]["x"].extend(slideSearchIndex.features(ratedQuery["queryJson"], selectedSlides))
+
+        print("Profiling data for query collation:\n {0}".format(json.dumps(lastCallProfile(), indent=4)))
+    return retval
 
 # Test code.
 if __name__ == "__main__":
@@ -52,12 +88,15 @@ if __name__ == "__main__":
     #else:
     # Training requires seed data. Seed data is created by applying SlideSearchW2V.
     slideSearchIndexSeed = SlideSearchW2V(latestZeptoDataTransformed, lisaConfig.slideSearch, word2vecDistanceModel)
-    (Tx, Ty, Tqids) = slideSearchIndex.buildSeedTrainingSet(slideSearchIndexSeed)
+    slideRatingsData = slideSearchIndex.buildSeedTrainingSet(slideSearchIndexSeed)
     with open(slideRatingsDataFilePath, "w") as fp:
-        json.dump({"Tx":Tx, "Ty":Ty, "Tqids":Tqids}, fp, indent=4)
+        json.dump(slideRatingsData, fp, indent=4)
+
+    # Convert ratings data into vectors for training, validation and evaluation.
+    slideRatingVecs = getSlideRatingVecs(slideSearchIndex, slideRatingsData, latestZeptoDataTransformed)
 
     # LambdaMART index is now trained using the training data.
-    slideSearchIndex.fit(Tx, Ty, Tqids)
+    slideSearchIndex.fit(slideRatingVecs)
 
     # Make a query.
     while True:
