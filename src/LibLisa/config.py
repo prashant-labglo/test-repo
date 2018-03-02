@@ -1,6 +1,7 @@
 """
 File which builds configuration object for all services in the solution.
 """
+import os
 from socket import gethostname
 from attrdict import AttrDict
 from enum import Enum
@@ -60,15 +61,24 @@ def LisaConfig():
     retval.zenCentral = zenCentralConfig
 
     if retval.hostname in ["preze-ntpc", "desktop-fk2ht4j"]:
-        retval.word2vecModelPath = "C:/Users/NishantSharma/source/repos/word2vec-slim/GoogleNews-vectors-negative300-SLIM.bin"
-        # retval.word2vecModelPath = "C:/Users/NishantSharma/source/repos/word2vec/GoogleNews-vectors-negative300.bin"
-        retval.dataFolderPath = "C:/Users/NishantSharma/source/repos/lisa/data/"
-        
+        if os.name == "nt":
+            repoRoot = "C:/Users/NishantSharma/source/repos/"
+        elif os.name == "posix":
+            repoRoot = "/mnt/c/Users/NishantSharma/source/repos/"
     elif retval.hostname in ["lisa-dev"]:
-        retval.word2vecModelPath = "/home/nishant/repos/word2vec-slim/GoogleNews-vectors-negative300-SLIM.bin"
-        # retval.word2vecModelPath = "/home/nishant/repos/word2vec/GoogleNews-vectors-negative300.bin"
-        retval.dataFolderPath = "/home/nishant/repos/lisa/data/"
- 
+        repoRoot = "/home/nishant/repos/"
+
+    if os.name == "nt":
+        retval.globalApacheModulesRoot = "C:/Apache2/modules/"
+    elif os.name == "posix":
+        retval.globalApacheModulesRoot = "/usr/lib/apache2/modules/"
+        
+    retval.appRoot = repoRoot + "lisa/"
+    retval.word2vecModelPath = repoRoot + "word2vec-slim/GoogleNews-vectors-negative300-SLIM.bin"
+    # retval.word2vecModelPath = repoRoot + "word2vec/GoogleNews-vectors-negative300.bin"
+    retval.dataFolderPath = retval.appRoot + "data/"
+
+    if retval.hostname in ["lisa-dev"]:
         zenCentralConfig["allowedHosts"].append("52.165.226.255")
 
     # Set these file paths to save/cache results.

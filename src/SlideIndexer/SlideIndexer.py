@@ -46,7 +46,7 @@ def searchIndexCreatorThreadFunc():
 
             # Generate slide ratings data, unless available from cached file.
             cachedFilePath = lisaConfig.simulatedSlideRatingsDataFilePath
-            if not os.path.exists(cachedFilePath) or cachedFilePath is None:
+            if cachedFilePath is None or not os.path.exists(cachedFilePath):
                 slideSearchIndexSeed = SlideSearchW2V(dataForIndexing, lisaConfig.slideIndexer, word2vecDistanceModel)
                 slideRatingsData = slideSearchIndex.buildSeedTrainingSet(slideSearchIndexSeed)
                 if cachedFilePath is not None:

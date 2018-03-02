@@ -30,10 +30,22 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="apache\zenApps.conf">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="app\fields.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="app\forms.py" />
+    <Compile Include="app\management\commands\createApacheSiteConf.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="app\management\commands\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="app\management\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="app\models.py" />
     <Compile Include="app\tests.py" />
     <Compile Include="app\views.py" />
@@ -77,11 +89,14 @@
     <Compile Include="ZenCentral\__init__.py" />
     <Compile Include="ZenCentral\settings.py" />
     <Compile Include="ZenCentral\urls.py" />
-    <Compile Include="ZenCentral\wsgi.py" />
+    <Compile Include="wsgi.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="app\" />
+    <Folder Include="app\management\" />
+    <Folder Include="app\management\commands\" />
     <Folder Include="app\migrations\" />
+    <Folder Include="C:\Users\NishantSharma\source\repos\lisa\src\ZenCentral\app\management\" />
     <Folder Include="app\static\" />
     <Folder Include="app\static\app\" />
     <Folder Include="app\static\app\content\" />
@@ -89,6 +104,7 @@
     <Folder Include="app\static\app\scripts\" />
     <Folder Include="app\templates\" />
     <Folder Include="app\templates\app\" />
+    <Folder Include="apache\" />
     <Folder Include="SlideDB\" />
     <Folder Include="SlideDB\migrations\" />
     <Folder Include="SlideDB\templates\" />
@@ -98,6 +114,9 @@
     <Folder Include="ZenCentral\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="apache\httpd.conf">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="requirements.txt" />
     <Content Include="db.sqlite3" />
     <Content Include="app\static\app\content\bootstrap.css" />
@@ -130,6 +149,8 @@
     <Content Include="app\templates\app\loginpartial.html" />
     <Content Include="SlideDB\templates\index.html" />
     <Content Include="Search\templates\index.html" />
+    <Content Include="start.bat" />
+    <Content Include="start.sh" />
   </ItemGroup>
   <ItemGroup>
     <None Include="readme.html">
