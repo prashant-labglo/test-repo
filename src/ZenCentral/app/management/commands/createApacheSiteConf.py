@@ -14,4 +14,5 @@ class Command(BaseCommand):
             print("Define ModulesRootFolder {0}".format(lisaConfig.globalApacheModulesRoot), file=fp)
             print("Include '${AppRootFolder}ZenCentral/apache/httpd.conf'", file=fp)
             print("Include '${AppRootFolder}ZenCentral/apache/wsgi.conf'", file=fp)
+            print("Include '${AppRootFolder}ZenCentral/apache/ssl.conf'", file=fp)
             print("Include '${AppRootFolder}ZenCentral/apache/zenApps.conf'", file=fp)
