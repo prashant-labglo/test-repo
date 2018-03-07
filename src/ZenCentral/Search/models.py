@@ -9,7 +9,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save, post_delete, pre_save
 from SlideDB.models import Slide, Concept, SubConcept, Construct
-from SlideSearch import Word2vecDistanceModel, SlideSearchW2V, SlideSearchLambdaMart
+from SlideSearch import SlideSearchW2V, SlideSearchLambdaMart
 from LibLisa import lastCallProfile, lisaConfig, textCleanUp, methodProfiler, blockProfiler
 from ZenCentral.middleware import get_current_user
 
@@ -234,8 +234,6 @@ class SearchIndex(models.Model):
     pickledModelFile = models.FileField(upload_to=pickFilename)
 
     schemaVersion = models.IntegerField()
-    # Model to find word distances using word2vec.
-    word2vecDistanceModel = Word2vecDistanceModel()
 
     # Cache object is used to select which search index data structures to
     # keep in memory. A maximum of 3 are kept in memory at a time.

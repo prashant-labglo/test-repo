@@ -56,3 +56,7 @@ class Word2vecDistanceModel(object):
 
         # Return result.
         return semanticSimilarity
+
+word2vecDistanceModel = Word2vecDistanceModel()
+print("Profiling data for building Word2vecDistanceModel:\n {0}".format(json.dumps(lastCallProfile(), indent=4)))
+

@@ -4,22 +4,20 @@ SectionModel is used to build a model
 import gensim
 
 from LibLisa import methodProfiler, blockProfiler, lastCallProfile
+from SlideSearch.Word2VecDistanceModel import word2vecDistanceModel
 
 class SectionModel(object):
     """
     Indexes a text segment for search and provides the ability to generate features like:
         BM25, TFIDF, SemanticSimilarity, 
     """
-    def __init__(self, corpus, dictionary, word2vecDistanceModel):
+    def __init__(self, corpus, dictionary):
         with blockProfiler("SectionModel.__init__"):
             self.corpus = corpus
 
             # Create a word dictionary for use in vector building.
             # self.dictionary = gensim.corpora.Dictionary(self.corpus)
             self.dictionary = dictionary
-
-            # One of the features is word2vec distance.
-            self.word2vecDistanceModel = word2vecDistanceModel
 
             # Build a TFIDF model for the corpus.
             self.tfidfModel = gensim.models.TfidfModel(self.corpus, dictionary=self.dictionary)
@@ -61,7 +59,7 @@ class SectionModel(object):
             ftrArray[curIndex].extend([sum_tf, sum_idf, sum_tfidf])
 
             # Append word2vec distance.
-            # word2vecDistance = self.word2vecDistanceModel.queryPhrase2TagsetSimilarity(queryDoc["Keywords"], corpusDoc)
+            # word2vecDistance = word2vecDistanceModel.queryPhrase2TagsetSimilarity(queryDoc["Keywords"], corpusDoc)
             # ftrArray[curIndex].append(word2vecDistance)
 
             curIndex += 1

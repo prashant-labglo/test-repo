@@ -14,20 +14,19 @@ import gensim
 
 from LibLisa import lisaConfig, methodProfiler, blockProfiler, lastCallProfile
 from SlideSearch.SlideSearchBase import SlideSearchBase
+from SlideSearch.Word2VecDistanceModel import word2vecDistanceModel
 
 class SlideSearchW2V(SlideSearchBase):
     """
     Search engine object for slides.
     The similarity is measured by simply taking a dot product between the two word vectors.
     """
-    def __init__(self, dataForIndexing, config, word2vecDistanceModel):
+    def __init__(self, dataForIndexing, config):
         """
         Constructor for SlideSearchIndex takes the path of slide contents file as input.
         """
         # Invoke base class constructor.
         super().__init__(dataForIndexing, config)
-
-        self.word2vecDistanceModel = word2vecDistanceModel
 
     @methodProfiler
     def slideSimilarity(self, queryInfo, permittedSlides):
@@ -36,7 +35,7 @@ class SlideSearchW2V(SlideSearchBase):
         """
         retval = {}
         for (index, slide) in enumerate(permittedSlides):
-            slideScore = self.word2vecDistanceModel.queryPhrase2TagsetSimilarity(queryInfo["Keywords"], self.getTags(slide))
+            slideScore = word2vecDistanceModel.queryPhrase2TagsetSimilarity(queryInfo["Keywords"], self.getTags(slide))
             retval[index] = slideScore
 
         return retval

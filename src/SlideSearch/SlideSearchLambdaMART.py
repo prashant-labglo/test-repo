@@ -22,7 +22,7 @@ class SlideSearchLambdaMart(SlideSearchBase):
     """
     Search engine object for slides, using LambdaMART.
     """
-    def __init__(self, dataForIndexing, config, word2vecDistanceModel):
+    def __init__(self, dataForIndexing, config):
         """
         Constructor for SlideSearchIndex takes the path of slide contents file as input.
         """
@@ -53,13 +53,13 @@ class SlideSearchLambdaMart(SlideSearchBase):
                 # Build section wise corpora and model for slide tags.
                 slideTagCorpora = [self.getTags(slide) for slide in allSlides]
 
-                self.slideTagModel = SectionModel(slideTagCorpora, self.dictionary, word2vecDistanceModel)
+                self.slideTagModel = SectionModel(slideTagCorpora, self.dictionary)
 
                 # Build corpora for construct paths.
                 constructPathCorpora = set([self.getPath(slide) for slide in allSlides])
                 self.constructPathList = [list(constructPath) for constructPath in constructPathCorpora]
                 self.constructPathToIndex = { tuple(path):index for (index, path) in enumerate(self.constructPathList) }
-                self.constructPathModel = SectionModel(self.constructPathList, self.dictionary, word2vecDistanceModel)
+                self.constructPathModel = SectionModel(self.constructPathList, self.dictionary)
 
     @methodProfiler
     def features(self, queryInfo, permittedSlides=None):

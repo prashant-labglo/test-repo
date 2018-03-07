@@ -7,9 +7,16 @@ import numpy as np
 
 from LibLisa import lastCallProfile, lisaConfig, LisaZeptoClient, blockProfiler
 
-from SlideSearch.Word2VecDistanceModel import Word2vecDistanceModel
 from SlideSearch.SlideSearchWord2vec import SlideSearchW2V
 from SlideSearch.SlideSearchLambdaMART import SlideSearchLambdaMart
+
+@methodProfiler
+def slideSearchIndexSave(index, filename):
+    pass
+
+@methodProfiler
+def slideSearchIndexLoad(filename, schemaVersion):
+    pass
 
 def getSlideRatingVecs(slideSearchIndex, slideRatingsData, slideHierarchy):
     """
@@ -67,17 +74,13 @@ if __name__ == "__main__":
     with open(lisaConfig.dataFolderPath + "latestZeptoDataTransformed.json", "w") as fp:
         json.dump(latestZeptoDataTransformed, fp, indent=2)
 
-    # Model to find word distances using word2vec.
-    word2vecDistanceModel = Word2vecDistanceModel()
-    print("Profiling data for building Word2vecDistanceModel:\n {0}".format(json.dumps(lastCallProfile(), indent=4)))
-
     # Assign indices to all slides.
     for (index, slide) in enumerate(latestZeptoDataTransformed["Slides"]):
         slide.id = index
 
     # Slide search using LambdaMART.
     lisaConfig["slideSearch"].isDjangoModel = False
-    slideSearchIndex = SlideSearchLambdaMart(latestZeptoDataTransformed, lisaConfig.slideSearch, word2vecDistanceModel)
+    slideSearchIndex = SlideSearchLambdaMart(latestZeptoDataTransformed, lisaConfig.slideSearch)
 
     # See if we have already created training data.
     slideRatingsDataFilePath = lisaConfig.dataFolderPath + "slideRatingsData.json"
@@ -87,7 +90,7 @@ if __name__ == "__main__":
     #        (Tx, Ty, Tqids) = (slideRatingsData["Tx"], slideRatingsData["Ty"], slideRatingsData["Tqids"])
     #else:
     # Training requires seed data. Seed data is created by applying SlideSearchW2V.
-    slideSearchIndexSeed = SlideSearchW2V(latestZeptoDataTransformed, lisaConfig.slideSearch, word2vecDistanceModel)
+    slideSearchIndexSeed = SlideSearchW2V(latestZeptoDataTransformed, lisaConfig.slideSearch)
     slideRatingsData = slideSearchIndex.buildSeedTrainingSet(slideSearchIndexSeed)
     with open(slideRatingsDataFilePath, "w") as fp:
         json.dump(slideRatingsData, fp, indent=4)
