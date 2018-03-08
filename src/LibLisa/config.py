@@ -66,17 +66,21 @@ def LisaConfig():
         elif os.name == "posix":
             repoRoot = "/mnt/c/Users/NishantSharma/source/repos/"
     elif retval.hostname in ["lisa-dev"]:
-        repoRoot = "/home/nishant/repos/"
+        repoRoot = "/srv/"
+    elif retval.hostname in ["labglo-pc"]:
+        repoRoot = "/projects/sources/"
 
     if os.name == "nt":
         retval.globalApacheModulesRoot = "C:/Apache2/modules/"
     elif os.name == "posix":
         retval.globalApacheModulesRoot = "/usr/lib/apache2/modules/"
         
-    retval.appRoot = repoRoot + "lisa/"
+    retval.appRoot = repoRoot + "lisa-api/"
     retval.word2vecModelPath = repoRoot + "word2vec-slim/GoogleNews-vectors-negative300-SLIM.bin"
     # retval.word2vecModelPath = repoRoot + "word2vec/GoogleNews-vectors-negative300.bin"
     retval.dataFolderPath = retval.appRoot + "data/"
+    if not os.path.exists(retval.dataFolderPath):
+        os.makedirs(retval.dataFolderPath)
 
     if retval.hostname in ["lisa-dev"]:
         zenCentralConfig["allowedHosts"].append("52.165.226.255")

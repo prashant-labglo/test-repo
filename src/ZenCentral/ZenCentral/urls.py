@@ -4,6 +4,7 @@ Definition of urls for ZenCentral.
 
 from datetime import datetime
 from django.conf.urls import url, include
+from django.contrib import admin
 import django.contrib.auth.views
 
 import app, app.views, app.forms
@@ -15,12 +16,11 @@ from rest_framework.schemas import get_schema_view
 schema_view = get_schema_view(title="SlideDB and slide search API")
 
 # Uncomment the next lines to enable the admin:
-# from django.conf.urls import include
-# from django.contrib import admin
-# admin.autodiscover()
+admin.autodiscover()
 
 urlpatterns = [
     # Examples:
+    url(r'^admin/', admin.site.urls),
     url(r'^$', app.views.home, name='home'),
     url(r'^contact$', app.views.contact, name='contact'),
     url(r'^about', app.views.about, name='about'),
