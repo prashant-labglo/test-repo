@@ -55,7 +55,7 @@ MIDDLEWARE = [
     'ZenCentral.middleware.ThreadLocalMiddleware',
 ]
 
-MIDDLEWARE_CLASSES = [
+MIDDLEWARE += [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -146,3 +146,8 @@ STATIC_URL = '/static/'
 STATIC_ROOT = posixpath.join(*(BASE_DIR.split(os.path.sep) + ['static']))
 
 FORCE_LOWERCASE_TAGS = True
+
+try:
+    from local_settings import *
+except ImportError:
+    pass
