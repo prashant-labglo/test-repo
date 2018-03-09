@@ -6,7 +6,7 @@ from Search.models import SearchResult, SearchResultRating, SearchQuery, SearchI
 from SlideDB.models import Slide
 from Search.serializers import NestedSearchResultSerializer, SearchResultSerializer, SearchResultRatingSerializer, SearchQuerySerializer, SearchIndexSerializer
 from ZenCentral.views import profiledModelViewSet
-from LibLisa import lastCallProfile, lisaConfig, textCleanUp, methodProfiler, blockProfiler
+from LibLisa import lastCallProfile, lisaConfig, methodProfiler, blockProfiler
 
 from django.shortcuts import render
 

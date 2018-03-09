@@ -27,6 +27,7 @@ then
     fi
 fi
 
+export PYTHONPATH=$(pwd)/../
 mkdir -p apache/logs
 mod_wsgi-express module-config > apache/wsgi.conf
 python3 ./manage.py createApacheSiteConf apache/site.conf

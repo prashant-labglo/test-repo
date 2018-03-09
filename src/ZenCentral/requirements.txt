@@ -5,3 +5,5 @@ django-taggit>=0.22.2
 django-taggit-serializer>=0.1.5
 django_jsonfield>=1.0.1
 cachetools>=2.0.1
+django-sslserver>=0.20
+mod_wsgi>=4.6.2

@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'taggit',
     'taggit_serializer',
+    'sslserver',
 ]
 
 MIDDLEWARE = [
@@ -84,7 +85,6 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'ZenCentral.wsgi.application'
 
 
 # Database

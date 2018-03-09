@@ -7,7 +7,7 @@
         Microsoft LTR dataset: https://www.microsoft.com/en-us/research/project/mslr
 """
 
-import json, re
+import json, re, pickle
 import gensim, pyltr
 
 import numpy as np
@@ -72,8 +72,8 @@ class SlideSearchLambdaMart(SlideSearchBase):
             permittedSlides = allSlides
             permittedIndices = range(len(allSlides))
         else:
-            slideToIndexMap = { slide["id"]:index for (index, slide) in enumerate(allSlides) }
-            permittedIndices = [slideToIndexMap[slide["id"]] for slide in permittedSlides]
+            slideToIndexMap = { self.getAttr(slide, "id"):index for (index, slide) in enumerate(allSlides) }
+            permittedIndices = [slideToIndexMap[self.getAttr(slide, "id")] for slide in permittedSlides]
 
         # Create construct feature array from path model.
         constructFtrArray = self.constructPathModel.get_features(queryInfo)
@@ -86,7 +86,7 @@ class SlideSearchLambdaMart(SlideSearchBase):
             toAppend.extend(constructFtrArray[self.constructPathToIndex[self.getPath(slide)]])
 
             # Add zeptoDownloads count as a feature.
-            toAppend.append(slide["zeptoDownloads"])
+            toAppend.append(self.getAttr(slide, "zeptoDownloads"))
 
             # Append a copy of features into the slide feature array.
             slideFtrArray.append(toAppend)
@@ -260,6 +260,31 @@ class SlideSearchLambdaMart(SlideSearchBase):
         # Return the result.
         return retval
 
+    @methodProfiler
+    def saveTrainingResult(self, filename):
+        """
+        Pre Conditions:
+            fit has already been called.
+            We have already called fit. We are only interseted in the result of fit.
+            Nothing else is really important.
+        Things to save:
+            1) 
+        """
+        tupleToSave = (self.LambdaMartMetric, self.LambdaMartMonitor, self.LambdaMartModel)
+        with open(filename, "wb") as fp:
+            pickle.dump(tupleToSave, fp)
+
+    @methodProfiler
+    def loadTrainingResult(self, filePointer, schemaVersion):
+        """
+        Only the result of an old fit operation is to be loaded.
+        """
+        if schemaVersion == 1:
+            savedTuple = pickle.load(filePointer)
+            (self.LambdaMartMetric, self.LambdaMartMonitor, self.LambdaMartModel) = savedTuple
+        else:
+            raise NotImplemented("Incorrect schema version.")
+
 @methodProfiler
 def extractCorpus(slideComponent):
     """
@@ -284,3 +309,4 @@ def extractCorpus(slideComponent):
         return retval
     else:
         import pdb;pdb.set_trace()
+

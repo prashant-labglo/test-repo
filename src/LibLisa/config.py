@@ -1,7 +1,7 @@
 """
 File which builds configuration object for all services in the solution.
 """
-import os
+import os, ssl
 from socket import gethostname
 from attrdict import AttrDict
 from enum import Enum
@@ -34,7 +34,7 @@ def LisaConfig():
 
     # Build and set SlideDbClient config.
     slideDbConfig = AttrDict()
-    slideDbConfig.BaseUrl = "http://localhost:8000/"
+    slideDbConfig.BaseUrl = "https://localhost:8000/"
     slideDbConfig.appName = "slidedb"
     slideDbConfig.Username = "test"
     slideDbConfig.Password = "test"
@@ -42,7 +42,7 @@ def LisaConfig():
 
     # Build and set SlideSearch config.
     slideSearchConfig = AttrDict()
-    slideSearchConfig.BaseUrl = "http://localhost:8000/"
+    slideSearchConfig.BaseUrl = "https://localhost:8000/"
     slideSearchConfig.appName = "search"
     slideSearchConfig.Username = "test"
     slideSearchConfig.Password = "test"
@@ -74,8 +74,12 @@ def LisaConfig():
         retval.globalApacheModulesRoot = "C:/Apache2/modules/"
     elif os.name == "posix":
         retval.globalApacheModulesRoot = "/usr/lib/apache2/modules/"
-        
+
+    retval.ssl_verify = retval.hostname in ["lisa-dev", "lisa-ppe", "lisa-prod"]
+
     retval.appRoot = repoRoot + "lisa-api/"
+    retval.uploadsFolder = retval.appRoot + "src/ZenCentral/uploads/"
+
     retval.word2vecModelPath = repoRoot + "word2vec-slim/GoogleNews-vectors-negative300-SLIM.bin"
     # retval.word2vecModelPath = repoRoot + "word2vec/GoogleNews-vectors-negative300.bin"
     retval.dataFolderPath = retval.appRoot + "data/"

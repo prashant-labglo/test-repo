@@ -5,7 +5,11 @@ All modified slides are then uploaded into ZenCentral SlideDB service.
 
 import threading, time, json, os, random
 from attrdict import AttrDict
-from LibLisa import lisaConfig, LisaZeptoClient, SlideDbClient, SearchClient, blockProfiler, lastCallProfile
+from LibLisa import lisaConfig, blockProfiler, lastCallProfile
+from SlideIndexer.SearchClient import SearchClient
+from SlideIndexer.SlideDbClient import SlideDbClient
+from SlideIndexer.LisaZeptoClient import LisaZeptoClient
+
 from SlideSearch import SlideSearchW2V, SlideSearchLambdaMart, getSlideRatingVecs
 
 # Instantiate REST clients.

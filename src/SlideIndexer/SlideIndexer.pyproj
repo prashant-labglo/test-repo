@@ -21,6 +21,9 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="LisaZeptoClient.py" />
+    <Compile Include="SearchClient.py" />
+    <Compile Include="SlideDbClient.py" />
     <Compile Include="SlideIndexer.py" />
     <Compile Include="ZeptoSync.py">
       <SubType>Code</SubType>

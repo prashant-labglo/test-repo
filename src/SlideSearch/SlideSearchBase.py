@@ -102,7 +102,7 @@ class SlideSearchBase(object):
 
         # Append scores with items in resultList.
         if getIDs:
-            resultList = [(slideScores[index], slide["id"]) for (index, slide) in resultList]
+            resultList = [(slideScores[index], self.getAttr(slide, "id")) for (index, slide) in resultList]
         else:
             resultList = [(slideScores[index], slide) for (index, slide) in resultList]
 
@@ -126,6 +126,13 @@ class SlideSearchBase(object):
 
     def getTags(self, slide):
         if self.config["isDjangoModel"]:
+
             return slide.tags.names()
         else:
             return slide["tags"]
+
+    def getAttr(self, slide, attr):
+        if self.config["isDjangoModel"]:
+            return getattr(slide, attr)
+        else:
+            return slide[attr]

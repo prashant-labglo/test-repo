@@ -5,6 +5,7 @@ import tempfile, pickle, json
 from LibLisa.behaviors import Behavior
 from LibLisa.CoreApiRestClient import CoreApiRestClient
 from LibLisa.config import lisaConfig
+from SlideSearch import curSchemaVersion
 from coreapi.utils import File as CoreApiFile
 
 class SearchClient(CoreApiRestClient):
@@ -57,8 +58,7 @@ class SearchClient(CoreApiRestClient):
 
     def uploadSlideSearchIndex(self, slideSearchIndex, indexType, rankingSources, evalResults):
         slideSearchIndexFilename = lisaConfig.dataFolderPath + "slideSearchIndex.pkl"
-        with open(slideSearchIndexFilename, "wb") as fp:
-            pickle.dump(slideSearchIndex, fp)
+        slideSearchIndex.saveTrainingResult(slideSearchIndexFilename)
 
         with open(slideSearchIndexFilename, "rb") as fp:
             retval = self.client.action(
@@ -67,7 +67,7 @@ class SearchClient(CoreApiRestClient):
                 params={
                     "indexType":indexType,
                     "rankingSources" : rankingSources,
-                    "schemaVersion" : 0,
+                    "schemaVersion" : curSchemaVersion,
                     "pickledModelFile" : fp,
                     "evalResults" : json.dumps(evalResults),
                     },

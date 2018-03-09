@@ -5,6 +5,7 @@ needs to talk to Django ZenClient.
 import coreapi, os, json
 from attrdict import AttrDict
 from LibLisa.RestClient import RestClient
+from LibLisa import lisaConfig, no_ssl_verification
 
 class CoreApiRestClient(RestClient):
     """
@@ -26,8 +27,9 @@ class CoreApiRestClient(RestClient):
         #    password=self.config.Password
         #)
         #self.client = coreapi.Client(auth=self.auth)
-        self.client = coreapi.Client()
-        self.schema = self.client.get(self.schemaURL)
+        with no_ssl_verification():
+            self.client = coreapi.Client()
+            self.schema = self.client.get(self.schemaURL)
 
     def getModelInstances(self, modelName):
         """

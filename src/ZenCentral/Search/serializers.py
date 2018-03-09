@@ -168,7 +168,7 @@ class QueryResultsIteratorWithAutoInsertion(object):
             try:
                 # First try pre-existing DB entries.
                 return SearchResult.objects.get(query=self.queryObj, rank=key)
-            except:
+            except SearchResult.DoesNotExist:
                 # Create a new entry for DB and insert it.
                 (score, slideId) = self.queryObj.resultJson[key]
                 slide = Slide.objects.get(id=slideId)

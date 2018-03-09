@@ -3,14 +3,16 @@ from attrdict import AttrDict
 from cachetools import LRUCache
 from jsonfield import JSONField
 from enumfields import Enum, EnumField
+from django.forms.models import model_to_dict
 from django.utils import timezone
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save, post_delete, pre_save
 from SlideDB.models import Slide, Concept, SubConcept, Construct
-from SlideSearch import SlideSearchW2V, SlideSearchLambdaMart
-from LibLisa import lastCallProfile, lisaConfig, textCleanUp, methodProfiler, blockProfiler
+from SlideSearch import slideSearchIndexLoad
+from LibLisa import lastCallProfile, lisaConfig, methodProfiler, blockProfiler
+from LibLisa.config import lisaConfig
 from ZenCentral.middleware import get_current_user
 
 UserModel = get_user_model()
@@ -28,6 +30,14 @@ class SearchResultRating(models.Model):
     result = models.ForeignKey("SearchResult", related_name="ratings", on_delete=models.CASCADE)
     class Meta:
         unique_together = ('user', 'result',)
+
+    @classmethod
+    def pre_save(cls, sender, instance, *args, **kwargs):
+        """
+        Upon save, we update timestamps and populate other values, if missing.
+        """
+        if not instance.id:
+            instance.downloads = 0
 
 # Create your models here.
 class SearchResult(models.Model):
@@ -223,13 +233,12 @@ class SearchIndex(models.Model):
     evalResults = JSONField(default={})
 
     def pickFilename(instance, filename):
-        path = "uploads/"
         filename = "Type_{0}.Compat_{1}.ID_{2}.Create_{3}.pkl".format(
             instance.indexType,
             instance.schemaVersion,
             instance.id,
             instance.created)
-        return os.path.join(path, filename)
+        return os.path.join(lisaConfig.uploadsFolder, filename)
 
     pickledModelFile = models.FileField(upload_to=pickFilename)
 
@@ -266,8 +275,22 @@ class SearchIndex(models.Model):
         """
         modelInstance = SearchIndex.searchIndexCache.get(self.id)
         if modelInstance is None:
+            # Build data to index.
+            dataForIndexing = {}
+            print("Starting preparation of dataForIndexing")
+            for model in [Concept, SubConcept, Construct, Slide]:
+                # serializedData = serializer(model.objects.all(), many=True, context={'request': request}).data
+                modelArray = []
+                dataForIndexing[model.__name__ + "s"] = model.objects.all()
+
+            lisaConfig["slideSearch"].isDjangoModel = True
+            print("Starting slideSearchIndexLoad")
             # Load and cache model instance.
-            modelInstance = pickle.load(self.pickledModelFile)
+            modelInstance = slideSearchIndexLoad(
+                self.pickledModelFile,
+                dataForIndexing,
+                lisaConfig.slideSearch,
+                self.schemaVersion)
             SearchIndex.searchIndexCache[self.id] = modelInstance
         return modelInstance
 
@@ -288,3 +311,4 @@ class SearchIndex(models.Model):
 
 # Connects pre_save signal of SearchQuery.
 pre_save.connect(SearchQuery.pre_save, sender=SearchQuery) 
+pre_save.connect(SearchResultRating.pre_save, sender=SearchResultRating) 
