@@ -9,7 +9,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         with open(options["filename"][0], "w") as fp:
-            print("ServerRoot {0}.format(lisaConfig.appRoot)")
+            print("ServerRoot {0}".format(lisaConfig.appRoot), file=fp)
             print("Define AppRootFolder '{0}src/'".format(lisaConfig.appRoot), file=fp)
             print("Define ModulesRootFolder {0}".format(lisaConfig.globalApacheModulesRoot), file=fp)
             print("Include '${AppRootFolder}ZenCentral/apache/httpd.conf'", file=fp)

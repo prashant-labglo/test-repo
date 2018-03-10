@@ -66,7 +66,10 @@ def LisaConfig():
         elif os.name == "posix":
             repoRoot = "/mnt/c/Users/NishantSharma/source/repos/"
     elif retval.hostname in ["lisa-dev"]:
-        repoRoot = "/srv/"
+        if getpass.username() == "nishant":
+            repoRoot = "/home/nishant/repos/"
+        else:
+            repoRoot = "/srv/"
     elif retval.hostname in ["labglo-pc"]:
         repoRoot = "/projects/sources/"
 

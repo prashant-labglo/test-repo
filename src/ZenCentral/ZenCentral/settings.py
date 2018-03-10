@@ -143,7 +143,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-STATIC_ROOT = posixpath.join(*(BASE_DIR.split(os.path.sep) + ['static']))
+STATIC_ROOT = 'static'
 
 FORCE_LOWERCASE_TAGS = True
 
