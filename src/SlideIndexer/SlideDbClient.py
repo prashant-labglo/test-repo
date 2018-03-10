@@ -85,7 +85,7 @@ class SlideDbClient(CoreApiRestClient):
                                 changes[key] = value
                         elif key == "parent":
                             if value["id"] != attoModel[key]["id"]:
-                                changes[key] = value
+                                changes[key] = self.getModelUrl(value)
                         else:
                             if value != attoModel[key]:
                                 changes[key] = value
@@ -93,6 +93,7 @@ class SlideDbClient(CoreApiRestClient):
                     if changes:
                         # Apply all changes into the atto server's copy.
                         changes["id"] = attoModel["id"]
+                        print("Applying changes {0} to {1}", changes, self.getModelUrl(attoModel))
                         self.client.action(self.schema, [self.config.appName, modelName.lower(), 'partial_update'], changes)
 
             # Iterate over zeptoModelsDict to find newly created entries on the zepto side.

@@ -7,7 +7,7 @@
         Microsoft LTR dataset: https://www.microsoft.com/en-us/research/project/mslr
 """
 
-import json, re
+import json, re, pickle
 import gensim, pyltr
 
 import numpy as np
@@ -22,7 +22,7 @@ class SlideSearchLambdaMart(SlideSearchBase):
     """
     Search engine object for slides, using LambdaMART.
     """
-    def __init__(self, dataForIndexing, config, word2vecDistanceModel):
+    def __init__(self, dataForIndexing, config):
         """
         Constructor for SlideSearchIndex takes the path of slide contents file as input.
         """
@@ -53,13 +53,13 @@ class SlideSearchLambdaMart(SlideSearchBase):
                 # Build section wise corpora and model for slide tags.
                 slideTagCorpora = [self.getTags(slide) for slide in allSlides]
 
-                self.slideTagModel = SectionModel(slideTagCorpora, self.dictionary, word2vecDistanceModel)
+                self.slideTagModel = SectionModel(slideTagCorpora, self.dictionary)
 
                 # Build corpora for construct paths.
                 constructPathCorpora = set([self.getPath(slide) for slide in allSlides])
                 self.constructPathList = [list(constructPath) for constructPath in constructPathCorpora]
                 self.constructPathToIndex = { tuple(path):index for (index, path) in enumerate(self.constructPathList) }
-                self.constructPathModel = SectionModel(self.constructPathList, self.dictionary, word2vecDistanceModel)
+                self.constructPathModel = SectionModel(self.constructPathList, self.dictionary)
 
     @methodProfiler
     def features(self, queryInfo, permittedSlides=None):
@@ -72,8 +72,8 @@ class SlideSearchLambdaMart(SlideSearchBase):
             permittedSlides = allSlides
             permittedIndices = range(len(allSlides))
         else:
-            slideToIndexMap = { slide["id"]:index for (index, slide) in enumerate(allSlides) }
-            permittedIndices = [slideToIndexMap[slide["id"]] for slide in permittedSlides]
+            slideToIndexMap = { self.getAttr(slide, "id"):index for (index, slide) in enumerate(allSlides) }
+            permittedIndices = [slideToIndexMap[self.getAttr(slide, "id")] for slide in permittedSlides]
 
         # Create construct feature array from path model.
         constructFtrArray = self.constructPathModel.get_features(queryInfo)
@@ -86,7 +86,7 @@ class SlideSearchLambdaMart(SlideSearchBase):
             toAppend.extend(constructFtrArray[self.constructPathToIndex[self.getPath(slide)]])
 
             # Add zeptoDownloads count as a feature.
-            toAppend.append(slide["zeptoDownloads"])
+            toAppend.append(self.getAttr(slide, "zeptoDownloads"))
 
             # Append a copy of features into the slide feature array.
             slideFtrArray.append(toAppend)
@@ -260,6 +260,33 @@ class SlideSearchLambdaMart(SlideSearchBase):
         # Return the result.
         return retval
 
+    @methodProfiler
+    def saveTrainingResult(self, filename):
+        """
+        Pre Conditions:
+            fit has already been called.
+            We have already called fit. We are only interested in the result of fit().
+            Nothing else is really important.
+        Things to save:
+            1) self.LambdaMartMetric.
+            2) self.LambdaMartMonitor.
+            3) self.LambdaMartModel.
+        """
+        tupleToSave = (self.LambdaMartMetric, self.LambdaMartMonitor, self.LambdaMartModel)
+        with open(filename, "wb") as fp:
+            pickle.dump(tupleToSave, fp)
+
+    @methodProfiler
+    def loadTrainingResult(self, filePointer, schemaVersion):
+        """
+        Inverse of saveTrainingResult, it loads the data saved by saveTrainingResult().
+        """
+        if schemaVersion == 1:
+            savedTuple = pickle.load(filePointer)
+            (self.LambdaMartMetric, self.LambdaMartMonitor, self.LambdaMartModel) = savedTuple
+        else:
+            raise NotImplemented("Incorrect schema version.")
+
 @methodProfiler
 def extractCorpus(slideComponent):
     """
@@ -284,3 +311,4 @@ def extractCorpus(slideComponent):
         return retval
     else:
         import pdb;pdb.set_trace()
+

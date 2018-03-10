@@ -96,7 +96,7 @@
     <Folder Include="app\management\" />
     <Folder Include="app\management\commands\" />
     <Folder Include="app\migrations\" />
-    <Folder Include="C:\Users\NishantSharma\source\repos\lisa\src\ZenCentral\app\management\" />
+    <Folder Include="app\management\" />
     <Folder Include="app\static\" />
     <Folder Include="app\static\app\" />
     <Folder Include="app\static\app\content\" />

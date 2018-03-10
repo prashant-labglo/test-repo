@@ -25,9 +25,9 @@ then
         openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout apache/zenCentral.key -out apache/zenCentral.crt -subj \
 	'/O=PREZENTIUM/OU=Tech/CN=www.prezentium.com'
     fi
-
 fi
 
+export PYTHONPATH=$(pwd)/../
 mkdir -p apache/logs
 mod_wsgi-express module-config > apache/wsgi.conf
 python3 ./manage.py createApacheSiteConf apache/site.conf

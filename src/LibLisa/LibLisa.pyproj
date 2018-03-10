@@ -29,17 +29,12 @@
     <Compile Include="config.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="LisaZeptoClient.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="RestClient.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="CoreApiRestClient.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="SearchClient.py" />
-    <Compile Include="SlideDbClient.py" />
     <Compile Include="__init__.py">
       <SubType>Code</SubType>
     </Compile>

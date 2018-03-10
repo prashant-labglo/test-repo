@@ -5,8 +5,12 @@ All modified slides are then uploaded into ZenCentral SlideDB service.
 
 import threading, time, json, os, random
 from attrdict import AttrDict
-from LibLisa import lisaConfig, LisaZeptoClient, SlideDbClient, SearchClient, blockProfiler, lastCallProfile
-from SlideSearch import Word2vecDistanceModel, SlideSearchW2V, SlideSearchLambdaMart, getSlideRatingVecs
+from LibLisa import lisaConfig, blockProfiler, lastCallProfile
+from SlideIndexer.SearchClient import SearchClient
+from SlideIndexer.SlideDbClient import SlideDbClient
+from SlideIndexer.LisaZeptoClient import LisaZeptoClient
+
+from SlideSearch import SlideSearchW2V, SlideSearchLambdaMart, getSlideRatingVecs
 
 # Instantiate REST clients.
 slideDbClient = SlideDbClient()
@@ -23,17 +27,13 @@ def searchIndexCreatorThreadFunc():
     slideDbClient.login()
     searchClient.login()
 
-    # Initialize a word2vecDistanceModel to be used regularly.
-    word2vecDistanceModel = Word2vecDistanceModel()
-    print("Profiling data for building Word2vecDistanceModel:\n {0}".format(json.dumps(lastCallProfile(), indent=4)))
-
     # Main loop.
     while True:
         # Get all changes made since last update.
         dataForIndexing = slideDbClient.getSlideHierarchy()
 
         # Slide search using LambdaMART.
-        slideSearchIndex = SlideSearchLambdaMart(dataForIndexing, lisaConfig.slideIndexer, word2vecDistanceModel)
+        slideSearchIndex = SlideSearchLambdaMart(dataForIndexing, lisaConfig.slideIndexer)
 
         # Collate slides rating data from the server.
         slideRatingsData = searchClient.getSlideRatingsData(dataForIndexing)
@@ -47,7 +47,7 @@ def searchIndexCreatorThreadFunc():
             # Generate slide ratings data, unless available from cached file.
             cachedFilePath = lisaConfig.simulatedSlideRatingsDataFilePath
             if cachedFilePath is None or not os.path.exists(cachedFilePath):
-                slideSearchIndexSeed = SlideSearchW2V(dataForIndexing, lisaConfig.slideIndexer, word2vecDistanceModel)
+                slideSearchIndexSeed = SlideSearchW2V(dataForIndexing, lisaConfig.slideIndexer)
                 slideRatingsData = slideSearchIndex.buildSeedTrainingSet(slideSearchIndexSeed)
                 if cachedFilePath is not None:
                     with open(cachedFilePath, "w") as fp:

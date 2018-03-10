@@ -4,7 +4,10 @@ All modified slides are then uploaded into ZenCentral SlideDB service.
 """
 
 import threading, time
-from LibLisa import lisaConfig, LisaZeptoClient, SlideDbClient, SearchClient
+from LibLisa import lisaConfig
+
+from SlideIndexer.LisaZeptoClient import LisaZeptoClient
+from SlideIndexer.SlideDbClient import SlideDbClient
 
 # Instantiate REST clients.
 slideDbClient = SlideDbClient()
