@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>106709ab-6abc-4459-ae55-a03530c4a88b</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>SlideIndexer.py</StartupFile>
+    <StartupFile>appSlideIndexer.py</StartupFile>
     <SearchPath>..\..\src</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -24,8 +24,11 @@
     <Compile Include="LisaZeptoClient.py" />
     <Compile Include="SearchClient.py" />
     <Compile Include="SlideDbClient.py" />
-    <Compile Include="SlideIndexer.py" />
-    <Compile Include="ZeptoSync.py">
+    <Compile Include="appSlideIndexer.py" />
+    <Compile Include="appZeptoSync.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="__init__.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

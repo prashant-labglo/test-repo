@@ -80,29 +80,45 @@ class blockProfiler(object):
         profilingData[-1]["BreakUp"].append(self.curNode)
 
 class no_ssl_verification_session(requests.sessions.Session):
+    """
+    This class overrides send method of requests.sessions.Session class.
+    It inserts argument verify=False in the send method of the said class.
+
+    Useful in skipping certificate check when required.
+    """
     def send(self, request, **kwargs):
         kwargs["verify"] = False
         return super().send(request, **kwargs)
 
 @contextlib.contextmanager
-def no_ssl_verification():
+def check_ssl_certs(enabled):
     """
     Sometimes we want to make https requests without certificate verification.
     This function does that.
     """
-    old_request = requests.Session.request
-    requests.Session.request = functools.partialmethod(old_request, verify=False)
+    if enabled:
+        # Override request method in module requests.Session to pass verify=False.
+        old_request = requests.Session.request
+        requests.Session.request = functools.partialmethod(old_request, verify=False)
 
-    old_session_class = requests.sessions.Session
-    requests.sessions.Session = no_ssl_verification_session
-    requests.Session = no_ssl_verification_session
-    warnings.filterwarnings('ignore', 'Unverified HTTPS request')
+        # Override Session class in module requests and requests.sessions to pass
+        # verify=False when needed.
+        old_session_class = requests.sessions.Session
+        requests.sessions.Session = no_ssl_verification_session
+        requests.Session = no_ssl_verification_session
+        warnings.filterwarnings('ignore', 'Unverified HTTPS request')
+        
     yield
-    warnings.resetwarnings()
 
-    requests.Session.request = old_request
-    requests.Session = old_session_class
-    requests.sessions.Session = old_session_class
+    if enabled:
+        warnings.resetwarnings()
+
+        # Undo override request method in module requests.Session.
+        requests.Session.request = old_request
+
+        # Undo override Session class in module requests and requests.sessions.
+        requests.Session = old_session_class
+        requests.sessions.Session = old_session_class
     
 def textCleanUp(jsonObject, badStrings=None, allStrings=None):
     """

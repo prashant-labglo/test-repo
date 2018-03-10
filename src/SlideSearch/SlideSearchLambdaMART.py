@@ -265,10 +265,12 @@ class SlideSearchLambdaMart(SlideSearchBase):
         """
         Pre Conditions:
             fit has already been called.
-            We have already called fit. We are only interseted in the result of fit.
+            We have already called fit. We are only interested in the result of fit().
             Nothing else is really important.
         Things to save:
-            1) 
+            1) self.LambdaMartMetric.
+            2) self.LambdaMartMonitor.
+            3) self.LambdaMartModel.
         """
         tupleToSave = (self.LambdaMartMetric, self.LambdaMartMonitor, self.LambdaMartModel)
         with open(filename, "wb") as fp:
@@ -277,7 +279,7 @@ class SlideSearchLambdaMart(SlideSearchBase):
     @methodProfiler
     def loadTrainingResult(self, filePointer, schemaVersion):
         """
-        Only the result of an old fit operation is to be loaded.
+        Inverse of saveTrainingResult, it loads the data saved by saveTrainingResult().
         """
         if schemaVersion == 1:
             savedTuple = pickle.load(filePointer)

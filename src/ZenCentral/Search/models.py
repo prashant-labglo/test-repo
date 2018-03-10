@@ -3,7 +3,6 @@ from attrdict import AttrDict
 from cachetools import LRUCache
 from jsonfield import JSONField
 from enumfields import Enum, EnumField
-from django.forms.models import model_to_dict
 from django.utils import timezone
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
