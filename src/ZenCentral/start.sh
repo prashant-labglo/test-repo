@@ -11,10 +11,12 @@ function list_include_item {
   return $result
 }
 
+export PYTHONPATH=$(pwd)/../
+
 if [ "$HOSTNAME" != "preze-ntpc" ]
 then
 	python3 ./manage.py migrate
-	python3 ./manage.py collectstatic
+	python3 ./manage.py collectstatic --no-input
 fi
 
 # For most test machines.
@@ -27,7 +29,6 @@ then
     fi
 fi
 
-export PYTHONPATH=$(pwd)/../
 mkdir -p apache/logs
 mod_wsgi-express module-config > apache/wsgi.conf
 python3 ./manage.py createApacheSiteConf apache/site.conf

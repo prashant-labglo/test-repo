@@ -1,7 +1,7 @@
 """
 File which builds configuration object for all services in the solution.
 """
-import os, ssl
+import os, ssl, getpass
 from socket import gethostname
 from attrdict import AttrDict
 from enum import Enum
@@ -66,7 +66,10 @@ def LisaConfig():
         elif os.name == "posix":
             repoRoot = "/mnt/c/Users/NishantSharma/source/repos/"
     elif retval.hostname in ["lisa-dev"]:
-        repoRoot = "/srv/"
+        if getpass.getuser() == "nishant":
+            repoRoot = "/home/nishant/repos/"
+        else:
+            repoRoot = "/srv/"
     elif retval.hostname in ["labglo-pc"]:
         repoRoot = "/projects/sources/"
 
