@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
 import os
-import posixpath
 
 from LibLisa import lisaConfig
 from ZenCentral.middleware import ThreadLocalMiddleware
@@ -86,14 +85,17 @@ TEMPLATES = [
 ]
 
 
-
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': lisaConfig.zendbconf.engine,
+        'NAME': lisaConfig.zendbconf.name,
+        'USER': lisaConfig.zendbconf.user,
+        'PASSWORD': lisaConfig.zendbconf.password,
+        'HOST': lisaConfig.zendbconf.host,
+        'PORT': lisaConfig.zendbconf.port,
     }
 }
 
@@ -147,7 +149,7 @@ STATIC_ROOT = 'static'
 
 FORCE_LOWERCASE_TAGS = True
 
-try:
-    from local_settings import *
-except ImportError:
-    pass
+# try:
+#     from local_settings import *
+# except ImportError:
+#     pass

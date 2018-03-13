@@ -7,19 +7,21 @@ from attrdict import AttrDict
 from enum import Enum
 from LibLisa.behaviors import Behavior
 
+
 class DeploymentStage(Enum):
     """
     Enum representing the stage of deployment where the current service is running.
     """
     Dev = 0
 
+
 def LisaConfig():
     """
     Function which builds the configuration object.
     """
     retval = AttrDict({
-            "behaviorVersion" : Behavior(0),
-            "IterationPeriod" : 60,
+            "behaviorVersion": Behavior(0),
+            "IterationPeriod": 60,
         })
 
     retval.hostname = gethostname().lower()
@@ -57,8 +59,19 @@ def LisaConfig():
 
     # Build and set ZenCentral config.
     zenCentralConfig = AttrDict()
-    zenCentralConfig.allowedHosts = ["localhost"]
+    zenCentralConfig.allowedHosts = ["localhost", "lisa-dev.prezentium.com"]
     retval.zenCentral = zenCentralConfig
+
+    # Database configurations
+    if retval.hostname in ["labglo-pc", "lisa-dev"]:
+        dbconf = AttrDict()
+        dbconf.engine = "django.db.backends.postgresql_psycopg2"
+        dbconf.name = "lisadevdb"
+        dbconf.user = "postgres"
+        dbconf.password = "password"
+        dbconf.host = "localhost"
+        dbconf.port = ""
+        retval.zendbconf = dbconf
 
     if retval.hostname in ["preze-ntpc", "desktop-fk2ht4j"]:
         if os.name == "nt":
