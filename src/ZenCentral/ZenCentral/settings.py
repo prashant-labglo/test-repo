@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
 import os
-import posixpath
 
 from LibLisa import lisaConfig
 from ZenCentral.middleware import ThreadLocalMiddleware
@@ -54,9 +53,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'ZenCentral.middleware.ThreadLocalMiddleware',
-]
-
-MIDDLEWARE += [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -86,15 +82,11 @@ TEMPLATES = [
 ]
 
 
-
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
+    'default': lisaConfig.zenDbConf
 }
 
 # Password validation

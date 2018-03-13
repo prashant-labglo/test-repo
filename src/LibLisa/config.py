@@ -7,19 +7,21 @@ from attrdict import AttrDict
 from enum import Enum
 from LibLisa.behaviors import Behavior
 
+
 class DeploymentStage(Enum):
     """
     Enum representing the stage of deployment where the current service is running.
     """
     Dev = 0
 
+
 def LisaConfig():
     """
     Function which builds the configuration object.
     """
     retval = AttrDict({
-            "behaviorVersion" : Behavior(0),
-            "IterationPeriod" : 60,
+            "behaviorVersion": Behavior(0),
+            "IterationPeriod": 60,
         })
 
     retval.hostname = gethostname().lower()
@@ -57,7 +59,7 @@ def LisaConfig():
 
     # Build and set ZenCentral config.
     zenCentralConfig = AttrDict()
-    zenCentralConfig.allowedHosts = ["localhost"]
+    zenCentralConfig.allowedHosts = ["localhost", "lisa-dev.prezentium.com"]
     retval.zenCentral = zenCentralConfig
 
     if retval.hostname in ["preze-ntpc", "desktop-fk2ht4j"]:
@@ -99,6 +101,29 @@ def LisaConfig():
         retval.simulatedSlideRatingsDataFilePath = None
     else:
         retval.simulatedSlideRatingsDataFilePath = retval.dataFolderPath + "simulatedSlideRatings.json"
+
+    # Database configurations
+    if retval.hostname in ["labglo-pc"]:
+        dbconf = AttrDict()
+        dbconf.ENGINE = "django.db.backends.postgresql_psycopg2"
+        dbconf.NAME = "lisadevdb"
+        dbconf.USER = "postgres"
+        dbconf.PASSWORD = "password"
+        dbconf.HOST = "localhost"
+        dbconf.PORT = ""
+    elif retval.hostname in ["lisa-dev"]:
+        dbconf = AttrDict()
+        dbconf.ENGINE = "django.db.backends.postgresql_psycopg2"
+        dbconf.NAME = "lisadb"
+        dbconf.USER = "postgres"
+        dbconf.PASSWORD = "Pass@lisa2018"
+        dbconf.HOST = "localhost"
+        dbconf.PORT = ""
+    else:
+        dbconf = AttrDict()
+        dbconf.ENGINE = 'django.db.backends.sqlite3'
+        dbconf.NAME = retval.appRoot + "src/ZenCentral/db.sqlite3"
+    retval.zenDbConf = dbconf
 
     return retval
 
