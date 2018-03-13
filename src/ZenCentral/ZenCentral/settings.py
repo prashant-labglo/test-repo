@@ -53,9 +53,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'ZenCentral.middleware.ThreadLocalMiddleware',
-]
-
-MIDDLEWARE += [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -89,14 +86,7 @@ TEMPLATES = [
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': lisaConfig.zendbconf.engine,
-        'NAME': lisaConfig.zendbconf.name,
-        'USER': lisaConfig.zendbconf.user,
-        'PASSWORD': lisaConfig.zendbconf.password,
-        'HOST': lisaConfig.zendbconf.host,
-        'PORT': lisaConfig.zendbconf.port,
-    }
+    'default': lisaConfig.zenDbConf
 }
 
 # Password validation
@@ -149,7 +139,7 @@ STATIC_ROOT = 'static'
 
 FORCE_LOWERCASE_TAGS = True
 
-# try:
-#     from local_settings import *
-# except ImportError:
-#     pass
+try:
+    from local_settings import *
+except ImportError:
+    pass

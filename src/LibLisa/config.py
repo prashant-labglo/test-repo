@@ -62,17 +62,6 @@ def LisaConfig():
     zenCentralConfig.allowedHosts = ["localhost", "lisa-dev.prezentium.com"]
     retval.zenCentral = zenCentralConfig
 
-    # Database configurations
-    if retval.hostname in ["labglo-pc", "lisa-dev"]:
-        dbconf = AttrDict()
-        dbconf.engine = "django.db.backends.postgresql_psycopg2"
-        dbconf.name = "lisadevdb"
-        dbconf.user = "postgres"
-        dbconf.password = "password"
-        dbconf.host = "localhost"
-        dbconf.port = ""
-        retval.zendbconf = dbconf
-
     if retval.hostname in ["preze-ntpc", "desktop-fk2ht4j"]:
         if os.name == "nt":
             repoRoot = "C:/Users/NishantSharma/source/repos/"
@@ -112,6 +101,29 @@ def LisaConfig():
         retval.simulatedSlideRatingsDataFilePath = None
     else:
         retval.simulatedSlideRatingsDataFilePath = retval.dataFolderPath + "simulatedSlideRatings.json"
+
+    # Database configurations
+    if retval.hostname in ["labglo-pc"]:
+        dbconf = AttrDict()
+        dbconf.ENGINE = "django.db.backends.postgresql_psycopg2"
+        dbconf.NAME = "lisadevdb"
+        dbconf.USER = "postgres"
+        dbconf.PASSWORD = "password"
+        dbconf.HOST = "localhost"
+        dbconf.PORT = ""
+    elif retval.hostname in ["lisa-dev"]:
+        dbconf = AttrDict()
+        dbconf.ENGINE = "django.db.backends.postgresql_psycopg2"
+        dbconf.NAME = "lisadb"
+        dbconf.USER = "postgres"
+        dbconf.PASSWORD = "Pass@lisa2018"
+        dbconf.HOST = "localhost"
+        dbconf.PORT = ""
+    else:
+        dbconf = AttrDict()
+        dbconf.ENGINE = 'django.db.backends.sqlite3'
+        dbconf.NAME = retval.appRoot + "src/ZenCentral/db.sqlite3"
+    retval.zenDbConf = dbconf
 
     return retval
 
