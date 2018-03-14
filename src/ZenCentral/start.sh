@@ -25,7 +25,7 @@ then
     if [[ ! -f apache/zenCentral.key ]] || [[ ! -f apache/zenCentral.crt ]]
     then
         openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout apache/zenCentral.key -out apache/zenCentral.crt -subj \
-	'/O=PREZENTIUM/OU=Tech/CN=www.prezentium.com'
+	'/O=PREZENTIUM/OU=Tech/CN=*.prezentium.com'
     fi
 fi
 

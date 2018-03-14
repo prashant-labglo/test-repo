@@ -36,7 +36,7 @@ def LisaConfig():
 
     # Build and set SlideDbClient config.
     slideDbConfig = AttrDict()
-    slideDbConfig.BaseUrl = "https://localhost:8000/"
+    slideDbConfig.BaseUrl = "https://localhost:8080/"
     slideDbConfig.appName = "slidedb"
     slideDbConfig.Username = "test"
     slideDbConfig.Password = "test"
@@ -44,7 +44,7 @@ def LisaConfig():
 
     # Build and set SlideSearch config.
     slideSearchConfig = AttrDict()
-    slideSearchConfig.BaseUrl = "https://localhost:8000/"
+    slideSearchConfig.BaseUrl = "https://localhost:8080/"
     slideSearchConfig.appName = "search"
     slideSearchConfig.Username = "test"
     slideSearchConfig.Password = "test"
