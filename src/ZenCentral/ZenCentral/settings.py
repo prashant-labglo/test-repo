@@ -118,6 +118,8 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 100
 }
 
+# Cross Origin Resource Sharing needs to be enabled, so that the plugin javascript is able to access
+# the REST API.
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ORIGIN_WHITELIST = (
     'null',
