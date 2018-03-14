@@ -26,6 +26,25 @@ def LisaConfig():
 
     retval.hostname = gethostname().lower()
 
+    # Build config useful in generating Apache configuration.
+    apacheConfig = AttrDict()
+    apacheConfig.enableSSL = True
+    if retval.hostname in ["lisa-dev", "lisa-ppe", "lisa-prod"]:
+        apacheConfig.http_host = retval.hostname + ".prezentium.com"
+        if getpass.getuser() == "nishant":
+            apacheConfig.http_port = 8080
+        else:
+            apacheConfig.http_port = 443
+    else:
+        apacheConfig.http_host = "localhost"
+        apacheConfig.http_port = 8000
+    retval.apacheConfig = apacheConfig
+
+    apacheConfig.service_url = (
+                 "http" + ("s" if apacheConfig.enableSSL else "") 
+                 + "://" + apacheConfig.http_host
+                 + ":" + apacheConfig.http_port + "/")
+
     retval.deploymentStage = DeploymentStage.Dev
     # Build and set LisaZepto client config.
     lisaZeptoConfig = AttrDict()
@@ -36,7 +55,7 @@ def LisaConfig():
 
     # Build and set SlideDbClient config.
     slideDbConfig = AttrDict()
-    slideDbConfig.BaseUrl = "https://localhost:8000/"
+    slideDbConfig.BaseUrl = apacheConfig.service_url
     slideDbConfig.appName = "slidedb"
     slideDbConfig.Username = "test"
     slideDbConfig.Password = "test"
@@ -44,7 +63,7 @@ def LisaConfig():
 
     # Build and set SlideSearch config.
     slideSearchConfig = AttrDict()
-    slideSearchConfig.BaseUrl = "https://localhost:8000/"
+    slideSearchConfig.BaseUrl = apacheConfig.service_url
     slideSearchConfig.appName = "search"
     slideSearchConfig.Username = "test"
     slideSearchConfig.Password = "test"

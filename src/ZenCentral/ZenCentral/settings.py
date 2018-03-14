@@ -49,9 +49,11 @@ INSTALLED_APPS = [
     'taggit',
     'taggit_serializer',
     'sslserver',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'ZenCentral.middleware.ThreadLocalMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -115,6 +117,22 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 100
 }
+
+# Cross Origin Resource Sharing needs to be enabled, so that the plugin javascript is able to access
+# the REST API.
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_WHITELIST = (
+    'null',
+    'lisa-api.prezentium.com:443',
+    'lisa-dev.prezentium.com:443',
+    'lisa-prod.prezentium.com:443',
+    'lisa.prezentium.com:443',
+    'www.prezentium.com:443',
+    'prezentium.com:443',
+)
+
+CORS_ORIGIN_REGEX_WHITELIST = (
+)
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/

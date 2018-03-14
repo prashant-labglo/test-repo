@@ -29,8 +29,7 @@ class CoreApiRestClient(RestClient):
         #self.client = coreapi.Client(auth=self.auth)
         with check_ssl_certs(lisaConfig.ssl_verify):
             self.client = coreapi.Client()
-
-        self.schema = self.client.get(self.schemaURL)
+            self.schema = self.client.get(self.schemaURL)
 
     def getModelInstances(self, modelName):
         """
