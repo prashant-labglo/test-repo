@@ -43,7 +43,7 @@ def LisaConfig():
     apacheConfig.service_url = (
                  "http" + ("s" if apacheConfig.enableSSL else "") 
                  + "://" + apacheConfig.http_host
-                 + ":" + apacheConfig.http_port + "/")
+                 + ":" + str(apacheConfig.http_port) + "/")
 
     retval.deploymentStage = DeploymentStage.Dev
     # Build and set LisaZepto client config.
