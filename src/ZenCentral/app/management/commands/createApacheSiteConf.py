@@ -13,6 +13,7 @@ class Command(BaseCommand):
             print("Define AppRootFolder '{0}src/'".format(lisaConfig.appRoot), file=fp)
             print("Define ModulesRootFolder {0}".format(lisaConfig.globalApacheModulesRoot), file=fp)
             print("Define ServicePort {0}".format(lisaConfig.apacheConfig.http_port), file=fp)
+            print("Define ServerName {0}".format(lisaConfig.apacheConfig.http_host), file=fp)
             print("Include '${AppRootFolder}ZenCentral/apache/httpd.conf'", file=fp)
             print("Include '${AppRootFolder}ZenCentral/apache/wsgi.conf'", file=fp)
             print("Include '${AppRootFolder}ZenCentral/apache/ssl.conf'", file=fp)
