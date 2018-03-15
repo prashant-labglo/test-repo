@@ -38,6 +38,7 @@ def LisaConfig():
     else:
         apacheConfig.http_host = "localhost"
         apacheConfig.http_port = 8000
+
     retval.apacheConfig = apacheConfig
 
     apacheConfig.service_url = (
@@ -143,6 +144,13 @@ def LisaConfig():
         dbconf.ENGINE = 'django.db.backends.sqlite3'
         dbconf.NAME = retval.appRoot + "src/ZenCentral/db.sqlite3"
     retval.zenDbConf = dbconf
+
+    if apacheConfig.http_port == 443:
+        apacheConfig.ssl_crt = '/srv/ssl-docs/lisa-dev_220ff5a21b448215.crt'
+        apacheConfig.ssl_key = '/srv/ssl-docs/lisa-dev_220ff5a21b448215.key'
+    else:
+        apacheConfig.ssl_crt = retval.appRoot + 'src/ZenCentral/apache/zenCentral.crt'
+        apacheConfig.ssl_key = retval.appRoot + 'src/ZenCentral/apache/zenCentral.key'
 
     return retval
 
