@@ -131,20 +131,12 @@ def LisaConfig():
         dbconf.PASSWORD = "password"
         dbconf.HOST = "localhost"
         dbconf.PORT = ""
-    elif retval.hostname in ["lisa-dev"]:
+    elif retval.hostname in ["lisa-dev", "lisa-prod"]:
         dbconf = AttrDict()
         dbconf.ENGINE = "django.db.backends.postgresql_psycopg2"
         dbconf.NAME = "lisadb"
         dbconf.USER = "postgres"
         dbconf.PASSWORD = "Pass@lisa2018"
-        dbconf.HOST = "localhost"
-        dbconf.PORT = ""
-    elif retval.hostname in ["lisa-prod"]:
-        dbconf = AttrDict()
-        dbconf.ENGINE = "django.db.backends.postgresql_psycopg2"
-        dbconf.NAME = "lisadb"
-        dbconf.USER = "postgres"
-        dbconf.PASSWORD = "Pass@prod2018"
         dbconf.HOST = "localhost"
         dbconf.PORT = ""
     else:
