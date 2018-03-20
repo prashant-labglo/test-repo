@@ -87,7 +87,7 @@ def LisaConfig():
             repoRoot = "C:/Users/NishantSharma/source/repos/"
         elif os.name == "posix":
             repoRoot = "/mnt/c/Users/NishantSharma/source/repos/"
-    elif retval.hostname in ["lisa-dev"]:
+    elif retval.hostname in ["lisa-dev", "lisa-prod"]:
         if getpass.getuser() == "nishant":
             repoRoot = "/home/nishant/repos/"
         else:
@@ -137,6 +137,14 @@ def LisaConfig():
         dbconf.NAME = "lisadb"
         dbconf.USER = "postgres"
         dbconf.PASSWORD = "Pass@lisa2018"
+        dbconf.HOST = "localhost"
+        dbconf.PORT = ""
+    elif retval.hostname in ["lisa-prod"]:
+        dbconf = AttrDict()
+        dbconf.ENGINE = "django.db.backends.postgresql_psycopg2"
+        dbconf.NAME = "lisadb"
+        dbconf.USER = "postgres"
+        dbconf.PASSWORD = "Pass@prod2018"
         dbconf.HOST = "localhost"
         dbconf.PORT = ""
     else:
