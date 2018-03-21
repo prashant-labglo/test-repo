@@ -79,7 +79,7 @@ def LisaConfig():
 
     # Build and set ZenCentral config.
     zenCentralConfig = AttrDict()
-    zenCentralConfig.allowedHosts = ["localhost", "lisa-dev.prezentium.com"]
+    zenCentralConfig.allowedHosts = ["localhost", "lisa-dev.prezentium.com", "lisa-prod.prezentium.com"]
     retval.zenCentral = zenCentralConfig
 
     if retval.hostname in ["preze-ntpc", "desktop-fk2ht4j"]:
@@ -145,9 +145,12 @@ def LisaConfig():
         dbconf.NAME = retval.appRoot + "src/ZenCentral/db.sqlite3"
     retval.zenDbConf = dbconf
 
-    if apacheConfig.http_port == 443:
+    if apacheConfig.http_port == 443 and retval.hostname in ["lisa-dev"]:
         apacheConfig.ssl_crt = '/srv/ssl-docs/lisa-dev_220ff5a21b448215.crt'
         apacheConfig.ssl_key = '/srv/ssl-docs/lisa-dev_220ff5a21b448215.key'
+    elif apacheConfig.http_port == 443 and retval.hostname in ["lisa-prod"]:
+        apacheConfig.ssl_crt = '/srv/ssl-docs/lisa-prod_1bcc62fad2ba9bec.crt'
+        apacheConfig.ssl_key = '/srv/ssl-docs/lisa-prod_1bcc62fad2ba9bec.key'
     else:
         apacheConfig.ssl_crt = retval.appRoot + 'src/ZenCentral/apache/zenCentral.crt'
         apacheConfig.ssl_key = retval.appRoot + 'src/ZenCentral/apache/zenCentral.key'
