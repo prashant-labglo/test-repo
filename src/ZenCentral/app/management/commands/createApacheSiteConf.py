@@ -20,3 +20,4 @@ class Command(BaseCommand):
             print("Include '${AppRootFolder}ZenCentral/apache/wsgi.conf'", file=fp)
             print("Include '${AppRootFolder}ZenCentral/apache/ssl.conf'", file=fp)
             print("Include '${AppRootFolder}ZenCentral/apache/zenApps.conf'", file=fp)
+            print("Include '${AppRootFolder}ZenCentral/apache/openidc.conf'", file=fp)

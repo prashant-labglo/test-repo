@@ -5,6 +5,8 @@ Definition of urls for ZenCentral.
 from datetime import datetime
 from django.conf.urls import url, include
 from django.contrib import admin
+from django.conf.urls.static import static
+from django.conf import settings
 import django.contrib.auth.views
 
 import app, app.views, app.forms
@@ -53,4 +55,4 @@ urlpatterns = [
     url(r'^slidedb/', include(slideDbRouter.urls)),
     url(r'^search/', include(searchRouter.urls)),
     url('^schema$', schema_view),
-]
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
