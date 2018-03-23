@@ -2,34 +2,34 @@
 __pycache__/
 *.py[cod]
 *$py.class
-*.log
 
+*logs
 *.sqlite3
 *data/
 *Concepts.json
 *Constructs.json
 *Slides.json
 *SubConcepts.json
-projects/
 
 # C extensions
 *.so
 
+# SSL files
+*.crt
+*.key
+
+# Apache site conf
+*site.conf
+
+*wsgi.conf
+
 # Distribution / packaging
 .Python
-apache/
-env/
-build/
 develop-eggs/
-dist/
-downloads/
 eggs/
 .eggs/
 lib/
 lib64/
-parts/
-sdist/
-var/
 wheels/
 *.egg-info/
 .installed.cfg
@@ -46,7 +46,6 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # Unit test / coverage reports
-htmlcov/
 .tox/
 .coverage
 .coverage.*
@@ -62,11 +61,8 @@ coverage.xml
 
 # Django stuff:
 *.log
-local_settings.py
-shopify_settings.py
 
 # Flask stuff:
-instance/
 .webassets-cache
 
 # Scrapy stuff:
@@ -74,9 +70,6 @@ instance/
 
 # Sphinx documentation
 docs/_build/
-
-# PyBuilder
-target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -95,8 +88,6 @@ celerybeat-schedule
 
 # virtualenv
 .venv
-venv/
-ENV/
 
 # Spyder project settings
 .spyderproject
@@ -114,13 +105,7 @@ ENV/
 # pycharm
 .idea/
 
-# Media files
-media/
-
 # Ignore Mac DS_Store files
 *.DS_Store
 
 nohup.out
-
-#react
-configurations.js

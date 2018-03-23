@@ -6,7 +6,6 @@ from datetime import datetime
 from django.conf.urls import url, include
 from django.contrib import admin
 import django.contrib.auth.views
-
 import app, app.views, app.forms
 from SlideDB.urls import router as slideDbRouter
 from Search.urls import router as searchRouter
