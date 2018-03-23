@@ -44,31 +44,32 @@ class SlideSearchBase(object):
         """
         for slide in self.dataForIndexing["Slides"]:
             if "Constructs" in queryInfo.keys():
-                if slide["parent"]["id"] not in queryInfo["Constructs"]:
+                slideConstruct = self.getAttr(slide, "parent")
+                if self.getAttr(slideConstruct, "id") not in queryInfo["Constructs"]:
                     continue
 
             if "HasIcon" in queryInfo.keys():
-                if slide["hasIcon"] != queryInfo["HasIcon"]:
+                if self.getAttr(slide, "hasIcon") != queryInfo["HasIcon"]:
                     # Constraints not met. No Similarity.
                     continue
 
             if "HasImage" in queryInfo.keys():
-                if slide["hasImage"] != queryInfo["HasImage"]:
+                if self.getAttr(slide, "hasImage") != queryInfo["HasImage"]:
                     # Constraints not met. No Similarity.
                     continue
 
             if "Layout" in queryInfo.keys():
-                if slide["layout"] not in queryInfo["Layout"]:
+                if self.getAttr(slide, "layout") not in queryInfo["Layout"]:
                     # Constraints not met. No Similarity.
                     continue
 
             if "Style" in queryInfo.keys():
-                if slide["style"] not in queryInfo["Style"]:
+                if self.getAttr(slide, "Style") not in queryInfo["Style"]:
                     # Constraints not met. No Similarity.
                     continue
 
             if "VisualStyle" in queryInfo.keys():
-                if slide["visualStyle"] not in queryInfo["VisualStyle"]:
+                if self.getAttr(slide, "visualStyle") not in queryInfo["VisualStyle"]:
                     # Constraints not met. No Similarity.
                     continue
 
