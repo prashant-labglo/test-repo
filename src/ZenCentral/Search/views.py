@@ -2,6 +2,8 @@ import json
 from rest_framework import viewsets
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.reverse import reverse
+
 from Search.models import SearchResult, SearchResultRating, SearchQuery, SearchIndex
 from SlideDB.models import Slide
 from Search.serializers import NestedSearchResultSerializer, SearchResultSerializer, SearchResultRatingSerializer, SearchQuerySerializer, SearchIndexSerializer
@@ -46,6 +48,9 @@ class SearchQueryViewSet(profiledModelViewSet):
         """
         # Create the query instance by calling parent method.
         queryJson = request.data
+        if "index" not in request.data.keys() or not request.data["index"]:
+            latestIndex = SearchIndex.objects.latest("created")
+            request.data["index"] = reverse("searchindex-detail", request=request, args=[latestIndex.id])
 
         with blockProfiler("create.InsertSearchQuery"):
             retval = super().create(request)
