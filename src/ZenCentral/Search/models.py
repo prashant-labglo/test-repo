@@ -197,19 +197,6 @@ class SearchQuery(models.Model):
         if not instance.id:
             instance.created = timezone.now()
 
-        if "Keywords" not in instance.queryJson or not instance.queryJson["Keywords"]:
-            instance.queryJson["Keywords"] = []
-        elif isinstance(instance.queryJson["Keywords"], str):
-            instance.queryJson["Keywords"] = [instance.queryJson["Keywords"]]
-
-        if "HasIcon" in instance.queryJson:
-            instance.queryJson["HasIcon"] = True if instance.queryJson["HasIcon"] else False
-
-        if "HasImage" in instance.queryJson:
-            instance.queryJson["HasImage"] = True if instance.queryJson["HasImage"] else False
-
-        instance.queryJson["Keywords"] = [word.lower() for word in instance.queryJson["Keywords"]]
-
 class IndexTypeChoices(Enum):
     """
     Enum class for type of search index being created.

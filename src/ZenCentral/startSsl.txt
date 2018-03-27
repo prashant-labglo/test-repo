@@ -1,1 +1,1 @@
-sudo env PYTHONPATH=/srv/lisa-api/src/ python3 ./manage.py runsslserver 0.0.0.0:443  --certificate /srv/ssl-docs/lisa-prod_1bcc62fad2ba9bec.crt --key /srv/ssl-docs/lisa-prod_1bcc62fad2ba9bec.key
+sudo env PYTHONPATH=/srv/lisa-api/src/ python3 ./manage.py runsslserver 0.0.0.0:443  --certificate /srv/ssl-docs/lisa-prod_1bcc62fad2ba9bec.crt --key /srv/ssl-docs/lisa-prod_1bcc62fad2ba9bec.key&
