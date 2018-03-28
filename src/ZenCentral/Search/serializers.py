@@ -201,6 +201,7 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
 
     def to_internal_value(self, data):
        if "index" not in data.keys() or not data["index"]:
+           # Converts json data received into SearcuQuery instance. Fills up missing data with defaults, wherever applicable.
            latestIndex = SearchIndex.objects.latest("created")
            indexUrl = reverse("searchindex-detail", request=get_current_request(), args=[latestIndex.id])
            try:

@@ -253,9 +253,10 @@ class SlideSearchLambdaMart(SlideSearchBase):
         # Use LambdaMART model to calculate the scores of each slide in DB.
         # Retval is a dictionary from "original index" of a slide to its score.
         retval = {}
-        for (index, score) in enumerate(self.LambdaMartModel.predict(ftrVec)):
-            slide = permittedSlides[index]
-            retval[index] = score
+        if ftrVec:
+            for (index, score) in enumerate(self.LambdaMartModel.predict(ftrVec)):
+                slide = permittedSlides[index]
+                retval[index] = score
 
         # Return the result.
         return retval

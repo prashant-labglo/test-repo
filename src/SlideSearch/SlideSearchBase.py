@@ -86,13 +86,6 @@ class SlideSearchBase(object):
         """
         queryInfo = textCleanUp(queryInfo)
 
-        # Check whether the input dict is in required format or not
-        if "queryJson" not in queryInfo:
-            modqueryInfo = {}
-            modqueryInfo["queryJson"] = queryInfo
-            modqueryInfo["Keywords"] = []
-            queryInfo = modqueryInfo
-
         # Apply filter part of queryInfo.
         permittedSlides = list(self.permittedSlides(queryInfo))
 
