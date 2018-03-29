@@ -10,6 +10,11 @@ class Concept(models.Model):
     # Zepto ID is used to cross reference with corresponding entry in Lisa-Zepto.
     zeptoId = models.IntegerField(unique=True)
 
+    def parent_constructs(self):
+        queryset = Construct.objects.filter(parent__parent=self.id).values('id', 'name')
+        result = [item for item in queryset]
+        return result
+
 class SubConcept(models.Model):
     name = models.CharField(max_length=64)
     parent = models.ForeignKey(Concept, related_name="subConcepts", on_delete=models.CASCADE)
