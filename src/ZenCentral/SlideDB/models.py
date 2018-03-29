@@ -10,7 +10,9 @@ class Concept(models.Model):
     # Zepto ID is used to cross reference with corresponding entry in Lisa-Zepto.
     zeptoId = models.IntegerField(unique=True)
 
-    def parent_constructs(self):
+    def grand_children(self):
+        """ Method to get all constructs related to concept. """
+
         queryset = Construct.objects.filter(parent__parent=self.id).values('id', 'name')
         result = [item for item in queryset]
         return result

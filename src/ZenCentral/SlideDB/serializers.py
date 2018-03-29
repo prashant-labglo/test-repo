@@ -5,7 +5,7 @@ from ZenCentral import fields
 
 class ConceptSerializer(serializers.HyperlinkedModelSerializer):
     id = serializers.IntegerField(read_only=True)
-    constructs = serializers.ReadOnlyField(source='parent_constructs')
+    constructs = serializers.ReadOnlyField(source='grand_children')
 
     class Meta:
         model = Concept
