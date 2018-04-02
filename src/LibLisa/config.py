@@ -82,6 +82,7 @@ def LisaConfig():
     zenCentralConfig.allowedHosts = ["localhost", "lisa-dev.prezentium.com", "lisa-prod.prezentium.com"]
     retval.zenCentral = zenCentralConfig
 
+    documentRoot = ''
     if retval.hostname in ["preze-ntpc", "desktop-fk2ht4j"]:
         if os.name == "nt":
             repoRoot = "C:/Users/NishantSharma/source/repos/"
@@ -92,8 +93,12 @@ def LisaConfig():
             repoRoot = "/home/nishant/repos/"
         else:
             repoRoot = "/srv/"
+            documentRoot = "/srv/lisa-ng/src/LisaTools/"
     elif retval.hostname in ["labglo-pc"]:
         repoRoot = "/projects/sources/"
+        documentRoot = "/projects/sources/lisa-ng/src/LisaTools/"
+
+    retval.documentRoot = documentRoot
 
     if os.name == "nt":
         retval.globalApacheModulesRoot = "C:/Apache2/modules/"

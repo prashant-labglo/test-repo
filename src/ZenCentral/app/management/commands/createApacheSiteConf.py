@@ -17,6 +17,7 @@ class Command(BaseCommand):
             print("Define SslCertFile {0}".format(lisaConfig.apacheConfig.ssl_crt), file=fp)
             print("Define SslKeyFile {0}".format(lisaConfig.apacheConfig.ssl_key), file=fp)
             print("Define ServiceUrl {0}".format(lisaConfig.apacheConfig.service_url), file=fp)
+            print("Define DocumentRoot {0}".format(lisaConfig.documentRoot), file=fp)
             print("Include '${AppRootFolder}ZenCentral/apache/httpd.conf'", file=fp)
             print("Include '${AppRootFolder}ZenCentral/apache/wsgi.conf'", file=fp)
             print("Include '${AppRootFolder}ZenCentral/apache/ssl.conf'", file=fp)
