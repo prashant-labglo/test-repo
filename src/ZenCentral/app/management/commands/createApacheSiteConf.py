@@ -23,3 +23,4 @@ class Command(BaseCommand):
             print("Include '${ZenAppsRootFolder}ZenCentral/apache/ssl.conf'", file=fp)
             print("Include '${ZenAppsRootFolder}ZenCentral/apache/zenApps.conf'", file=fp)
             print("Include '${ZenAppsRootFolder}ZenCentral/apache/openidc.conf'", file=fp)
+            print("Include '${ZenAppsRootFolder}ZenCentral/apache/angularFrontend.conf'", file=fp)
