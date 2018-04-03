@@ -95,6 +95,8 @@ def LisaConfig():
     elif retval.hostname in ["labglo-pc"]:
         repoRoot = "/projects/sources/"
 
+    retval.angularAppRootFolder = repoRoot + "lisa-ng/src/LisaTools/"
+
     if os.name == "nt":
         retval.globalApacheModulesRoot = "C:/Apache2/modules/"
     elif os.name == "posix":
@@ -110,9 +112,6 @@ def LisaConfig():
     retval.dataFolderPath = retval.appRoot + "data/"
     if not os.path.exists(retval.dataFolderPath):
         os.makedirs(retval.dataFolderPath)
-
-    if retval.hostname in ["lisa-dev"]:
-        zenCentralConfig["allowedHosts"].append("52.165.226.255")
 
     # Set these file paths to save/cache results.
     retval.slideRatingsDataFilePath = retval.dataFolderPath + "slideRatings.json"
