@@ -113,9 +113,6 @@ def LisaConfig():
     if not os.path.exists(retval.dataFolderPath):
         os.makedirs(retval.dataFolderPath)
 
-    if retval.hostname in ["lisa-dev"]:
-        zenCentralConfig["allowedHosts"].append("52.165.226.255", "52.165.231.18")
-
     # Set these file paths to save/cache results.
     retval.slideRatingsDataFilePath = retval.dataFolderPath + "slideRatings.json"
     if retval.hostname in ["lisa-dev"]:
