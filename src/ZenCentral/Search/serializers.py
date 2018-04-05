@@ -12,7 +12,7 @@ from ZenCentral import fields
 class UpsertingOnPostResultRatingSerializer(serializers.Serializer):
     """
     - Serializer to create and update the Search Result Rating objects with post request.
-    - By using ModelSerializer the issue generating while updating the object with same POST request.
+    - If this class is derived from ModelSerializer", we get validation issues when updating an object in POST request.
     """
 
     rated = serializers.IntegerField()
