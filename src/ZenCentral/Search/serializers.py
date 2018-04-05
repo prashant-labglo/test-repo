@@ -1,6 +1,4 @@
-import json
 from collections import OrderedDict
-from frozendict import frozendict
 from rest_framework import serializers, pagination
 from rest_framework.reverse import reverse
 from ZenCentral.middleware import get_current_request
@@ -9,9 +7,27 @@ from SlideDB.models import Slide
 from Search.models import SearchResult, SearchResultRating, SearchQuery, SearchIndex
 from Search.models import IndexTypeChoices
 from ZenCentral import fields
-from rest_framework.response import Response
 
-from django.contrib.auth import get_user_model
+
+class UpsertingOnPostResultRatingSerializer(serializers.Serializer):
+    """
+    - Serializer to create and update the Search Result Rating objects with post request.
+    - By using ModelSerializer the issue generating while updating the object with same POST request.
+    """
+
+    rated = serializers.IntegerField()
+    result = serializers.IntegerField()
+
+    def create(self, validated_data):
+        try:
+            result_obj = SearchResult.objects.get(id=validated_data['result'])
+        except:
+            raise serializers.ValidationError({'result': 'SearchResult object not present'})
+        SearchResultRating.objects.create(
+            rated=validated_data['rated'], result=result_obj, user=self.context['request'].user
+        )
+        return validated_data
+
 
 class SearchResultRatingSerializer(serializers.ModelSerializer):
     """
@@ -20,9 +36,11 @@ class SearchResultRatingSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(
         read_only=True,
         default=serializers.CurrentUserDefault())
+
     class Meta:
         model = SearchResultRating
         fields = ('rated', 'result', 'user')
+
 
 class SearchResultSerializer(serializers.ModelSerializer):
     """
@@ -31,10 +49,12 @@ class SearchResultSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
     myRating = serializers.IntegerField(read_only=True)
     ratings = SearchResultRatingSerializer(many=True)
+
     class Meta:
         model = SearchResult
         fields = ('id', 'slide', 'rank', 'query', 'ratings', 'myRating', 'avgRating')
         read_only_fields = ('id', 'slide', 'rank', 'query', 'ratings')
+
 
 class NestedSearchResultRatingSerializer(serializers.ModelSerializer):
     """
@@ -46,9 +66,11 @@ class NestedSearchResultRatingSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(
         read_only=True,
         default=serializers.CurrentUserDefault())
+
     class Meta:
         model = SearchResultRating
         fields = ('rated', 'user')
+
 
 class NestedSearchResultSerializer(serializers.ModelSerializer):
     """
@@ -59,9 +81,11 @@ class NestedSearchResultSerializer(serializers.ModelSerializer):
     avgRating = serializers.FloatField(read_only=True)
     myRating = serializers.IntegerField(read_only=False)
     id = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = SearchResult
         fields = ('id', 'slide', 'avgRating', 'myRating', 'score', 'pptFile', 'thumbnailFile')
+
 
 class PaginatedSearchResultListSerializer(serializers.ListSerializer):
     """
@@ -98,6 +122,7 @@ class PaginatedSearchResultListSerializer(serializers.ListSerializer):
             ('results', super().to_representation(page))
         ])
         return retval
+
     def to_internal_value(self, data):
         """
         Remove pagination data and return.
@@ -111,6 +136,7 @@ class PaginatedSearchResultListSerializer(serializers.ListSerializer):
         """
         ret = super(serializers.ListSerializer, self).data
         return ret
+
 
 class PaginatedSearchResultSerializer(NestedSearchResultSerializer):
     """
@@ -136,6 +162,7 @@ class PaginatedSearchResultSerializer(NestedSearchResultSerializer):
     class Meta(NestedSearchResultSerializer.Meta):
         list_serializer_class=PaginatedSearchResultListSerializer
 
+
 class QueryResultsIteratorWithAutoInsertion(object):
     """
     For a query object, there can be large number of search results.
@@ -152,17 +179,19 @@ class QueryResultsIteratorWithAutoInsertion(object):
             results = SearchResult.objects.filter(query=self.queryObj)
             self.queryObj.resultJson = [(result.score, result.slide.id) for result in results]
             self.queryObj.save()
+
     def __len__(self):
         """
         Returns complete length of the results list.
         """
         return len(self.queryObj.resultJson)
+
     def __getitem__(self, key):
         """
         Makes the class scriptable.
         """
         if isinstance(key, int):
-            #Handle negative indices
+            # Handle negative indices
             if key < 0 :
                 key += len( self )
 
@@ -184,6 +213,7 @@ class QueryResultsIteratorWithAutoInsertion(object):
             step = 1 if key.step is None else key.step
             return [self[index] for index in range(start, key.stop, step)]
 
+
 class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
     """
     Serializer for /search/queries.
@@ -200,36 +230,36 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
         fields = ('id', 'index', 'queryJson', 'created', 'results')
 
     def to_internal_value(self, data):
-       if "index" not in data.keys() or not data["index"]:
-           # Converts json data received into SearcuQuery instance. Fills up missing data with defaults, wherever applicable.
-           latestIndex = SearchIndex.objects.latest("created")
-           indexUrl = reverse("searchindex-detail", request=get_current_request(), args=[latestIndex.id])
-           try:
-               data["index"] = indexUrl
-           except:
-               data = dict(data)
-               data["index"] = indexUrl
+        if "index" not in data.keys() or not data["index"]:
+            # Converts json data received into SearcuQuery instance.
+            # Fills up missing data with defaults, wherever applicable.
+            latestIndex = SearchIndex.objects.latest("created")
+            indexUrl = reverse("searchindex-detail", request=get_current_request(), args=[latestIndex.id])
+            try:
+                data["index"] = indexUrl
+            except:
+                data = dict(data)
+                data["index"] = indexUrl
 
-       queryJson = data["queryJson"]
+        queryJson = data["queryJson"]
 
-       if "Keywords" not in queryJson or not queryJson["Keywords"]:
-           queryJson["Keywords"] = []
+        if "Keywords" not in queryJson or not queryJson["Keywords"]:
+            queryJson["Keywords"] = []
+        elif isinstance(queryJson["Keywords"], str):
+            queryJson["Keywords"] = [queryJson["Keywords"]]
 
-       elif isinstance(queryJson["Keywords"], str):
-           queryJson["Keywords"] = [queryJson["Keywords"]]
+        if "HasIcon" in queryJson:
+            queryJson["HasIcon"] = True if queryJson["HasIcon"] else False
 
-       if "HasIcon" in queryJson:
-           queryJson["HasIcon"] = True if queryJson["HasIcon"] else False
+        if "HasImage" in queryJson:
+            queryJson["HasImage"] = True if queryJson["HasImage"] else False
 
-       if "HasImage" in queryJson:
-           queryJson["HasImage"] = True if queryJson["HasImage"] else False
+        queryJson["Keywords"] = [word.lower() for word in queryJson["Keywords"]]
 
-       queryJson["Keywords"] = [word.lower() for word in queryJson["Keywords"]]
+        data["queryJson"] = queryJson
 
-       data["queryJson"] = queryJson
-
-       instance = super(SearchQuerySerializer, self).to_internal_value(data)
-       return instance
+        instance = super(SearchQuerySerializer, self).to_internal_value(data)
+        return instance
 
     @methodProfiler
     def paginated_results(self, queryObj):
@@ -245,6 +275,7 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
         serializer = PaginatedSearchResultSerializer(paginationObj.page, many=True, context={'request': self.context['request'], 'paginationObj': paginationObj})
         return serializer.data
 
+
 class SearchIndexSerializer(serializers.HyperlinkedModelSerializer):
     """
     Serializer for /search/indices.
@@ -258,18 +289,3 @@ class SearchIndexSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = SearchIndex
         fields = ('id', 'created', 'indexType', 'rankingSources', 'evalResults', 'schemaVersion', 'pickledModelFile')
-
-
-class ResultRatingSerializer(serializers.Serializer):
-    rated = serializers.IntegerField()
-    result = serializers.IntegerField()
-
-    def create(self, validated_data):
-        try:
-            result_obj = SearchResult.objects.get(id=validated_data['result'])
-        except:
-            raise serializers.ValidationError({'result': 'SearchResult object not present'})
-        SearchResultRating.objects.create(
-            rated=validated_data['rated'], result=result_obj, user=self.context['request'].user
-        )
-        return validated_data
