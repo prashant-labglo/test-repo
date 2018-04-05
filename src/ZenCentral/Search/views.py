@@ -1,28 +1,41 @@
-import json
 from rest_framework import viewsets
 from rest_framework import status
-from rest_framework.response import Response
 
 from Search.models import SearchResult, SearchResultRating, SearchQuery, SearchIndex
-from SlideDB.models import Slide
-from Search.serializers import NestedSearchResultSerializer, SearchResultSerializer, SearchResultRatingSerializer, SearchQuerySerializer, SearchIndexSerializer
+
+from Search.serializers import (
+    NestedSearchResultSerializer, SearchResultSerializer, SearchResultRatingSerializer, SearchQuerySerializer,
+    SearchIndexSerializer, UpsertingOnPostResultRatingSerializer
+)
 from ZenCentral.views import profiledModelViewSet
 from LibLisa import lastCallProfile, lisaConfig, methodProfiler, blockProfiler
 
-from django.shortcuts import render
 
-# Create your views here.
 class SearchResultRatingViewSet(profiledModelViewSet):
     """
     API endpoint that allows SearchResults to be viewed or edited.
     """
     queryset = SearchResultRating.objects.all()
-    serializer_class = SearchResultRatingSerializer
+
+    def get_serializer_class(self):
+        return UpsertingOnPostResultRatingSerializer if self.request.method == 'POST' else SearchResultRatingSerializer
+
+    def perform_create(self, serializer):
+        """
+        Method to override the post request to update if the object present or to create new object.
+        """
+        result = serializer.validated_data['result']
+        qset = SearchResultRating.objects.filter(user=self.request.user, result=result)
+        if qset:
+            qset[0].rated = serializer.data['rated']
+            qset[0].save()
+        else:
+            serializer.save(user=self.request.user)
 
     # Post list route.
     # When a query is made, the search results are created and returned.
 
-# Create your views here.
+
 class SearchResultViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows SearchResults to be viewed or edited.
@@ -32,6 +45,7 @@ class SearchResultViewSet(viewsets.ModelViewSet):
 
     # Post list route.
     # When a query is made, the search results are created and returned.
+
 
 class SearchQueryViewSet(profiledModelViewSet):
     """
@@ -75,6 +89,7 @@ class SearchQueryViewSet(profiledModelViewSet):
                 if paginatedResults["previous"] is not None:
                     paginatedResults["previous"] = paginatedResults["previous"].replace("?", str(queryObj.id) + "/?")
             return retval
+
 
 class SearchIndexViewSet(profiledModelViewSet):
     """
