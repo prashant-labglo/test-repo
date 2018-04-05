@@ -258,3 +258,18 @@ class SearchIndexSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = SearchIndex
         fields = ('id', 'created', 'indexType', 'rankingSources', 'evalResults', 'schemaVersion', 'pickledModelFile')
+
+
+class ResultRatingSerializer(serializers.Serializer):
+    rated = serializers.IntegerField()
+    result = serializers.IntegerField()
+
+    def create(self, validated_data):
+        try:
+            result_obj = SearchResult.objects.get(id=validated_data['result'])
+        except:
+            raise serializers.ValidationError({'result': 'SearchResult object not present'})
+        SearchResultRating.objects.create(
+            rated=validated_data['rated'], result=result_obj, user=self.context['request'].user
+        )
+        return validated_data

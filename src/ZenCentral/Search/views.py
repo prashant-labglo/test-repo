@@ -5,7 +5,10 @@ from rest_framework.response import Response
 
 from Search.models import SearchResult, SearchResultRating, SearchQuery, SearchIndex
 from SlideDB.models import Slide
-from Search.serializers import NestedSearchResultSerializer, SearchResultSerializer, SearchResultRatingSerializer, SearchQuerySerializer, SearchIndexSerializer
+from Search.serializers import (
+    NestedSearchResultSerializer, SearchResultSerializer, SearchResultRatingSerializer, SearchQuerySerializer,
+    SearchIndexSerializer, ResultRatingSerializer
+)
 from ZenCentral.views import profiledModelViewSet
 from LibLisa import lastCallProfile, lisaConfig, methodProfiler, blockProfiler
 
@@ -17,7 +20,20 @@ class SearchResultRatingViewSet(profiledModelViewSet):
     API endpoint that allows SearchResults to be viewed or edited.
     """
     queryset = SearchResultRating.objects.all()
-    serializer_class = SearchResultRatingSerializer
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return ResultRatingSerializer
+        return SearchResultRatingSerializer
+
+    def perform_create(self, serializer):
+        result = serializer.validated_data['result']
+        qset = SearchResultRating.objects.filter(user=self.request.user, result=result)
+        if qset:
+            qset[0].rated = serializer.data['rated']
+            qset[0].save()
+        else:
+            serializer.save(user=self.request.user)
 
     # Post list route.
     # When a query is made, the search results are created and returned.
