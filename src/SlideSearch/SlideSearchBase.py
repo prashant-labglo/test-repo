@@ -80,13 +80,16 @@ class SlideSearchBase(object):
 
             if "IncludeDisabledHierarchy" in queryInfo.keys():
                 if not queryInfo["IncludeDisabledHierarchy"]:
-                    if self.getAttr(slide.parent, "enabled") != queryInfo["IncludeDisabledHierarchy"]:
+                    construct = self.getAttr(slide, "parent")
+                    subConcept = self.getAttr(construct, "parent")
+                    concept = self.getAttr(subConcept, "parent")
+                    if self.getAttr(construct, "enabled") != queryInfo["IncludeDisabledHierarchy"]:
                         # Constraints not met. No Similarity.
                         continue
-                    elif self.getAttr(slide.parent.parent, "enabled") != queryInfo["IncludeDisabledHierarchy"]:
+                    elif self.getAttr(subConcept, "enabled") != queryInfo["IncludeDisabledHierarchy"]:
                         # Constraints not met. No Similarity.
                         continue
-                    elif self.getAttr(slide.parent.parent.parent, "enabled") != queryInfo["IncludeDisabledHierarchy"]:
+                    elif self.getAttr(concept, "enabled") != queryInfo["IncludeDisabledHierarchy"]:
                         # Constraints not met. No Similarity.
                         continue
 
