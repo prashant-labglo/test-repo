@@ -256,9 +256,13 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
 
         if "IsEnabled" not in queryJson or not queryJson["IsEnabled"]:
             queryJson["IsEnabled"] = False
+        else:
+            queryJson["IsEnabled"] = True if queryJson["IsEnabled"] else False
 
         if "IncludeDisabledHierarchy" not in queryJson or not queryJson["IncludeDisabledHierarchy"]:
             queryJson["IncludeDisabledHierarchy"] = False
+        else:
+            queryJson["IncludeDisabledHierarchy"] = True if queryJson["IncludeDisabledHierarchy"] else False
 
         queryJson["Keywords"] = [word.lower() for word in queryJson["Keywords"]]
 
