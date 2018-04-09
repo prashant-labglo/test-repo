@@ -254,8 +254,8 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
         if "HasImage" in queryJson:
             queryJson["HasImage"] = True if queryJson["HasImage"] else False
 
-        if "IsEnabled" not in queryJson or not queryJson["IsEnabled"]:
-            queryJson["IsEnabled"] = False
+        if "IsEnabled" not in queryJson or queryJson["IsEnabled"]:
+            queryJson["IsEnabled"] = True
         else:
             queryJson["IsEnabled"] = True if queryJson["IsEnabled"] else False
 
