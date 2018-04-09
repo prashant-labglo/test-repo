@@ -10,7 +10,7 @@ class ConceptViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows concepts to be viewed or edited.
     """
-    queryset = Concept.objects.all()
+    queryset = Concept.objects.filter(enabled=True)
     serializer_class = ConceptSerializer
 
 class SubConceptViewSet(viewsets.ModelViewSet):

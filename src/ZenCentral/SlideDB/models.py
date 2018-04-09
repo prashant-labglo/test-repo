@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from enumfields import Enum, EnumField
 from taggit.managers import TaggableManager
 
@@ -13,7 +14,7 @@ class Concept(models.Model):
     def grand_children(self):
         """ Method to get all constructs related to concept. """
 
-        queryset = Construct.objects.filter(parent__parent=self.id).values('id', 'name')
+        queryset = Construct.objects.filter(Q(parent__parent=self.id) & Q(enabled=True)).values('id', 'name')
         result = [item for item in queryset]
         return result
 
