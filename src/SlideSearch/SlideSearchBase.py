@@ -73,22 +73,20 @@ class SlideSearchBase(object):
                     # Constraints not met. No Similarity.
                     continue
 
-            if "IsEnabled" in queryInfo.keys():
-                if queryInfo.get("IsEnabled", True):
-                    if self.getAttr(slide, "enabled") != queryInfo["IsEnabled"]:
-                        # Constraints not met. No Similarity.
-                        continue
+            if queryInfo.get("IsEnabled", True):
+                if self.getAttr(slide, "enabled") != queryInfo["IsEnabled"]:
+                    # Constraints not met. No Similarity.
+                    continue
 
-            if "IncludeDisabledHierarchy" in queryInfo.keys():
-                if queryInfo.get("IncludeDisabledHierarchy", False):
-                    construct = self.getAttr(slide, "parent")
-                    subConcept = self.getAttr(construct, "parent")
-                    concept = self.getAttr(subConcept, "parent")
-                    if self.getAttr(concept, "enabled") != queryInfo["IncludeDisabledHierarchy"]:
-                        if self.getAttr(subConcept, "enabled") != queryInfo["IncludeDisabledHierarchy"]:
-                            if self.getAttr(construct, "enabled") != queryInfo["IncludeDisabledHierarchy"]:
-                                # Constraints not met. No Similarity.
-                                continue
+            if queryInfo.get("IncludeDisabledHierarchy", False):
+                construct = self.getAttr(slide, "parent")
+                subConcept = self.getAttr(construct, "parent")
+                concept = self.getAttr(subConcept, "parent")
+                if self.getAttr(concept, "enabled") != queryInfo["IncludeDisabledHierarchy"]:
+                    if self.getAttr(subConcept, "enabled") != queryInfo["IncludeDisabledHierarchy"]:
+                        if self.getAttr(construct, "enabled") != queryInfo["IncludeDisabledHierarchy"]:
+                            # Constraints not met. No Similarity.
+                            continue
 
             yield slide
 
