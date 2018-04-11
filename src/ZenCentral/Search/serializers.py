@@ -254,6 +254,12 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
         if "HasImage" in queryJson:
             queryJson["HasImage"] = True if queryJson["HasImage"] else False
 
+        if "IsEnabled" in queryJson:
+            queryJson["IsEnabled"] = True if queryJson["IsEnabled"] else False
+
+        if "IncludeDisabledHierarchy" in queryJson:
+            queryJson["IncludeDisabledHierarchy"] = True if queryJson["IncludeDisabledHierarchy"] else False
+
         queryJson["Keywords"] = [word.lower() for word in queryJson["Keywords"]]
 
         data["queryJson"] = queryJson

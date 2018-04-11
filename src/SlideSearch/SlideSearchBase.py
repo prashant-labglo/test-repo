@@ -73,6 +73,19 @@ class SlideSearchBase(object):
                     # Constraints not met. No Similarity.
                     continue
 
+            if queryInfo.get("IsEnabled", True):
+                if not (self.getAttr(slide, "enabled")):
+                    # Constraints not met. No Similarity.
+                    continue
+
+            if not (queryInfo.get("IncludeDisabledHierarchy", False)):
+                construct = self.getAttr(slide, "parent")
+                subConcept = self.getAttr(construct, "parent")
+                concept = self.getAttr(subConcept, "parent")
+                if not (self.getAttr(concept, "enabled")) or not (self.getAttr(subConcept, "enabled")) or not \
+                        (self.getAttr(construct, "enabled")):
+                    continue
+
             yield slide
 
     def slideSimilarity(self, queryInfo, permittedSlides):
