@@ -1,3 +1,5 @@
+from rest_framework.response import Response
+from rest_framework import status
 from collections import OrderedDict
 from rest_framework import serializers, pagination
 from rest_framework.reverse import reverse
@@ -280,6 +282,13 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
         paginationObj.paginate_queryset(querySet, self.context['request'])
         serializer = PaginatedSearchResultSerializer(paginationObj.page, many=True, context={'request': self.context['request'], 'paginationObj': paginationObj})
         return serializer.data
+
+    def create(self, validated_data):
+        queryJson = validated_data.get('queryJson', None)
+        search_query = SearchQuery.objects.filter(queryJson__contains=queryJson)
+        if search_query:
+            return search_query[0]
+        return SearchQuery.objects.create(**validated_data)
 
 
 class SearchIndexSerializer(serializers.HyperlinkedModelSerializer):

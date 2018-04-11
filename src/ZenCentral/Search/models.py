@@ -1,5 +1,5 @@
 import json, os, pickle
-from attrdict import AttrDict
+from django.contrib.postgres.fields import JSONField as PostgresJSONField
 from cachetools import LRUCache
 from jsonfield import JSONField
 from enumfields import Enum, EnumField
@@ -181,7 +181,7 @@ class SearchQuery(models.Model):
     index = models.ForeignKey("SearchIndex", related_name="queries", on_delete=models.CASCADE)
 
     # Query definition.
-    queryJson = JSONField(default={"Keywords":[]})
+    queryJson = PostgresJSONField(default={"Keywords": []})
 
     # A list of results and their scores.
     resultJson = JSONField(default=[])
