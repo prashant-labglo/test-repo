@@ -8,6 +8,7 @@ from LibLisa import methodProfiler
 from SlideDB.models import Slide
 from Search.models import SearchResult, SearchResultRating, SearchQuery, SearchIndex
 from Search.models import IndexTypeChoices
+from Search.helpers import normalizeQueryJson
 from ZenCentral import fields
 
 
@@ -285,6 +286,8 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
 
     def create(self, validated_data):
         queryJson = validated_data.get('queryJson', None)
+        if queryJson is not None:
+            queryJson = normalizeQueryJson(queryJson)
         search_query = SearchQuery.objects.filter(queryJson__contains=queryJson)
         if search_query:
             return search_query[0]
