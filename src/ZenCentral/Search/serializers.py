@@ -1,5 +1,3 @@
-from rest_framework.response import Response
-from rest_framework import status
 from collections import OrderedDict
 from rest_framework import serializers, pagination
 from rest_framework.reverse import reverse
@@ -8,7 +6,6 @@ from LibLisa import methodProfiler
 from SlideDB.models import Slide
 from Search.models import SearchResult, SearchResultRating, SearchQuery, SearchIndex
 from Search.models import IndexTypeChoices
-from Search.helpers import normalizeQueryJson
 from ZenCentral import fields
 
 
@@ -258,10 +255,16 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
             queryJson["HasImage"] = True if queryJson["HasImage"] else False
 
         if "IsEnabled" in queryJson:
-            queryJson["IsEnabled"] = True if queryJson["IsEnabled"] else False
+            if queryJson["IsEnabled"]:
+                del(queryJson["IsEnabled"])
+            else:
+                queryJson["IsEnabled"] = False
 
         if "IncludeDisabledHierarchy" in queryJson:
-            queryJson["IncludeDisabledHierarchy"] = True if queryJson["IncludeDisabledHierarchy"] else False
+            if queryJson["IncludeDisabledHierarchy"]:
+                queryJson["IncludeDisabledHierarchy"] = True
+            else:
+                del(queryJson["IncludeDisabledHierarchy"])
 
         queryJson["Keywords"] = [word.lower() for word in queryJson["Keywords"]]
 
@@ -286,8 +289,6 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
 
     def create(self, validated_data):
         queryJson = validated_data.get('queryJson', None)
-        if queryJson is not None:
-            queryJson = normalizeQueryJson(queryJson)
         search_query = SearchQuery.objects.filter(queryJson__contains=queryJson)
         if search_query:
             return search_query[0]
