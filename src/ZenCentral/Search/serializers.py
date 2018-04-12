@@ -6,6 +6,7 @@ from LibLisa import methodProfiler
 from SlideDB.models import Slide
 from Search.models import SearchResult, SearchResultRating, SearchQuery, SearchIndex
 from Search.models import IndexTypeChoices
+from Search.utils import normalizeQueryJson
 from ZenCentral import fields
 
 
@@ -241,28 +242,7 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
                 data = dict(data)
                 data["index"] = indexUrl
 
-        queryJson = data["queryJson"]
-
-        if "Keywords" not in queryJson or not queryJson["Keywords"]:
-            queryJson["Keywords"] = []
-        elif isinstance(queryJson["Keywords"], str):
-            queryJson["Keywords"] = [queryJson["Keywords"]]
-
-        if "HasIcon" in queryJson:
-            queryJson["HasIcon"] = True if queryJson["HasIcon"] else False
-
-        if "HasImage" in queryJson:
-            queryJson["HasImage"] = True if queryJson["HasImage"] else False
-
-        if "IsEnabled" in queryJson:
-            queryJson["IsEnabled"] = True if queryJson["IsEnabled"] else False
-
-        if "IncludeDisabledHierarchy" in queryJson:
-            queryJson["IncludeDisabledHierarchy"] = True if queryJson["IncludeDisabledHierarchy"] else False
-
-        queryJson["Keywords"] = [word.lower() for word in queryJson["Keywords"]]
-
-        data["queryJson"] = queryJson
+        data["queryJson"] = normalizeQueryJson(data["queryJson"])
 
         instance = super(SearchQuerySerializer, self).to_internal_value(data)
         return instance
@@ -280,6 +260,13 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
         paginationObj.paginate_queryset(querySet, self.context['request'])
         serializer = PaginatedSearchResultSerializer(paginationObj.page, many=True, context={'request': self.context['request'], 'paginationObj': paginationObj})
         return serializer.data
+
+    def create(self, validated_data):
+        queryJson = validated_data.get('queryJson', None)
+        search_query = SearchQuery.objects.filter(queryJson__contains=queryJson)
+        if search_query:
+            return search_query[0]
+        return SearchQuery.objects.create(**validated_data)
 
 
 class SearchIndexSerializer(serializers.HyperlinkedModelSerializer):
