@@ -263,9 +263,9 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
 
     def create(self, validated_data):
         queryJson = validated_data.get('queryJson', None)
-        search_query = SearchQuery.objects.filter(queryJson__contains=queryJson)
+        search_query = SearchQuery.objects.filter(queryJson__exact=queryJson)
         if search_query:
-            return search_query[0]
+            return search_query.filter(id=max([ele.id for ele in search_query]))[0]
         return SearchQuery.objects.create(**validated_data)
 
 
