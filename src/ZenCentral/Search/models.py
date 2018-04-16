@@ -16,42 +16,45 @@ from ZenCentral.middleware import get_current_user
 
 UserModel = get_user_model()
 
+
 class SearchResultRating(models.Model):
     """
-    Model for rating search results.
+    Model for rating search Slide.
     
-    Each user can rate the result differently. So rating object is kept outside result.
+    Each user can rate the slide differently. So rating object is kept outside result.
     """
     rated = models.IntegerField(default=0, validators=[MaxValueValidator(3), MinValueValidator(-3)])
-    downloads = models.IntegerField(default=0, validators=[MinValueValidator(0)])
 
     user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
-    result = models.ForeignKey("SearchResult", related_name="ratings", on_delete=models.CASCADE)
+    slide = models.ForeignKey("Slide", related_name="ratings", on_delete=models.CASCADE)
+    query = models.ForeignKey("SearchQuery", related_name="ratings", on_delete=models.CASCADE)
+
     class Meta:
-        unique_together = ('user', 'result',)
+        unique_together = ('user', 'slide',)
 
-    @classmethod
-    def pre_save(cls, sender, instance, *args, **kwargs):
-        """
-        Upon save, we update timestamps and populate other values, if missing.
-        """
-        if not instance.id:
-            instance.downloads = 0
 
-# Create your models here.
 class SearchResult(models.Model):
     """
     Each search query may output a large number of search results shown to the user.
     """
     slide = models.ForeignKey(Slide, on_delete=models.CASCADE)
     rank = models.IntegerField()
-    query = models.ForeignKey('SearchQuery', related_name="results", on_delete=models.CASCADE)
+    queryInvocation = models.ForeignKey('SearchQueryInvocation', related_name="results", on_delete=models.CASCADE)
+    downloads = models.IntegerField(default=0, validators=[MinValueValidator(0)])
 
     # Add rating.
     score = models.FloatField()
     
     class Meta:
-        ordering = ('query', 'rank', )
+        ordering = ('queryInvocation', 'rank', )
+
+    @classmethod
+    def pre_save(cls, sender, instance, *args, **kwargs):
+        """
+        Upon save, we populate other values, if missing.
+        """
+        if not instance.id:
+            instance.downloads = 0
 
     @property
     def thumbnailFile(self):
@@ -63,9 +66,7 @@ class SearchResult(models.Model):
 
     @property
     def allDownloads(self):
-        ratings = SearchRatings.objects.get(result=self)
-        allDownloads = sum([rating.downloads for rating in ratings])
-        return allDownloads
+        return self.downloads
 
     @property
     def slideDownloadFeatures(self):
@@ -75,7 +76,7 @@ class SearchResult(models.Model):
 
         These properties are used by pyltr models to improve search quality.
         """
-        otherResultsWithSameSlide = SearchResult.objects.get(slide=slide)
+        otherResultsWithSameSlide = SearchResult.objects.filter(slide=self.slide)
         downloadCount = 0
         for result in otherResultsWithSameSlide:
             downloadCount += result.allDownloads
@@ -83,7 +84,7 @@ class SearchResult(models.Model):
         if downloadCount == 0:
             return (0, 0)
         else:
-            return (downloadCount, downloadCount/len(otherResultsWithSameSlide))
+            return (downloadCount, downloadCount/len(otherResultsWithSameSlide)
 
     @property
     def myDownloads(self):
@@ -111,13 +112,15 @@ class SearchResult(models.Model):
         """
         curUser = get_current_user()
         if not curUser.is_anonymous:
-            ratingObj = SearchResultRating.objects.get(result=self, user=curUser)
+            ratingObj = SearchResultRating.objects.get(
+                slide=self.slide, query=self.queryInvocation.query, user=curUser
+            )
             if ratingObj is not None:
-                if newDownloads > ratingObj.downloads:
-                    ratingObj.downloads += 1
+                if newDownloads > self.downloads:
+                    self.downloads += 1
             else:
                 raise ValueError("Cannot increment download count, without rating the slide.")
-            ratingObj.save()
+            self.save()
         else:
             raise PermissionError("Anonymous user cannot increment download count.")
 
@@ -132,7 +135,9 @@ class SearchResult(models.Model):
         curUser = get_current_user()
         if curUser.is_anonymous:
             return None
-        ratingObj = SearchResultRating.objects.get(result=self, user=curUser)
+        ratingObj = SearchResultRating.objects.get(
+            slide=self.slide, query=self.queryInvocation.query, user=curUser
+        )
         if ratingObj is None:
             return None
         return ratingObj.rated
@@ -147,11 +152,15 @@ class SearchResult(models.Model):
         """
         curUser = get_current_user()
         if not curUser.is_anonymous:
-            ratingObj = SearchResultRating.objects.get(result=self, user=curUser)
+            ratingObj = SearchResultRating.objects.get(
+                slide=self.slide, query=self.queryInvocation.query, user=curUser
+            )
             if ratingObj is not None:
                 ratingObj.rated = newRating
             else:
-                ratingObj = SearchResultRating(rated=newRating, result=self, user=curUser)
+                ratingObj = SearchResultRating(
+                    rated=newRating, slide=self.slide, query=self.queryInvocation.query, user=curUser
+                )
             ratingObj.save()
         else:
             raise PermissionError("Anonymous user cannot rate.")
@@ -166,22 +175,31 @@ class SearchResult(models.Model):
         """
         sumRatings = 1
         countRatings = 0
-        for ratingObj in SearchResultRating.objects.filter(result=self):
+        for ratingObj in SearchResultRating.objects.filter(slide=self.slide, query=self.queryInvocation.query):
             countRatings += 1
             sumRatings += ratingObj.rated
         if countRatings is 0:
             return None
         return sumRatings/countRatings
 
+
 class SearchQuery(models.Model):
+    """
+    Model class to save the input search query by user.
+    """
+
+    # Query definition.
+    queryJson = PostgresJSONField(default={"Keywords": []})
+
+
+class SearchQueryInvocation(models.Model):
     """
     Model class for any query made by any user.
     """
     # Session linking.
-    index = models.ForeignKey("SearchIndex", related_name="queries", on_delete=models.CASCADE)
+    index = models.ForeignKey("SearchIndex", related_name="invocations", on_delete=models.CASCADE)
 
-    # Query definition.
-    queryJson = PostgresJSONField(default={"Keywords": []})
+    query = models.ForeignKey("SearchQuery", related_name="invocations", on_delete=models.CASCADE)
 
     # A list of results and their scores.
     resultJson = JSONField(default=[])
@@ -197,12 +215,14 @@ class SearchQuery(models.Model):
         if not instance.id:
             instance.created = timezone.now()
 
+
 class IndexTypeChoices(Enum):
     """
     Enum class for type of search index being created.
     """
     SimulatedRatings = 0
     UserRatings = 1
+
 
 class SearchIndex(models.Model):
     """
@@ -296,5 +316,5 @@ class SearchIndex(models.Model):
         return retval
 
 # Connects pre_save signal of SearchQuery.
-pre_save.connect(SearchQuery.pre_save, sender=SearchQuery) 
-pre_save.connect(SearchResultRating.pre_save, sender=SearchResultRating) 
+pre_save.connect(SearchQueryInvocation.pre_save, sender=SearchQueryInvocation)
+pre_save.connect(SearchResult.pre_save, sender=SearchResult)
