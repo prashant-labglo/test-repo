@@ -19,9 +19,8 @@ UserModel = get_user_model()
 
 class SearchResultRating(models.Model):
     """
-    Model for rating search Slide.
-    
-    Each user can rate the slide differently. So rating object is kept outside result.
+    Model for rating search results.
+    Rating is a user's perception of the fitness of a slide against a SearchQuery.
     """
     rated = models.IntegerField(default=0, validators=[MaxValueValidator(3), MinValueValidator(-3)])
 
@@ -31,6 +30,12 @@ class SearchResultRating(models.Model):
 
     class Meta:
         unique_together = ('user', 'slide',)
+
+    @property
+    def allDownloads(self):
+        results = SearchResult.objects.filter(slide=self.slide, queryInvocation__query=self.query)
+        allDownloads = sum([obj.downloads for obj in results])
+        return allDownloads
 
 
 class SearchResult(models.Model):
@@ -65,10 +70,6 @@ class SearchResult(models.Model):
         return self.slide.pptFile
 
     @property
-    def allDownloads(self):
-        return self.downloads
-
-    @property
     def slideDownloadFeatures(self):
         """
         For the current result object, this method finds the rating of the
@@ -84,7 +85,7 @@ class SearchResult(models.Model):
         if downloadCount == 0:
             return (0, 0)
         else:
-            return (downloadCount, downloadCount/len(otherResultsWithSameSlide)
+            return (downloadCount, downloadCount/len(otherResultsWithSameSlide))
 
     @property
     def myDownloads(self):
@@ -94,6 +95,7 @@ class SearchResult(models.Model):
 
         This property is used by Search result serializers for the REST API.
         """
+
         curUser = get_current_user()
         if curUser.is_anonymous:
             return None
