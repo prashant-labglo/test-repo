@@ -4,7 +4,7 @@ from rest_framework.reverse import reverse
 from ZenCentral.middleware import get_current_request
 from LibLisa import methodProfiler
 from SlideDB.models import Slide
-from Search.models import SearchResult, SearchResultRating, SearchQuery, SearchIndex
+from Search.models import SearchResult, SearchResultRating, SearchQueryInvocation, SearchIndex
 from Search.models import IndexTypeChoices
 from Search.utils import normalizeQueryJson
 from ZenCentral import fields
@@ -25,7 +25,8 @@ class UpsertingOnPostResultRatingSerializer(serializers.Serializer):
         except:
             raise serializers.ValidationError({'result': 'SearchResult object not present'})
         SearchResultRating.objects.create(
-            rated=validated_data['rated'], result=result_obj, user=self.context['request'].user
+            rated=validated_data['rated'], slide=result_obj.slide, query=result_obj.queryInvocation.query,
+            user=self.context['request'].user
         )
         return validated_data
 
@@ -40,7 +41,7 @@ class SearchResultRatingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SearchResultRating
-        fields = ('rated', 'result', 'user')
+        fields = ('rated', 'slide', 'query', 'user')
 
 
 class SearchResultSerializer(serializers.ModelSerializer):
@@ -53,8 +54,8 @@ class SearchResultSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SearchResult
-        fields = ('id', 'slide', 'rank', 'query', 'ratings', 'myRating', 'avgRating')
-        read_only_fields = ('id', 'slide', 'rank', 'query', 'ratings')
+        fields = ('id', 'slide', 'rank', 'queryInvocation', 'ratings', 'myRating', 'avgRating')
+        read_only_fields = ('id', 'slide', 'rank', 'queryInvocation', 'ratings')
 
 
 class NestedSearchResultRatingSerializer(serializers.ModelSerializer):
@@ -161,7 +162,7 @@ class PaginatedSearchResultSerializer(NestedSearchResultSerializer):
     overriding list_serializer_class of NestedSearchResultSerializer.
     """
     class Meta(NestedSearchResultSerializer.Meta):
-        list_serializer_class=PaginatedSearchResultListSerializer
+        list_serializer_class = PaginatedSearchResultListSerializer
 
 
 class QueryResultsIteratorWithAutoInsertion(object):
@@ -177,7 +178,7 @@ class QueryResultsIteratorWithAutoInsertion(object):
 
         # Needed for old queries. Build resultJson, if it doesn't exist.
         if not self.queryObj.resultJson:
-            results = SearchResult.objects.filter(query=self.queryObj)
+            results = SearchResult.objects.filter(queryInvocation=self.queryObj)
             self.queryObj.resultJson = [(result.score, result.slide.id) for result in results]
             self.queryObj.save()
 
@@ -193,20 +194,20 @@ class QueryResultsIteratorWithAutoInsertion(object):
         """
         if isinstance(key, int):
             # Handle negative indices
-            if key < 0 :
-                key += len( self )
+            if key < 0:
+                key += len(self)
 
             # Handle out of range access.
             if key < 0 or key >= len(self.queryObj.resultJson) :
-                raise IndexError("The index (%d) is out of range."%key)
+                raise IndexError("The index (%d) is out of range." % key)
             try:
                 # First try pre-existing DB entries.
-                return SearchResult.objects.get(query=self.queryObj, rank=key)
+                return SearchResult.objects.get(queryInvocation=self.queryObj, rank=key)
             except SearchResult.DoesNotExist:
                 # Create a new entry for DB and insert it.
                 (score, slideId) = self.queryObj.resultJson[key]
                 slide = Slide.objects.get(id=slideId)
-                searchResult = SearchResult(slide=slide, rank=key, query=self.queryObj, score=score)
+                searchResult = SearchResult(slide=slide, rank=key, queryInvocation=self.queryObj, score=score)
                 searchResult.save()
                 return searchResult
         elif isinstance(key, slice):
@@ -215,7 +216,7 @@ class QueryResultsIteratorWithAutoInsertion(object):
             return [self[index] for index in range(start, key.stop, step)]
 
 
-class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
+class SearchQueryInvocationSerializer(serializers.HyperlinkedModelSerializer):
     """
     Serializer for /search/queries.
     """
@@ -227,7 +228,7 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
     results = serializers.SerializerMethodField('paginated_results')
 
     class Meta:
-        model = SearchQuery
+        model = SearchQueryInvocation
         fields = ('id', 'index', 'queryJson', 'created', 'results')
 
     def to_internal_value(self, data):
@@ -244,7 +245,7 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
 
         data["queryJson"] = normalizeQueryJson(data["queryJson"])
 
-        instance = super(SearchQuerySerializer, self).to_internal_value(data)
+        instance = super(SearchQueryInvocationSerializer, self).to_internal_value(data)
         return instance
 
     @methodProfiler
@@ -263,10 +264,10 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
 
     def create(self, validated_data):
         queryJson = validated_data.get('queryJson', None)
-        search_query = SearchQuery.objects.filter(queryJson__exact=queryJson)
+        search_query = SearchQueryInvocation.objects.filter(query__queryJson__exact=queryJson)
         if search_query:
             return search_query.filter(id=max([ele.id for ele in search_query]))[0]
-        return SearchQuery.objects.create(**validated_data)
+        return SearchQueryInvocation.objects.create(**validated_data)
 
 
 class SearchIndexSerializer(serializers.HyperlinkedModelSerializer):

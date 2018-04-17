@@ -1,10 +1,10 @@
 from rest_framework import viewsets
 from rest_framework import status
 
-from Search.models import SearchResult, SearchResultRating, SearchQuery, SearchIndex
+from Search.models import SearchResult, SearchResultRating, SearchQueryInvocation, SearchIndex
 
 from Search.serializers import (
-    NestedSearchResultSerializer, SearchResultSerializer, SearchResultRatingSerializer, SearchQuerySerializer,
+    NestedSearchResultSerializer, SearchResultSerializer, SearchResultRatingSerializer, SearchQueryInvocationSerializer,
     SearchIndexSerializer, UpsertingOnPostResultRatingSerializer
 )
 from ZenCentral.views import profiledModelViewSet
@@ -25,7 +25,10 @@ class SearchResultRatingViewSet(profiledModelViewSet):
         Method to override the post request to update if the object present or to create new object.
         """
         result = serializer.validated_data['result']
-        qset = SearchResultRating.objects.filter(user=self.request.user, result=result)
+        result_obj = SearchResult.objects.get(id=result)
+        qset = SearchResultRating.objects.filter(
+            user=self.request.user, slide=result_obj.slide, query=result_obj.SearchQueryInvocation.query
+        )
         if qset:
             qset[0].rated = serializer.data['rated']
             qset[0].save()
@@ -47,12 +50,12 @@ class SearchResultViewSet(viewsets.ModelViewSet):
     # When a query is made, the search results are created and returned.
 
 
-class SearchQueryViewSet(profiledModelViewSet):
+class SearchQueryInvocationViewSet(profiledModelViewSet):
     """
     API endpoint that allows SearchQuerys to be viewed or edited.
     """
-    queryset = SearchQuery.objects.all()
-    serializer_class = SearchQuerySerializer
+    queryset = SearchQueryInvocation.objects.all()
+    serializer_class = SearchQueryInvocationSerializer
 
     @methodProfiler
     def create(self, request):
@@ -68,17 +71,17 @@ class SearchQueryViewSet(profiledModelViewSet):
             return retval
         else:
             with blockProfiler("create.GetSearchResults"):
-                queryObj = SearchQuery.objects.get(pk=retval.data["id"])
+                queryObj = SearchQueryInvocation.objects.get(pk=retval.data["id"])
                 searchIndex = queryObj.index
                 queryObj.resultJson = searchIndex.slideSearch(queryObj)
                 queryObj.save()
 
             with blockProfiler("create.SerializeSearchResults"):
                 # QueryObj may have now changed.
-                queryObj = SearchQuery.objects.get(pk=retval.data["id"])
+                queryObj = SearchQueryInvocation.objects.get(pk=retval.data["id"])
 
                 # Update retval with new data and return.
-                retval.data = SearchQuerySerializer(queryObj, context={'request': request}).data
+                retval.data = SearchQueryInvocationSerializer(queryObj, context={'request': request}).data
 
                 # Next and previous URLs in the pagination class work for GET queries.
                 # However, they are incorrect for post queries.
