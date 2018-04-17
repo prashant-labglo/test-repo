@@ -99,10 +99,12 @@ class SearchResult(models.Model):
         curUser = get_current_user()
         if curUser.is_anonymous:
             return None
-        ratingObj = SearchResultRating.objects.get(result=self, user=curUser)
+        ratingObj = SearchResultRating.objects.get(
+            slide=self.slide, query=self.queryInvocation.query, user=curUser
+        )
         if ratingObj is None:
             return None
-        return ratingObj.downloads
+        return self.downloads
 
     @myDownloads.setter
     def myDownloads(self, newDownloads):
