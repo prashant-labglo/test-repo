@@ -25,7 +25,7 @@ class SearchResultRating(models.Model):
     rated = models.IntegerField(default=0, validators=[MaxValueValidator(3), MinValueValidator(-3)])
 
     user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
-    slide = models.ForeignKey("Slide", related_name="ratings", on_delete=models.CASCADE)
+    slide = models.ForeignKey(Slide, related_name="ratings", on_delete=models.CASCADE)
     query = models.ForeignKey("SearchQuery", related_name="ratings", on_delete=models.CASCADE)
 
     class Meta:
