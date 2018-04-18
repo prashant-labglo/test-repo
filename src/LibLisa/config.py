@@ -95,7 +95,7 @@ def LisaConfig():
     elif retval.hostname in ["labglo-pc"]:
         repoRoot = "/projects/sources/"
 
-    retval.angularAppRootFolder = repoRoot + "lisa-ng/src/LisaTools/"
+    retval.angularAppRootFolder = repoRoot + "lisa-ng/src/LisaTools/containers/"
 
     if os.name == "nt":
         retval.globalApacheModulesRoot = "C:/Apache2/modules/"
