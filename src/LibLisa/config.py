@@ -39,10 +39,6 @@ def LisaConfig():
         apacheConfig.http_host = "localhost"
         apacheConfig.http_port = 8000
 
-    # Don't commit.
-    apacheConfig.http_host = "lisa-prod.prezentium.com"
-    apacheConfig.http_port = 443
-
     retval.apacheConfig = apacheConfig
 
     apacheConfig.service_url = (
