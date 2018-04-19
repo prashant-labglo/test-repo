@@ -39,6 +39,10 @@ def LisaConfig():
         apacheConfig.http_host = "localhost"
         apacheConfig.http_port = 8000
 
+    # Don't commit.
+    apacheConfig.http_host = "lisa-prod.prezentium.com"
+    apacheConfig.http_port = 443
+
     retval.apacheConfig = apacheConfig
 
     apacheConfig.service_url = (
@@ -56,7 +60,7 @@ def LisaConfig():
 
     # Build and set SlideDbClient config.
     slideDbConfig = AttrDict()
-    slideDbConfig.BaseUrl = apacheConfig.service_url
+    slideDbConfig.BaseUrl = apacheConfig.service_url + "api/"
     slideDbConfig.appName = "slidedb"
     slideDbConfig.Username = "test"
     slideDbConfig.Password = "test"
@@ -64,7 +68,7 @@ def LisaConfig():
 
     # Build and set SlideSearch config.
     slideSearchConfig = AttrDict()
-    slideSearchConfig.BaseUrl = apacheConfig.service_url
+    slideSearchConfig.BaseUrl = apacheConfig.service_url + "api/"
     slideSearchConfig.appName = "search"
     slideSearchConfig.Username = "test"
     slideSearchConfig.Password = "test"

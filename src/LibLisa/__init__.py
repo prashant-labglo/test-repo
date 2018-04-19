@@ -96,7 +96,7 @@ def check_ssl_certs(enabled):
     Sometimes we want to make https requests without certificate verification.
     This function does that.
     """
-    if enabled:
+    if not enabled:
         # Override request method in module requests.Session to pass verify=False.
         old_request = requests.Session.request
         requests.Session.request = functools.partialmethod(old_request, verify=False)
