@@ -186,6 +186,20 @@ class SearchResult(models.Model):
             return None
         return sumRatings/countRatings
 
+    @property
+    def ratings(self):
+        """
+        For the current result object, this method finds the all ratings.
+        This property is used by Search result serializers for the REST API.
+        """
+
+        ratings = SearchResultRating.objects.filter(
+            slide=self.slide, query=self.queryInvocation.query
+        ).values('rated', 'user')
+        for item in ratings:
+            item['result'] = self.id
+        return ratings
+
 
 class SearchQuery(models.Model):
     """
