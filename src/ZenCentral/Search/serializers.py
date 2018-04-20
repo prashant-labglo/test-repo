@@ -41,7 +41,7 @@ class SearchResultRatingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SearchResultRating
-        fields = ('rated', 'slide', 'query', 'user')
+        fields = ('id', 'rated', 'slide', 'query', 'user')
 
 
 class SearchResultSerializer(serializers.ModelSerializer):
@@ -50,7 +50,6 @@ class SearchResultSerializer(serializers.ModelSerializer):
     """
     id = serializers.IntegerField(read_only=True)
     myRating = serializers.IntegerField(read_only=True)
-    ratings = SearchResultRatingSerializer(many=True)
 
     class Meta:
         model = SearchResult
