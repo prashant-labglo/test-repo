@@ -5,7 +5,7 @@ from ZenCentral.middleware import get_current_request
 from LibLisa import methodProfiler
 from SlideDB.models import Slide
 from Search.models import SearchResult, SearchResultRating, SearchQueryInvocation, SearchIndex
-from Search.models import IndexTypeChoices
+from Search.models import IndexTypeChoices, SearchQuery
 from Search.utils import normalizeQueryJson
 from ZenCentral import fields
 
@@ -216,20 +216,28 @@ class QueryResultsIteratorWithAutoInsertion(object):
             return [self[index] for index in range(start, key.stop, step)]
 
 
+class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = SearchQuery
+        fields = ("queryJson",)
+
+
 class SearchQueryInvocationSerializer(serializers.HyperlinkedModelSerializer):
     """
     Serializer for /search/queries.
     """
     id = serializers.IntegerField(read_only=True)
     # queryJSON, being a custom model field type, needs a custom invocation of the field serializer.
-    queryJson = serializers.JSONField()
+
+    query = SearchQuerySerializer()
 
     # Making results read only in the API.
     results = serializers.SerializerMethodField('paginated_results')
 
     class Meta:
         model = SearchQueryInvocation
-        fields = ('id', 'index', 'queryJson', 'created', 'results')
+        fields = ('id', 'index', 'query', 'created', 'results')
 
     def to_internal_value(self, data):
         if "index" not in data.keys() or not data["index"]:
@@ -243,7 +251,7 @@ class SearchQueryInvocationSerializer(serializers.HyperlinkedModelSerializer):
                 data = dict(data)
                 data["index"] = indexUrl
 
-        data["queryJson"] = normalizeQueryJson(data["queryJson"])
+        data["query"]["queryJson"] = normalizeQueryJson(data["query"]["queryJson"])
 
         instance = super(SearchQueryInvocationSerializer, self).to_internal_value(data)
         return instance
@@ -263,11 +271,14 @@ class SearchQueryInvocationSerializer(serializers.HyperlinkedModelSerializer):
         return serializer.data
 
     def create(self, validated_data):
-        queryJson = validated_data.get('queryJson', None)
+        query = validated_data.get('query', None)
+        queryJson = query['queryJson']
+        index = validated_data.get('index', None)
         search_query = SearchQueryInvocation.objects.filter(query__queryJson__exact=queryJson)
         if search_query:
             return search_query.filter(id=max([ele.id for ele in search_query]))[0]
-        return SearchQueryInvocation.objects.create(**validated_data)
+        obj, created = SearchQuery.objects.get_or_create(queryJson=queryJson)
+        return SearchQueryInvocation.objects.create(index=index, query=obj)
 
 
 class SearchIndexSerializer(serializers.HyperlinkedModelSerializer):

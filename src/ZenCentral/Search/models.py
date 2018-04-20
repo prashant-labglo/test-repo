@@ -315,7 +315,7 @@ class SearchIndex(models.Model):
     @methodProfiler
     def slideSearch(self, queryObj):
         searchIndexBackend = queryObj.index.backend
-        retval = searchIndexBackend.slideSearch(queryObj.queryJson, getIDs=True)
+        retval = searchIndexBackend.slideSearch(queryObj.query.queryJson, getIDs=True)
 
         return retval
 
