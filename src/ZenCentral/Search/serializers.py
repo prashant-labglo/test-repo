@@ -273,7 +273,7 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
         queryTemplate = validated_data.get('queryTemplate', None)
         queryJson = queryTemplate['queryJson']
         index = validated_data.get('index', None)
-        search_query = SearchQuery.objects.filter(queryTemplate__queryJson__exact=queryJson)
+        search_query = SearchQuery.objects.filter(index=index, queryTemplate__queryJson__exact=queryJson)
         if search_query:
             return search_query.filter(id=max([ele.id for ele in search_query]))[0]
         obj, created = SearchQueryTemplate.objects.get_or_create(queryJson=queryJson)
