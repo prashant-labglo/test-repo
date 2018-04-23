@@ -4,8 +4,8 @@ from rest_framework.reverse import reverse
 from ZenCentral.middleware import get_current_request
 from LibLisa import methodProfiler
 from SlideDB.models import Slide
-from Search.models import SearchResult, SearchResultRating, SearchQueryInvocation, SearchIndex
-from Search.models import IndexTypeChoices, SearchQuery
+from Search.models import SearchResult, SearchResultRating, SearchQuery, SearchIndex
+from Search.models import IndexTypeChoices, SearchQueryTemplate
 from Search.utils import normalizeQueryJson
 from ZenCentral import fields
 
@@ -25,7 +25,7 @@ class UpsertingOnPostResultRatingSerializer(serializers.Serializer):
         except:
             raise serializers.ValidationError({'result': 'SearchResult object not present'})
         SearchResultRating.objects.create(
-            rated=validated_data['rated'], slide=result_obj.slide, query=result_obj.queryInvocation.query,
+            rated=validated_data['rated'], slide=result_obj.slide, queryTemplate=result_obj.query.queryTemplate,
             user=self.context['request'].user
         )
         return validated_data
@@ -41,7 +41,7 @@ class SearchResultRatingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SearchResultRating
-        fields = ('id', 'rated', 'slide', 'query', 'user')
+        fields = ('id', 'rated', 'slide', 'queryTemplate', 'user')
 
 
 class SearchResultSerializer(serializers.ModelSerializer):
@@ -53,8 +53,8 @@ class SearchResultSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SearchResult
-        fields = ('id', 'slide', 'rank', 'queryInvocation', 'ratings', 'myRating', 'avgRating')
-        read_only_fields = ('id', 'slide', 'rank', 'queryInvocation', 'ratings')
+        fields = ('id', 'slide', 'rank', 'query', 'ratings', 'myRating', 'avgRating')
+        read_only_fields = ('id', 'slide', 'rank', 'query', 'ratings')
 
 
 class NestedSearchResultRatingSerializer(serializers.ModelSerializer):
@@ -177,7 +177,7 @@ class QueryResultsIteratorWithAutoInsertion(object):
 
         # Needed for old queries. Build resultJson, if it doesn't exist.
         if not self.queryObj.resultJson:
-            results = SearchResult.objects.filter(queryInvocation=self.queryObj)
+            results = SearchResult.objects.filter(query=self.queryObj)
             self.queryObj.resultJson = [(result.score, result.slide.id) for result in results]
             self.queryObj.save()
 
@@ -201,12 +201,12 @@ class QueryResultsIteratorWithAutoInsertion(object):
                 raise IndexError("The index (%d) is out of range." % key)
             try:
                 # First try pre-existing DB entries.
-                return SearchResult.objects.get(queryInvocation=self.queryObj, rank=key)
+                return SearchResult.objects.get(query=self.queryObj, rank=key)
             except SearchResult.DoesNotExist:
                 # Create a new entry for DB and insert it.
                 (score, slideId) = self.queryObj.resultJson[key]
                 slide = Slide.objects.get(id=slideId)
-                searchResult = SearchResult(slide=slide, rank=key, queryInvocation=self.queryObj, score=score)
+                searchResult = SearchResult(slide=slide, rank=key, query=self.queryObj, score=score)
                 searchResult.save()
                 return searchResult
         elif isinstance(key, slice):
@@ -215,28 +215,28 @@ class QueryResultsIteratorWithAutoInsertion(object):
             return [self[index] for index in range(start, key.stop, step)]
 
 
-class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
+class SearchQueryTemplateSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
-        model = SearchQuery
+        model = SearchQueryTemplate
         fields = ("queryJson",)
 
 
-class SearchQueryInvocationSerializer(serializers.HyperlinkedModelSerializer):
+class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
     """
     Serializer for /search/queries.
     """
     id = serializers.IntegerField(read_only=True)
     # queryJSON, being a custom model field type, needs a custom invocation of the field serializer.
 
-    query = SearchQuerySerializer()
+    queryTemplate = SearchQueryTemplateSerializer()
 
     # Making results read only in the API.
     results = serializers.SerializerMethodField('paginated_results')
 
     class Meta:
-        model = SearchQueryInvocation
-        fields = ('id', 'index', 'query', 'created', 'results')
+        model = SearchQuery
+        fields = ('id', 'index', 'queryTemplate', 'created', 'results')
 
     def to_internal_value(self, data):
         if "index" not in data.keys() or not data["index"]:
@@ -250,9 +250,9 @@ class SearchQueryInvocationSerializer(serializers.HyperlinkedModelSerializer):
                 data = dict(data)
                 data["index"] = indexUrl
 
-        data["query"]["queryJson"] = normalizeQueryJson(data["query"]["queryJson"])
+        data["queryTemplate"]["queryJson"] = normalizeQueryJson(data["queryTemplate"]["queryJson"])
 
-        instance = super(SearchQueryInvocationSerializer, self).to_internal_value(data)
+        instance = super(SearchQuerySerializer, self).to_internal_value(data)
         return instance
 
     @methodProfiler
@@ -270,14 +270,14 @@ class SearchQueryInvocationSerializer(serializers.HyperlinkedModelSerializer):
         return serializer.data
 
     def create(self, validated_data):
-        query = validated_data.get('query', None)
-        queryJson = query['queryJson']
+        queryTemplate = validated_data.get('queryTemplate', None)
+        queryJson = queryTemplate['queryJson']
         index = validated_data.get('index', None)
-        search_query = SearchQueryInvocation.objects.filter(query__queryJson__exact=queryJson)
+        search_query = SearchQuery.objects.filter(queryTemplate__queryJson__exact=queryJson)
         if search_query:
             return search_query.filter(id=max([ele.id for ele in search_query]))[0]
-        obj, created = SearchQuery.objects.get_or_create(queryJson=queryJson)
-        return SearchQueryInvocation.objects.create(index=index, query=obj)
+        obj, created = SearchQueryTemplate.objects.get_or_create(queryJson=queryJson)
+        return SearchQuery.objects.create(index=index, queryTemplate=obj)
 
 
 class SearchIndexSerializer(serializers.HyperlinkedModelSerializer):

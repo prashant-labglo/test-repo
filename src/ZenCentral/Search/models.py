@@ -26,14 +26,14 @@ class SearchResultRating(models.Model):
 
     user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
     slide = models.ForeignKey(Slide, related_name="ratings", on_delete=models.CASCADE)
-    query = models.ForeignKey("SearchQuery", related_name="ratings", on_delete=models.CASCADE)
+    queryTemplate = models.ForeignKey("SearchQueryTemplate", related_name="ratings", on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ('user', 'slide',)
 
     @property
     def allDownloads(self):
-        results = SearchResult.objects.filter(slide=self.slide, queryInvocation__query=self.query)
+        results = SearchResult.objects.filter(slide=self.slide, query__queryTemplate=self.queryTemplate)
         allDownloads = sum([obj.downloads for obj in results])
         return allDownloads
 
@@ -44,14 +44,14 @@ class SearchResult(models.Model):
     """
     slide = models.ForeignKey(Slide, on_delete=models.CASCADE)
     rank = models.IntegerField()
-    queryInvocation = models.ForeignKey('SearchQueryInvocation', related_name="results", on_delete=models.CASCADE)
+    query = models.ForeignKey('SearchQuery', related_name="results", on_delete=models.CASCADE)
     downloads = models.IntegerField(default=0, validators=[MinValueValidator(0)])
 
     # Add rating.
     score = models.FloatField()
     
     class Meta:
-        ordering = ('queryInvocation', 'rank', )
+        ordering = ('query', 'rank', )
 
     @classmethod
     def pre_save(cls, sender, instance, *args, **kwargs):
@@ -100,7 +100,7 @@ class SearchResult(models.Model):
         if curUser.is_anonymous:
             return None
         ratingObj = SearchResultRating.objects.get(
-            slide=self.slide, query=self.queryInvocation.query, user=curUser
+            slide=self.slide, queryTemplate=self.query.queryTemplate, user=curUser
         )
         if ratingObj is None:
             return None
@@ -117,7 +117,7 @@ class SearchResult(models.Model):
         curUser = get_current_user()
         if not curUser.is_anonymous:
             ratingObj = SearchResultRating.objects.get(
-                slide=self.slide, query=self.queryInvocation.query, user=curUser
+                slide=self.slide, queryTemplate=self.query.queryTemplate, user=curUser
             )
             if ratingObj is not None:
                 if newDownloads > self.downloads:
@@ -140,7 +140,7 @@ class SearchResult(models.Model):
         if curUser.is_anonymous:
             return None
         ratingObj = SearchResultRating.objects.get(
-            slide=self.slide, query=self.queryInvocation.query, user=curUser
+            slide=self.slide, queryTemplate=self.query.queryTemplate, user=curUser
         )
         if ratingObj is None:
             return None
@@ -157,13 +157,13 @@ class SearchResult(models.Model):
         curUser = get_current_user()
         if not curUser.is_anonymous:
             ratingObj = SearchResultRating.objects.get(
-                slide=self.slide, query=self.queryInvocation.query, user=curUser
+                slide=self.slide, queryTemplate=self.query.queryTemplate, user=curUser
             )
             if ratingObj is not None:
                 ratingObj.rated = newRating
             else:
                 ratingObj = SearchResultRating(
-                    rated=newRating, slide=self.slide, query=self.queryInvocation.query, user=curUser
+                    rated=newRating, slide=self.slide, queryTemplate=self.query.queryTemplate, user=curUser
                 )
             ratingObj.save()
         else:
@@ -179,7 +179,7 @@ class SearchResult(models.Model):
         """
         sumRatings = 1
         countRatings = 0
-        for ratingObj in SearchResultRating.objects.filter(slide=self.slide, query=self.queryInvocation.query):
+        for ratingObj in SearchResultRating.objects.filter(slide=self.slide, queryTemplate=self.query.queryTemplate):
             countRatings += 1
             sumRatings += ratingObj.rated
         if countRatings is 0:
@@ -194,14 +194,14 @@ class SearchResult(models.Model):
         """
 
         ratings = SearchResultRating.objects.filter(
-            slide=self.slide, query=self.queryInvocation.query
+            slide=self.slide, queryTemplate=self.query.queryTemplate
         ).values('rated', 'user')
         for item in ratings:
             item['result'] = self.id
         return ratings
 
 
-class SearchQuery(models.Model):
+class SearchQueryTemplate(models.Model):
     """
     Model class to save the input search query by user.
     """
@@ -210,14 +210,15 @@ class SearchQuery(models.Model):
     queryJson = PostgresJSONField(default={"Keywords": []})
 
 
-class SearchQueryInvocation(models.Model):
+class SearchQuery(models.Model):
     """
-    Model class for any query made by any user.
+    Model class representing a particular invocation (at a particular time, by a particular user)
+    of a search query template.
     """
     # Session linking.
     index = models.ForeignKey("SearchIndex", related_name="invocations", on_delete=models.CASCADE)
 
-    query = models.ForeignKey("SearchQuery", related_name="invocations", on_delete=models.CASCADE)
+    queryTemplate = models.ForeignKey("SearchQueryTemplate", related_name="invocations", on_delete=models.CASCADE)
 
     # A list of results and their scores.
     resultJson = JSONField(default=[])
@@ -329,10 +330,10 @@ class SearchIndex(models.Model):
     @methodProfiler
     def slideSearch(self, queryObj):
         searchIndexBackend = queryObj.index.backend
-        retval = searchIndexBackend.slideSearch(queryObj.query.queryJson, getIDs=True)
+        retval = searchIndexBackend.slideSearch(queryObj.queryTemplate.queryJson, getIDs=True)
 
         return retval
 
 # Connects pre_save signal of SearchQuery.
-pre_save.connect(SearchQueryInvocation.pre_save, sender=SearchQueryInvocation)
+pre_save.connect(SearchQuery.pre_save, sender=SearchQuery)
 pre_save.connect(SearchResult.pre_save, sender=SearchResult)
