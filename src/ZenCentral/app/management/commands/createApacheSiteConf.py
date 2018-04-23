@@ -17,6 +17,7 @@ class Command(BaseCommand):
             print("Define SslCertFile {0}".format(lisaConfig.apacheConfig.ssl_crt), file=fp)
             print("Define SslKeyFile {0}".format(lisaConfig.apacheConfig.ssl_key), file=fp)
             print("Define ServiceUrl {0}".format(lisaConfig.apacheConfig.service_url), file=fp)
+            print("Define DjangoServiceUrl {0}".format(lisaConfig.apacheConfig.django_service_url), file=fp)
             print("Define AngularAppRootFolder {0}".format(lisaConfig.angularAppRootFolder), file=fp)
             print("Include '${ZenAppsRootFolder}ZenCentral/apache/httpd.conf'", file=fp)
             print("Include '${ZenAppsRootFolder}ZenCentral/apache/wsgi.conf'", file=fp)
