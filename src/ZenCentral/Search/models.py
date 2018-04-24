@@ -29,7 +29,7 @@ class SearchResultRating(models.Model):
     queryTemplate = models.ForeignKey("SearchQueryTemplate", related_name="ratings", on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = ('user', 'slide',)
+        unique_together = ('user', 'slide', 'queryTemplate')
 
     @property
     def allDownloads(self):
