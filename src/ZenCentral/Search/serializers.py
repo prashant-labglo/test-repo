@@ -229,7 +229,7 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
     id = serializers.IntegerField(read_only=True)
     # queryJSON, being a custom model field type, needs a custom invocation of the field serializer.
 
-    queryTemplate = SearchQueryTemplateSerializer()
+    queryTemplate = SearchQueryTemplateSerializer(required=False)
 
     # Making results read only in the API.
     results = serializers.SerializerMethodField('paginated_results')
@@ -250,7 +250,11 @@ class SearchQuerySerializer(serializers.HyperlinkedModelSerializer):
                 data = dict(data)
                 data["index"] = indexUrl
 
-        data["queryTemplate"]["queryJson"] = normalizeQueryJson(data["queryTemplate"]["queryJson"])
+        if "queryJson" not in data.keys():
+            data["queryTemplate"]["queryJson"] = normalizeQueryJson(data["queryTemplate"]["queryJson"])
+        else:
+            data["queryTemplate"] = {}
+            data["queryTemplate"]["queryJson"] = normalizeQueryJson(data["queryJson"])
 
         instance = super(SearchQuerySerializer, self).to_internal_value(data)
         return instance
