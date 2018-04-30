@@ -56,7 +56,7 @@ def LisaConfig():
 
     # Build and set SlideDbClient config.
     slideDbConfig = AttrDict()
-    slideDbConfig.BaseUrl = apacheConfig.service_url + "api/"
+    slideDbConfig.BaseUrl = apacheConfig.service_url
     slideDbConfig.appName = "slidedb"
     slideDbConfig.Username = "test"
     slideDbConfig.Password = "test"
@@ -64,7 +64,7 @@ def LisaConfig():
 
     # Build and set SlideSearch config.
     slideSearchConfig = AttrDict()
-    slideSearchConfig.BaseUrl = apacheConfig.service_url + "api/"
+    slideSearchConfig.BaseUrl = apacheConfig.service_url
     slideSearchConfig.appName = "search"
     slideSearchConfig.Username = "test"
     slideSearchConfig.Password = "test"
