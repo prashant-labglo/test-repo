@@ -13,6 +13,24 @@ def normalizeQueryJson(queryJson):
     elif isinstance(queryJson["Keywords"], str):
         queryJson["Keywords"] = [queryJson["Keywords"]]
 
+    if queryJson["Keywords"]:
+        in_keywords = []
+        out_keywords = []
+        keywords = []
+        for word in queryJson["Keywords"]:
+            if word[0] == "+":
+                in_keywords.append(word[1:])
+            elif word[0] == "-":
+                out_keywords.append(word[1:])
+            else:
+                keywords.append(word)
+        if in_keywords:
+            queryJson["FilterInKeywords"] = [word.lower() for word in in_keywords]
+        if out_keywords:
+            queryJson["FilterOutKeywords"] = [word.lower() for word in out_keywords]
+
+        queryJson["Keywords"] = keywords
+
     if "HasIcon" in queryJson:
         queryJson["HasIcon"] = True if queryJson["HasIcon"] else False
 
