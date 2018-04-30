@@ -43,16 +43,21 @@ class SlideSearchBase(object):
             }
         """
         for slide in self.dataForIndexing["Slides"]:
-            if "Keywords" in queryInfo.keys():
-                out_count = 0
-                tags_list = slide.tags.all().values_list('name', flat=True)
-                for word in queryInfo["Keywords"]:
-                    if word[0] == "+" and word[1:] not in tags_list:
-                        out_count += 1
-                    elif word[0] == "-" and word[1:] in tags_list:
-                        out_count += 1
-                if out_count > 0:
-                    continue
+            tags_list = slide.tags.all().values_list('name', flat=True)
+            out_flag = False
+            if "FilterInKeywords" in queryInfo.keys():
+                for word in queryInfo["FilterInKeywords"]:
+                    if word not in tags_list:
+                        out_flag = True
+                        break
+
+            if "FilterOutKeywords" in queryInfo.keys():
+                for word in queryInfo["FilterOutKeywords"]:
+                    if word not in tags_list:
+                        out_flag = True
+                        break
+            if out_flag:
+                continue
 
             if "Constructs" in queryInfo.keys():
                 slideConstruct = self.getAttr(slide, "parent")
