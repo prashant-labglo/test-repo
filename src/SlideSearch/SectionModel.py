@@ -46,6 +46,8 @@ class SectionModel(object):
             sum_idf = 0
             sum_tfidf = 0
             for word in queryDoc["Keywords"]:
+                if word[0] in ["+", "-"]:
+                    continue
                 if word not in self.bm25.f[corpusIndex]:
                     continue
                 tf = self.bm25.f[corpusIndex][word]
