@@ -41,7 +41,7 @@ def LisaConfig():
 
     retval.apacheConfig = apacheConfig
 
-    apacheConfig.service_url = (
+    apacheConfig.angular_service_url = (
                  "http" + ("s" if apacheConfig.enableSSL else "") 
                  + "://" + apacheConfig.http_host
                  + ":" + str(apacheConfig.http_port) + "/")
@@ -99,7 +99,7 @@ def LisaConfig():
     elif retval.hostname in ["labglo-pc"]:
         repoRoot = "/projects/sources/"
 
-    retval.angularAppRootFolder = repoRoot + "lisa-ng/src/LisaTools/containers/"
+    retval.angularAppRootFolder = repoRoot + "lisa-ng/src/LisaTools/"
 
     if os.name == "nt":
         retval.globalApacheModulesRoot = "C:/Apache2/modules/"
