@@ -13,23 +13,22 @@ def normalizeQueryJson(queryJson):
     elif isinstance(queryJson["Keywords"], str):
         queryJson["Keywords"] = [queryJson["Keywords"]]
 
-    if queryJson["Keywords"]:
-        in_keywords = []
-        out_keywords = []
-        keywords = []
-        for word in queryJson["Keywords"]:
-            if word[0] == "+":
-                in_keywords.append(word[1:])
-            elif word[0] == "-":
-                out_keywords.append(word[1:])
-            else:
-                keywords.append(word)
-        if in_keywords:
-            queryJson["FilterInKeywords"] = [word.lower() for word in in_keywords]
-        if out_keywords:
-            queryJson["FilterOutKeywords"] = [word.lower() for word in out_keywords]
-
-        queryJson["Keywords"] = keywords
+    filter_in_keywords = []
+    filter_out_keywords = []
+    keywords = []
+    for word in queryJson["Keywords"]:
+        if word[0] == "+":
+            filter_in_keywords.append(word[1:])
+        elif word[0] == "-":
+            filter_out_keywords.append(word[1:])
+        else:
+            keywords.append(word)
+    if filter_in_keywords:
+        queryJson["FilterInKeywords"] = [word.lower() for word in filter_in_keywords]
+    if filter_out_keywords:
+        queryJson["FilterOutKeywords"] = [word.lower() for word in filter_out_keywords]
+    if keywords:
+        queryJson["Keywords"] = [word.lower() for word in keywords]
 
     if "HasIcon" in queryJson:
         queryJson["HasIcon"] = True if queryJson["HasIcon"] else False
@@ -48,7 +47,5 @@ def normalizeQueryJson(queryJson):
             queryJson["IncludeDisabledHierarchy"] = True
         else:
             del (queryJson["IncludeDisabledHierarchy"])
-
-    queryJson["Keywords"] = [word.lower() for word in queryJson["Keywords"]]
 
     return queryJson
