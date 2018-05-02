@@ -1,11 +1,13 @@
 from rest_framework import viewsets
 from rest_framework import status
 
-from Search.models import SearchResult, SearchResultRating, SearchQuery, SearchIndex
+from django.shortcuts import get_object_or_404
+
+from Search.models import SearchResult, SearchResultRating, SearchQueryTemplate, SearchIndex, SearchQuery
 
 from Search.serializers import (
-    NestedSearchResultSerializer, SearchResultSerializer, SearchResultRatingSerializer, SearchQuerySerializer,
-    SearchIndexSerializer, UpsertingOnPostResultRatingSerializer
+    NestedSearchResultSerializer, SearchResultSerializer, SearchResultRatingSerializer, SearchQueryTemplateSerializer,
+    SearchIndexSerializer, UpsertingOnPostResultRatingSerializer, SearchQuerySerializer
 )
 from ZenCentral.views import profiledModelViewSet
 from LibLisa import lastCallProfile, lisaConfig, methodProfiler, blockProfiler
@@ -25,7 +27,10 @@ class SearchResultRatingViewSet(profiledModelViewSet):
         Method to override the post request to update if the object present or to create new object.
         """
         result = serializer.validated_data['result']
-        qset = SearchResultRating.objects.filter(user=self.request.user, result=result)
+        result_obj = get_object_or_404(SearchResult, id=result)
+        qset = SearchResultRating.objects.filter(
+            user=self.request.user, slide=result_obj.slide, queryTemplate=result_obj.query.queryTemplate
+        )
         if qset:
             qset[0].rated = serializer.data['rated']
             qset[0].save()
@@ -98,3 +103,12 @@ class SearchIndexViewSet(profiledModelViewSet):
     """
     queryset = SearchIndex.objects.all()
     serializer_class = SearchIndexSerializer
+
+
+class SearchQueryTemplateViewSet(profiledModelViewSet):
+    """
+    API endpoint that allows Search query Json to be viewed or edited.
+    """
+
+    queryset = SearchQueryTemplate.objects.all()
+    serializer_class = SearchQueryTemplateSerializer
