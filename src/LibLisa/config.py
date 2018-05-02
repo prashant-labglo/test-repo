@@ -45,6 +45,10 @@ def LisaConfig():
                  "http" + ("s" if apacheConfig.enableSSL else "") 
                  + "://" + apacheConfig.http_host
                  + ":" + str(apacheConfig.http_port) + "/")
+    apacheConfig.django_service_url = (
+                 "http" + ("s" if apacheConfig.enableSSL else "")
+                 + "://" + apacheConfig.http_host
+                 + ":8000" + "/")
 
     retval.deploymentStage = DeploymentStage.Dev
     # Build and set LisaZepto client config.
