@@ -133,7 +133,7 @@ class SlideSearchLambdaMart(SlideSearchBase):
         for (index, (word, matchingSlides)) in enumerate(wordToMatchingSlides):
             with blockProfiler("buildSeedTrainingSet."+word):
                 simulatedQuery = {"id" : word}
-                simulatedQuery["queryJson"] = {"Keywords" : [word]}
+                simulatedQuery["queryJson"] = {"RatingKeywords" : [word]}
 
                 # Now, find slides, which are close but are not matching.
                 closeButNotMatchingSlides = []
