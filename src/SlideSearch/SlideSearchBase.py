@@ -43,7 +43,7 @@ class SlideSearchBase(object):
             }
         """
         for slide in self.dataForIndexing["Slides"]:
-            tags_list = slide.tags.all().values_list('name', flat=True)
+            tags_list = self.getTags(slide)
             doRejectSlide = False
             if "FilterInKeywords" in queryInfo.keys():
                 for word in queryInfo["FilterInKeywords"]:
