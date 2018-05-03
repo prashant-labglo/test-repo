@@ -45,15 +45,16 @@ class SectionModel(object):
             sum_tf = 0
             sum_idf = 0
             sum_tfidf = 0
-            for word in queryDoc["Keywords"]:
-                if word not in self.bm25.f[corpusIndex]:
-                    continue
-                tf = self.bm25.f[corpusIndex][word]
-                idf = self.bm25.idf[word] if self.bm25.idf[word] >= 0 else EPSILON * self.average_idf
+            if "ScoreKeywords" in queryDoc:
+                for word in queryDoc["ScoreKeywords"]:
+                    if word not in self.bm25.f[corpusIndex]:
+                        continue
+                    tf = self.bm25.f[corpusIndex][word]
+                    idf = self.bm25.idf[word] if self.bm25.idf[word] >= 0 else EPSILON * self.average_idf
 
-                sum_tf += tf
-                sum_idf += idf
-                sum_tfidf += tf * idf
+                    sum_tf += tf
+                    sum_idf += idf
+                    sum_tfidf += tf * idf
 
             # Append TF-IDF features.
             ftrArray[curIndex].extend([sum_tf, sum_idf, sum_tfidf])

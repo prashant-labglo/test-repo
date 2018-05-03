@@ -114,7 +114,7 @@ if __name__ == "__main__":
     while True:
         queryStr = input("Enter search keywords:")
         keywords = re.split("\W+", queryStr)
-        queryInfo = {"Keywords" : keywords}
+        queryInfo = {"RatingKeywords" : keywords}
         result = slideSearchIndex.slideSearch(queryInfo)
         print("Results:")
         json.dump(result[0:10], sys.stdout, indent=4)

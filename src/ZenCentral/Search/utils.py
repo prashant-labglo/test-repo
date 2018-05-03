@@ -15,20 +15,22 @@ def normalizeQueryJson(queryJson):
 
     filter_in_keywords = []
     filter_out_keywords = []
-    keywords = []
+    score_keywords = []
     for word in queryJson["Keywords"]:
         if word[0] == "+":
             filter_in_keywords.append(word[1:])
         elif word[0] == "-":
             filter_out_keywords.append(word[1:])
         else:
-            keywords.append(word)
+            score_keywords.append(word)
     if filter_in_keywords:
         queryJson["FilterInKeywords"] = [word.lower() for word in filter_in_keywords]
     if filter_out_keywords:
         queryJson["FilterOutKeywords"] = [word.lower() for word in filter_out_keywords]
-    if keywords:
-        queryJson["Keywords"] = [word.lower() for word in keywords]
+    if score_keywords:
+        queryJson["ScoreKeywords"] = [word.lower() for word in score_keywords]
+
+    del queryJson["Keywords"]
 
     if "HasIcon" in queryJson:
         queryJson["HasIcon"] = True if queryJson["HasIcon"] else False
