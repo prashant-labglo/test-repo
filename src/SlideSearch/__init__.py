@@ -46,7 +46,7 @@ def getSlideRatingVecs(slideSearchIndex, slideRatingsData, slideHierarchy):
         print("{0}: Processing query({1}) searching for keywords({2}) as {3}.",
             index, 
             None if "id" not in ratedQuery else ratedQuery["id"],
-            ratedQuery["queryJson"]["Keywords"],
+            ratedQuery["queryJson"]["RatingKeywords"],
             label)
 
         # Build Ty and Tqids. Also build selectedSlides array to build Tx later.
