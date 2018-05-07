@@ -21,8 +21,13 @@ def normalizeQueryJson(queryJson):
             filter_in_keywords.append(word[1:])
         elif word[0] == "-":
             filter_out_keywords.append(word[1:])
+        elif word[0] == "*":
+            # If * is prepended, we use the word to score but not filter.
+            score_keywords.append(word[1:])
         else:
+            # By default, we use the word to score as well as filter.
             score_keywords.append(word)
+            filter_in_keywords.append(word)
     if filter_in_keywords:
         queryJson["FilterInKeywords"] = [word.lower() for word in filter_in_keywords]
     if filter_out_keywords:
