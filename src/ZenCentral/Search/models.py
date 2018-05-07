@@ -13,7 +13,7 @@ from SlideSearch import slideSearchIndexLoad
 from LibLisa import lastCallProfile, lisaConfig, methodProfiler, blockProfiler
 from LibLisa.config import lisaConfig
 from ZenCentral.middleware import get_current_user
-from Search.utils import getPermittedSlides
+from Search.utils import getPermittedSlidesDbOptimized
 
 UserModel = get_user_model()
 
@@ -331,7 +331,7 @@ class SearchIndex(models.Model):
     @methodProfiler
     def slideSearch(self, queryObj):
         searchIndexBackend = queryObj.index.backend
-        permittedSlideList = getPermittedSlides(queryObj.queryTemplate.queryJson)
+        permittedSlideList = getPermittedSlidesDbOptimized(queryObj.queryTemplate.queryJson)
         retval = searchIndexBackend.slideSearch(queryObj.queryTemplate.queryJson, permittedSlideList, getIDs=True)
 
         return retval

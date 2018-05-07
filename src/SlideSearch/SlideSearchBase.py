@@ -15,8 +15,12 @@ class SlideSearchBase(object):
         self.config = config
 
     @methodProfiler
-    def permittedSlides(self, queryInfo):
+    def getPermittedSlides(self, queryInfo):
         """
+            ********** IMPORTANT *********
+            Any change here MUST be reflected in method getPermittedSlidesDbOptimized(file ZenCentral/Search/utils.py)
+            *********** IMPORTANT *********
+
             queryJson contains filters, which are applied on slides in self.dataForIndexing["Slides"]. Remaining slides are returned.
             queryJson schema can be as below.
             {

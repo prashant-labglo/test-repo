@@ -1,5 +1,5 @@
 from SlideDB.models import Slide
-from SlideSearch.SlideSearchBase import SlideSearchBase
+from LibLisa import methodProfiler
 
 
 def normalizeQueryJson(queryJson):
@@ -56,8 +56,15 @@ def normalizeQueryJson(queryJson):
     return queryJson
 
 
-def getPermittedSlides(queryInfo):
-    """ Method to return only permitted slide after filtering with all keys values. """
+@methodProfiler
+def getPermittedSlidesDbOptimized(queryInfo):
+    """
+    *********** IMPORTANT *********
+    Any change here MUST be reflected in method SlideSearchBsae.getPermittedSlides(file SlideSearch/SlideSearchBase.py)
+    *********** IMPORTANT *********
+
+    Method to return only permitted slide after filtering with all keys values.
+    """
 
     slides_qset = Slide.objects.all().distinct()
 

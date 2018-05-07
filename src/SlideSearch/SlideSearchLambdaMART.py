@@ -138,7 +138,7 @@ class SlideSearchLambdaMart(SlideSearchBase):
                 # Now, find slides, which are close but are not matching.
                 closeButNotMatchingSlides = []
                 i = 0
-                permittedSlideList = seedDataBuilder.permittedSlides(simulatedQuery["queryJson"])
+                permittedSlideList = seedDataBuilder.getPermittedSlides(simulatedQuery["queryJson"])
                 results = seedDataBuilder.slideSearch(simulatedQuery["queryJson"], permittedSlideList)
                 while len(closeButNotMatchingSlides) < nonMatchingSlideCount:
                     if results[i][1] not in matchingSlides:
