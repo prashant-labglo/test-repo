@@ -56,13 +56,13 @@ class SlideContentChoices(Enum):
 
 class Slide(models.Model):
     parent = models.ForeignKey(Construct, related_name="slides", on_delete=models.CASCADE)
-    #pptFile = models.FileField(upload_to='uploads/')
+    pptxFile = models.FileField(upload_to="uploads/pptx/", default="uploads/pptx/default.pptx")
     pptFile = models.URLField()
     tags = TaggableManager()
     enabled = models.BooleanField()
 
     # Attributes derived from PPT file.
-    # thumbnailFile = models.ImageField(upload_to='uploads/')
+    imageFile = models.ImageField(upload_to="uploads/images/", default="uploads/images/default.jpg")
     thumbnailFile = models.URLField()
     hasIcon = models.BooleanField()
     hasImage = models.BooleanField()

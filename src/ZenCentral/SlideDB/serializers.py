@@ -32,4 +32,7 @@ class SlideSerializer(TaggitSerializer, serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Slide
-        fields = ('id', 'parent', 'pptFile', 'tags', 'enabled', 'thumbnailFile', 'hasIcon', 'hasImage', 'layout', 'style', 'visualStyle', 'zeptoId', 'zeptoDownloads')
+        fields = (
+            'id', 'parent', 'pptxFile', 'pptFile', 'tags', 'enabled', 'imageFile', 'thumbnailFile', 'hasIcon',
+            'hasImage', 'layout', 'style', 'visualStyle', 'zeptoId', 'zeptoDownloads'
+        )
