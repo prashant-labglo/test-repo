@@ -15,8 +15,12 @@ class SlideSearchBase(object):
         self.config = config
 
     @methodProfiler
-    def permittedSlides(self, queryInfo):
+    def getPermittedSlides(self, queryInfo):
         """
+            ********** IMPORTANT *********
+            Any change here MUST be reflected in method getPermittedSlidesDbOptimized(file ZenCentral/Search/utils.py)
+            *********** IMPORTANT *********
+
             queryJson contains filters, which are applied on slides in self.dataForIndexing["Slides"]. Remaining slides are returned.
             queryJson schema can be as below.
             {
@@ -108,21 +112,18 @@ class SlideSearchBase(object):
         raise NotImplementedError("Derived classes must define this function.")
 
     @methodProfiler
-    def slideSearch(self, queryInfo, getIDs=False):
+    def slideSearch(self, queryInfo, permittedSlideList, getIDs=False):
         """
         Gets a query JSON as input. Computes similarity of the query JSON with all indexed slides and 
         returns all of them sorted in the order of best match.
         """
         queryInfo = textCleanUp(queryInfo)
 
-        # Apply filter part of queryInfo.
-        permittedSlides = list(self.permittedSlides(queryInfo))
-
         # Compute scores of remaining slides.
-        slideScores = self.slideSimilarity(queryInfo, permittedSlides)
+        slideScores = self.slideSimilarity(queryInfo, permittedSlideList)
 
         # Start building resultList
-        resultList = list(enumerate(permittedSlides))
+        resultList = list(enumerate(permittedSlideList))
 
         # Drop slides with negative score.
         # resultList = [(index, slide) for (index, slide) in resultList if slideScores[index] > 0]

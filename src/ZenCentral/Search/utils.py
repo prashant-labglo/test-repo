@@ -1,3 +1,6 @@
+from SlideDB.models import Slide
+from LibLisa import methodProfiler
+
 
 def normalizeQueryJson(queryJson):
     """
@@ -56,3 +59,64 @@ def normalizeQueryJson(queryJson):
             del (queryJson["IncludeDisabledHierarchy"])
 
     return queryJson
+
+
+@methodProfiler
+def getPermittedSlidesDbOptimized(queryInfo):
+    """
+    *********** IMPORTANT *********
+    Any change here MUST be reflected in method SlideSearchBsae.getPermittedSlides(file SlideSearch/SlideSearchBase.py)
+    *********** IMPORTANT *********
+
+    Method to return only permitted slide after filtering with all keys values.
+    """
+
+    slides_qset = Slide.objects.all().distinct()
+
+    if queryInfo.get("IsEnabled", True):
+        slides_qset = slides_qset.filter(enabled=True)
+
+    if "FilterInKeywords" in queryInfo.keys():
+        slides_qset = slides_qset.filter(tags__name__in=queryInfo["FilterInKeywords"])
+
+    if "FilterOutKeywords" in queryInfo.keys():
+        slides_qset = slides_qset.exclude(tags__name__in=queryInfo["FilterOutKeywords"])
+
+    if "Constructs" in queryInfo.keys():
+        slides_qset = slides_qset.filter(parent__id__in=queryInfo["Constructs"])
+
+    if "HasIcon" in queryInfo.keys():
+        slides_qset = slides_qset.filter(hasIcon=queryInfo["HasIcon"])
+
+    if "HasImage" in queryInfo.keys():
+        slides_qset = slides_qset.filter(hasImage=queryInfo["HasImage"])
+
+    permitted_slides = []
+    for slide in slides_qset:
+        if "Layout" in queryInfo.keys():
+            if getattr(slide, "layout") not in queryInfo["Layout"]:
+                # Constraints not met. No Similarity.
+                continue
+
+        if "Style" in queryInfo.keys():
+            if getattr(slide, "Style") not in queryInfo["Style"]:
+                # Constraints not met. No Similarity.
+                continue
+
+        if "VisualStyle" in queryInfo.keys():
+            if str(getattr(slide, "visualStyle")).lower() not in queryInfo["VisualStyle"]:
+                # Constraints not met. No Similarity.
+                continue
+
+        if not (queryInfo.get("IncludeDisabledHierarchy", False)):
+            construct = getattr(slide, "parent")
+            subConcept = getattr(construct, "parent")
+            concept = getattr(subConcept, "parent")
+            if not (getattr(concept, "enabled")) or not \
+                    (getattr(subConcept, "enabled")) or not \
+                    (getattr(construct, "enabled")):
+                continue
+
+        permitted_slides.append(slide)
+
+    return permitted_slides
