@@ -12,7 +12,7 @@ class Command(BaseCommand):
 
         slides_list = Slide.objects.all()
 
-        for slide in slides_list[:10]:
+        for slide in slides_list:
             # Define image file name
             image_name = slide.thumbnailFile.split("/")[-1]
 
