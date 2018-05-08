@@ -15,11 +15,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='slide',
             name='imageFile',
-            field=models.ImageField(default='uploads/images/default.jpg', upload_to='uploads/images/'),
+            field=models.ImageField(default='/static/images/default.jpg', upload_to='uploads/images/'),
         ),
         migrations.AddField(
             model_name='slide',
             name='pptxFile',
-            field=models.FileField(default='uploads/pptx/default.pptx', upload_to='uploads/pptx/'),
+            field=models.FileField(default='/static/pptx/default.pptx', upload_to='uploads/pptx/'),
         ),
     ]
