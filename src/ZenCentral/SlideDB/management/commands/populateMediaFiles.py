@@ -1,3 +1,4 @@
+import os
 from django.core.management.base import BaseCommand
 from django.core.files import File
 from urllib.request import urlretrieve, urlcleanup
@@ -14,10 +15,10 @@ class Command(BaseCommand):
 
         for slide in slides_list:
             # Define image file name
-            image_name = slide.thumbnailFile.split("/")[-1]
+            image_name = os.path.basename(slide.thumbnailFile)
 
             # Define pptx file name
-            file_name = slide.pptFile.split("/")[-1]
+            file_name = os.path.basename(slide.pptFile)
 
             try:
                 # Retrieve pptx file from url and save it into new file field.
