@@ -140,16 +140,20 @@ class SlideSearchLambdaMart(SlideSearchBase):
                 i = 0
                 permittedSlideList = seedDataBuilder.getPermittedSlides(simulatedQuery["queryJson"])
                 results = seedDataBuilder.slideSearch(simulatedQuery["queryJson"], permittedSlideList)
-                while len(closeButNotMatchingSlides) < nonMatchingSlideCount:
-                    if results[i][1] not in matchingSlides:
-                        closeButNotMatchingSlides.append(results[i][1])
-                    i += 1
+                if results:
+                    while len(closeButNotMatchingSlides) < nonMatchingSlideCount:
+                        if results[i][1] not in matchingSlides:
+                            closeButNotMatchingSlides.append(results[i][1])
+                        i += 1
 
                 simulatedQueryResults = []
                 simulatedQuery["results"] = simulatedQueryResults
 
                 maxDownloads1 = max([slide["zeptoDownloads"] for slide in matchingSlides])
-                maxDownloads2 = max([slide["zeptoDownloads"] for slide in closeButNotMatchingSlides])
+                if closeButNotMatchingSlides:
+                    maxDownloads2 = max([slide["zeptoDownloads"] for slide in closeButNotMatchingSlides])
+                else:
+                    maxDownloads2 = 0
                 maxDownloads = float(max(maxDownloads1, maxDownloads2) + 0.0001)
                 # Build positive results.
                 for slide in matchingSlides:
@@ -160,12 +164,13 @@ class SlideSearchLambdaMart(SlideSearchBase):
                     simulatedQueryResults.append(simulatedQueryResult)
 
                 # Build negative results.
-                for slide in closeButNotMatchingSlides:
-                    simulatedQueryResult = {
-                            "avgRating" : -15 + int(10 * slide["zeptoDownloads"]/maxDownloads),
-                            "slide" : slide["id"],
-                        }
-                    simulatedQueryResults.append(simulatedQueryResult)
+                if closeButNotMatchingSlides:
+                    for slide in closeButNotMatchingSlides:
+                        simulatedQueryResult = {
+                                "avgRating" : -15 + int(10 * slide["zeptoDownloads"]/maxDownloads),
+                                "slide" : slide["id"],
+                            }
+                        simulatedQueryResults.append(simulatedQueryResult)
 
                 retval.append(simulatedQuery)
             print("{0}: Processed word {1}, occuring in {2}.".format(index, word, wordToMatchingSlideIds[word]))
