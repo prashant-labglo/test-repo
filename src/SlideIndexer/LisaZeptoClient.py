@@ -78,6 +78,14 @@ class LisaZeptoClient(RestClient):
             if slide["Style"] == "Enhaced":
                 slide["Style"] = "Enhanced"
 
+            # Content has Limited which is mis-spelled as Light for some slides.
+            if slide["Content"] == "Light" or not slide["Content"]:
+                slide["Content"] = "Limited"
+
+            # Content has Medium which is mis-spelled as Moderate/Modeate for some slides.
+            if slide["Content"] == "Moderate" or slide["Content"] == "Modeate":
+                slide["Content"] = "Medium"
+
             # Parts of tag data are corrupted. Fixing.
             slideTagLists = []
             for tag in slide["Tags"]:
@@ -174,6 +182,7 @@ class LisaZeptoClient(RestClient):
             transformedSlide["hasImage"] = True if latestSlide["Image"].lower() == "yes" else False
             transformedSlide["layout"] = latestSlide["Layout"]
             transformedSlide["style"] = latestSlide["Style"]
+            transformedSlide["content"] = latestSlide["Content"]
             transformedSlide["zeptoId"] = latestSlide["NumId"]
             transformedSlide["zeptoDownloads"] = latestSlide["Downloads"]
             transformedSlides.append(transformedSlide)
