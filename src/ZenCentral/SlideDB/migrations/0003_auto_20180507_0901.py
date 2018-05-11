@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('SlideDB', '0001_initial'),
+        ('SlideDB', '0002_slide_content'),
     ]
 
     operations = [
