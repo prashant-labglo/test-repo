@@ -68,6 +68,8 @@ class Slide(models.Model):
     hasImage = models.BooleanField()
     layout = EnumField(LayoutChoices, default=LayoutChoices.Basic)
     style = EnumField(StyleChoices, default=StyleChoices.Basic)
+    content = EnumField(SlideContentChoices, default=SlideContentChoices.Limited)
+
     @property
     def visualStyle(self):
         """

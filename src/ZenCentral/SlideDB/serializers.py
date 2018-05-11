@@ -1,5 +1,7 @@
 from rest_framework import serializers
-from SlideDB.models import Concept, SubConcept, Construct, Slide, LayoutChoices, StyleChoices, VisualStyleChoices
+from SlideDB.models import (
+    Concept, SubConcept, Construct, Slide, LayoutChoices, StyleChoices, VisualStyleChoices, SlideContentChoices
+)
 from taggit_serializer.serializers import TagListSerializerField, TaggitSerializer
 from ZenCentral import fields
 
@@ -28,11 +30,12 @@ class SlideSerializer(TaggitSerializer, serializers.HyperlinkedModelSerializer):
     tags = TagListSerializerField()
     layout = fields.EnumSerializerField(LayoutChoices)
     style = fields.EnumSerializerField(StyleChoices)
+    content = fields.EnumSerializerField(SlideContentChoices)
     visualStyle = fields.EnumSerializerField(VisualStyleChoices, read_only=True)
 
     class Meta:
         model = Slide
         fields = (
             'id', 'parent', 'pptxFile', 'pptFile', 'tags', 'enabled', 'imageFile', 'thumbnailFile', 'hasIcon',
-            'hasImage', 'layout', 'style', 'visualStyle', 'zeptoId', 'zeptoDownloads'
+            'hasImage', 'layout', 'style', 'content', 'visualStyle', 'zeptoId', 'zeptoDownloads'
         )
