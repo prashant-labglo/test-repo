@@ -94,12 +94,17 @@ def getPermittedSlidesDbOptimized(queryInfo):
     permitted_slides = []
     for slide in slides_qset:
         if "Layout" in queryInfo.keys():
-            if getattr(slide, "layout") not in queryInfo["Layout"]:
+            if str(getattr(slide, "layout")) not in queryInfo["Layout"]:
                 # Constraints not met. No Similarity.
                 continue
 
         if "Style" in queryInfo.keys():
-            if getattr(slide, "Style") not in queryInfo["Style"]:
+            if str(getattr(slide, "style")) not in queryInfo["Style"]:
+                # Constraints not met. No Similarity.
+                continue
+
+        if "Content" in queryInfo.keys():
+            if str(getattr(slide, "content")) not in queryInfo["Content"]:
                 # Constraints not met. No Similarity.
                 continue
 

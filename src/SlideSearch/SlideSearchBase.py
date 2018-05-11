@@ -88,6 +88,11 @@ class SlideSearchBase(object):
                     # Constraints not met. No Similarity.
                     continue
 
+            if "Content" in queryInfo.keys():
+                if self.getAttr(slide, "content") not in queryInfo["Content"]:
+                    # Constraints not met. No Similarity.
+                    continue
+
             if "VisualStyle" in queryInfo.keys():
                 if str(self.getAttr(slide, "visualStyle")).lower() not in queryInfo["VisualStyle"]:
                     # Constraints not met. No Similarity.
