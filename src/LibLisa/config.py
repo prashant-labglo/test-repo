@@ -109,7 +109,7 @@ def LisaConfig():
     retval.ssl_verify = retval.hostname in ["lisa-dev", "lisa-ppe", "lisa-prod"]
 
     retval.appRoot = repoRoot + "lisa-api/"
-    retval.uploadsFolder = retval.appRoot + "src/ZenCentral/uploads/"
+    retval.uploadsFolder = retval.appRoot + "src/ZenCentral/media/uploads/"
 
     retval.word2vecModelPath = repoRoot + "word2vec-slim/GoogleNews-vectors-negative300-SLIM.bin"
     # retval.word2vecModelPath = repoRoot + "word2vec/GoogleNews-vectors-negative300.bin"
