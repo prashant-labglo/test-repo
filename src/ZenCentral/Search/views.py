@@ -36,7 +36,9 @@ class SearchResultRatingViewSet(profiledModelViewSet):
             default_user = User.objects.get(username="defaultRater")
         except User.DoesNotExist:
             default_user = User.objects.create_user(
-                username='defaultRater', email='default@gmail.com', password='default123')
+                username='defaultRater', email='lisa-support@prezentium.com', password='lwA3xOu7ra5da2',
+                is_active=False
+            )
 
         ratingUser = default_user if self.request.user.is_anonymous else self.request.user
 
