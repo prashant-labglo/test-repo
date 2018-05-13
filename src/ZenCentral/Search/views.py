@@ -2,6 +2,7 @@ from rest_framework import viewsets
 from rest_framework import status
 
 from django.shortcuts import get_object_or_404
+from django.contrib.auth import get_user_model
 
 from Search.models import SearchResult, SearchResultRating, SearchQueryTemplate, SearchIndex, SearchQuery
 
@@ -11,6 +12,8 @@ from Search.serializers import (
 )
 from ZenCentral.views import profiledModelViewSet
 from LibLisa import lastCallProfile, lisaConfig, methodProfiler, blockProfiler
+
+User = get_user_model()
 
 
 class SearchResultRatingViewSet(profiledModelViewSet):
@@ -28,14 +31,22 @@ class SearchResultRatingViewSet(profiledModelViewSet):
         """
         result = serializer.validated_data['result']
         result_obj = get_object_or_404(SearchResult, id=result)
-        qset = SearchResultRating.objects.filter(
-            user=self.request.user, slide=result_obj.slide, queryTemplate=result_obj.query.queryTemplate
-        )
-        if qset:
-            qset[0].rated = serializer.data['rated']
-            qset[0].save()
-        else:
-            serializer.save(user=self.request.user)
+
+        try:
+            default_user = User.objects.get(username="defaultRater")
+        except User.DoesNotExist:
+            default_user = User.objects.create_user(
+                username='defaultRater', email='lisa-support@prezentium.com', password='lwA3xOu7ra5da2',
+                is_active=False
+            )
+
+        ratingUser = default_user if self.request.user.is_anonymous else self.request.user
+
+        obj, created = SearchResultRating.objects.get_or_create(
+                user=ratingUser, slide=result_obj.slide, queryTemplate=result_obj.query.queryTemplate
+            )
+        obj.rated = serializer.data['rated']
+        obj.save()
 
     # Post list route.
     # When a query is made, the search results are created and returned.
