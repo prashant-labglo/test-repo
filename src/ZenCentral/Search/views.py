@@ -2,6 +2,7 @@ from rest_framework import viewsets
 from rest_framework import status
 
 from django.shortcuts import get_object_or_404
+from django.contrib.auth.models import User
 
 from Search.models import SearchResult, SearchResultRating, SearchQueryTemplate, SearchIndex, SearchQuery
 
@@ -28,14 +29,18 @@ class SearchResultRatingViewSet(profiledModelViewSet):
         """
         result = serializer.validated_data['result']
         result_obj = get_object_or_404(SearchResult, id=result)
-        qset = SearchResultRating.objects.filter(
-            user=self.request.user, slide=result_obj.slide, queryTemplate=result_obj.query.queryTemplate
-        )
-        if qset:
-            qset[0].rated = serializer.data['rated']
-            qset[0].save()
+        if not self.request.user.is_anonymous:
+            obj, created = SearchResultRating.objects.get_or_create(
+                user=self.request.user, slide=result_obj.slide, queryTemplate=result_obj.query.queryTemplate
+            )
         else:
-            serializer.save(user=self.request.user)
+            # When no user logged in use the 'defaultRater' as logged in user.
+            default_user = User.objects.get(username="defaultRater")
+            obj, created = SearchResultRating.objects.get_or_create(
+                user=default_user, slide=result_obj.slide, queryTemplate=result_obj.query.queryTemplate
+            )
+        obj.rated = serializer.data['rated']
+        obj.save()
 
     # Post list route.
     # When a query is made, the search results are created and returned.
