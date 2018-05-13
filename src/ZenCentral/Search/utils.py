@@ -1,4 +1,4 @@
-from SlideDB.models import Slide
+from SlideDB.models import Slide, LayoutChoices, StyleChoices, VisualStyleChoices, SlideContentChoices
 from LibLisa import methodProfiler
 
 
@@ -58,6 +58,18 @@ def normalizeQueryJson(queryJson):
         else:
             del (queryJson["IncludeDisabledHierarchy"])
 
+    if "Layout" in queryJson:
+        queryJson["Layout"] = [LayoutChoices[item].value for item in queryJson["Layout"]] 
+
+    if "Style" in queryJson:
+        queryJson["Style"] = [StyleChoices[item].value for item in queryJson["Style"]] 
+
+    if "Content" in queryJson:
+        queryJson["Content"] = [SlideContentChoices[item].value for item in queryJson["Content"]] 
+
+    if "VisualStyle" in queryJson:
+        queryJson["VisualStyle"] = [VisualStyleChoices[item].value for item in queryJson["VisualStyle"]] 
+
     return queryJson
 
 
@@ -94,17 +106,22 @@ def getPermittedSlidesDbOptimized(queryInfo):
     permitted_slides = []
     for slide in slides_qset:
         if "Layout" in queryInfo.keys():
-            if getattr(slide, "layout") not in queryInfo["Layout"]:
+            if slide.layout.value not in queryInfo["Layout"]:
                 # Constraints not met. No Similarity.
                 continue
 
         if "Style" in queryInfo.keys():
-            if getattr(slide, "Style") not in queryInfo["Style"]:
+            if slide.style.value not in queryInfo["Style"]:
+                # Constraints not met. No Similarity.
+                continue
+
+        if "Content" in queryInfo.keys():
+            if slide.content.value not in queryInfo["Content"]:
                 # Constraints not met. No Similarity.
                 continue
 
         if "VisualStyle" in queryInfo.keys():
-            if str(getattr(slide, "visualStyle")).lower() not in queryInfo["VisualStyle"]:
+            if slide.visualStyle.value not in queryInfo["VisualStyle"]:
                 # Constraints not met. No Similarity.
                 continue
 
