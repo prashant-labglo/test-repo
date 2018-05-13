@@ -50,10 +50,11 @@ class SearchResultSerializer(serializers.ModelSerializer):
     """
     id = serializers.IntegerField(read_only=True)
     myRating = serializers.IntegerField(read_only=True)
+    friendlyId = serializers.ReadOnlyField(source='getFriendlyId')
 
     class Meta:
         model = SearchResult
-        fields = ('id', 'slide', 'rank', 'query', 'ratings', 'myRating', 'avgRating')
+        fields = ('id', 'slide', 'rank', 'query', 'ratings', 'myRating', 'avgRating', 'friendlyId')
         read_only_fields = ('id', 'slide', 'rank', 'query', 'ratings')
 
 
@@ -82,10 +83,11 @@ class NestedSearchResultSerializer(serializers.ModelSerializer):
     avgRating = serializers.FloatField(read_only=True)
     myRating = serializers.IntegerField(read_only=False)
     id = serializers.IntegerField(read_only=True)
+    friendlyId = serializers.ReadOnlyField(source='getFriendlyId')
 
     class Meta:
         model = SearchResult
-        fields = ('id', 'slide', 'avgRating', 'myRating', 'score', 'pptFile', 'thumbnailFile')
+        fields = ('id', 'slide', 'avgRating', 'myRating', 'score', 'friendlyId', 'pptFile', 'thumbnailFile')
 
 
 class PaginatedSearchResultListSerializer(serializers.ListSerializer):
