@@ -67,6 +67,12 @@ class SearchResult(models.Model):
         return self.slide.thumbnailFile
 
     @property
+    def getFriendlyId(self):
+        construct_name = self.slide.parent.name
+        concept_name = self.slide.parent.parent.parent.name
+        return "%s-%s-%s" % (concept_name, construct_name, self.slide.id)
+
+    @property
     def pptFile(self):
         return self.slide.pptFile
 
