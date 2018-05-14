@@ -89,10 +89,8 @@ def getPermittedSlidesDbOptimized(queryInfo):
         slides_qset = slides_qset.filter(enabled=True)
 
     if "FilterInKeywords" in queryInfo.keys():
-        qsets_to_and = [slides_qset.filter(tags__name__in=[tag]) for tag in queryInfo["FilterInKeywords"]]
-        slides_qset = qsets_to_and[0] 
-        for qset_to_and in qsets_to_and[1:]:
-            slides_qset = slides_qset and qset_to_and
+        for tag in queryInfo["FilterInKeywords"]:
+            slides_qset=slides_qset.filter(tags__name__in=[tag])
 
     if "FilterOutKeywords" in queryInfo.keys():
         slides_qset = slides_qset.exclude(tags__name__in=queryInfo["FilterOutKeywords"])
