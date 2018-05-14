@@ -2,7 +2,6 @@ from rest_framework import viewsets
 from rest_framework import status
 
 from django.shortcuts import get_object_or_404
-from django.contrib.auth import get_user_model
 
 from Search.models import SearchResult, SearchResultRating, SearchQueryTemplate, SearchIndex, SearchQuery
 
@@ -10,10 +9,11 @@ from Search.serializers import (
     NestedSearchResultSerializer, SearchResultSerializer, SearchResultRatingSerializer, SearchQueryTemplateSerializer,
     SearchIndexSerializer, UpsertingOnPostResultRatingSerializer, SearchQuerySerializer
 )
+
+from Search.utils import getDefaultUser
+
 from ZenCentral.views import profiledModelViewSet
 from LibLisa import lastCallProfile, lisaConfig, methodProfiler, blockProfiler
-
-User = get_user_model()
 
 
 class SearchResultRatingViewSet(profiledModelViewSet):
@@ -32,14 +32,7 @@ class SearchResultRatingViewSet(profiledModelViewSet):
         result = serializer.validated_data['result']
         result_obj = get_object_or_404(SearchResult, id=result)
 
-        try:
-            default_user = User.objects.get(username="defaultRater")
-        except User.DoesNotExist:
-            default_user = User.objects.create_user(
-                username='defaultRater', email='lisa-support@prezentium.com', password='lwA3xOu7ra5da2',
-                is_active=False
-            )
-
+        default_user = getDefaultUser()
         ratingUser = default_user if self.request.user.is_anonymous else self.request.user
 
         obj, created = SearchResultRating.objects.get_or_create(

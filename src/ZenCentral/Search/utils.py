@@ -1,5 +1,8 @@
+from django.contrib.auth import get_user_model
 from SlideDB.models import Slide, LayoutChoices, StyleChoices, VisualStyleChoices, SlideContentChoices
 from LibLisa import methodProfiler
+
+UserModel = get_user_model()
 
 
 def normalizeQueryJson(queryJson):
@@ -138,3 +141,18 @@ def getPermittedSlidesDbOptimized(queryInfo):
         permitted_slides.append(slide)
 
     return permitted_slides
+
+
+def getDefaultUser():
+    """
+    Method to return the default user.
+    """
+
+    try:
+        default_user = UserModel.objects.get(username="defaultRater")
+    except UserModel.DoesNotExist:
+        default_user = UserModel.objects.create_user(
+            username='defaultRater', email='lisa-support@prezentium.com', password='lwA3xOu7ra5da2',
+            is_active=False
+        )
+    return default_user
