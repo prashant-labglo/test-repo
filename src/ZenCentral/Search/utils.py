@@ -1,5 +1,8 @@
-from SlideDB.models import Slide
+from django.contrib.auth import get_user_model
+from SlideDB.models import Slide, LayoutChoices, StyleChoices, VisualStyleChoices, SlideContentChoices
 from LibLisa import methodProfiler
+
+UserModel = get_user_model()
 
 
 def normalizeQueryJson(queryJson):
@@ -58,6 +61,18 @@ def normalizeQueryJson(queryJson):
         else:
             del (queryJson["IncludeDisabledHierarchy"])
 
+    if "Layout" in queryJson:
+        queryJson["Layout"] = [LayoutChoices[item].value for item in queryJson["Layout"]] 
+
+    if "Style" in queryJson:
+        queryJson["Style"] = [StyleChoices[item].value for item in queryJson["Style"]] 
+
+    if "Content" in queryJson:
+        queryJson["Content"] = [SlideContentChoices[item].value for item in queryJson["Content"]] 
+
+    if "VisualStyle" in queryJson:
+        queryJson["VisualStyle"] = [VisualStyleChoices[item].value for item in queryJson["VisualStyle"]] 
+
     return queryJson
 
 
@@ -77,7 +92,8 @@ def getPermittedSlidesDbOptimized(queryInfo):
         slides_qset = slides_qset.filter(enabled=True)
 
     if "FilterInKeywords" in queryInfo.keys():
-        slides_qset = slides_qset.filter(tags__name__in=queryInfo["FilterInKeywords"])
+        for tag in queryInfo["FilterInKeywords"]:
+            slides_qset=slides_qset.filter(tags__name__in=[tag])
 
     if "FilterOutKeywords" in queryInfo.keys():
         slides_qset = slides_qset.exclude(tags__name__in=queryInfo["FilterOutKeywords"])
@@ -94,22 +110,22 @@ def getPermittedSlidesDbOptimized(queryInfo):
     permitted_slides = []
     for slide in slides_qset:
         if "Layout" in queryInfo.keys():
-            if str(getattr(slide, "layout")) not in queryInfo["Layout"]:
+            if slide.layout.value not in queryInfo["Layout"]:
                 # Constraints not met. No Similarity.
                 continue
 
         if "Style" in queryInfo.keys():
-            if str(getattr(slide, "style")) not in queryInfo["Style"]:
+            if slide.style.value not in queryInfo["Style"]:
                 # Constraints not met. No Similarity.
                 continue
 
         if "Content" in queryInfo.keys():
-            if str(getattr(slide, "content")) not in queryInfo["Content"]:
+            if slide.content.value not in queryInfo["Content"]:
                 # Constraints not met. No Similarity.
                 continue
 
         if "VisualStyle" in queryInfo.keys():
-            if str(getattr(slide, "visualStyle")).lower() not in queryInfo["VisualStyle"]:
+            if slide.visualStyle.value not in queryInfo["VisualStyle"]:
                 # Constraints not met. No Similarity.
                 continue
 
@@ -125,3 +141,18 @@ def getPermittedSlidesDbOptimized(queryInfo):
         permitted_slides.append(slide)
 
     return permitted_slides
+
+
+def getDefaultUser():
+    """
+    Method to return the default user.
+    """
+
+    try:
+        default_user = UserModel.objects.get(username="defaultRater")
+    except UserModel.DoesNotExist:
+        default_user = UserModel.objects.create_user(
+            username='defaultRater', email='lisa-support@prezentium.com', password='lwA3xOu7ra5da2',
+            is_active=False
+        )
+    return default_user

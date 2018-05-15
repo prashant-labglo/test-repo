@@ -13,7 +13,7 @@ from SlideSearch import slideSearchIndexLoad
 from LibLisa import lastCallProfile, lisaConfig, methodProfiler, blockProfiler
 from LibLisa.config import lisaConfig
 from ZenCentral.middleware import get_current_user
-from Search.utils import getPermittedSlidesDbOptimized
+from Search.utils import getPermittedSlidesDbOptimized, getDefaultUser
 
 UserModel = get_user_model()
 
@@ -145,7 +145,7 @@ class SearchResult(models.Model):
         """
         curUser = get_current_user()
         if curUser.is_anonymous:
-            return None
+            curUser = getDefaultUser()
         ratingObj = SearchResultRating.objects.get(
             slide=self.slide, queryTemplate=self.query.queryTemplate, user=curUser
         )

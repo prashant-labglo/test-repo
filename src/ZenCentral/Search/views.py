@@ -9,6 +9,9 @@ from Search.serializers import (
     NestedSearchResultSerializer, SearchResultSerializer, SearchResultRatingSerializer, SearchQueryTemplateSerializer,
     SearchIndexSerializer, UpsertingOnPostResultRatingSerializer, SearchQuerySerializer
 )
+
+from Search.utils import getDefaultUser
+
 from ZenCentral.views import profiledModelViewSet
 from LibLisa import lastCallProfile, lisaConfig, methodProfiler, blockProfiler
 
@@ -28,14 +31,15 @@ class SearchResultRatingViewSet(profiledModelViewSet):
         """
         result = serializer.validated_data['result']
         result_obj = get_object_or_404(SearchResult, id=result)
-        qset = SearchResultRating.objects.filter(
-            user=self.request.user, slide=result_obj.slide, queryTemplate=result_obj.query.queryTemplate
-        )
-        if qset:
-            qset[0].rated = serializer.data['rated']
-            qset[0].save()
-        else:
-            serializer.save(user=self.request.user)
+
+        default_user = getDefaultUser()
+        ratingUser = default_user if self.request.user.is_anonymous else self.request.user
+
+        obj, created = SearchResultRating.objects.get_or_create(
+                user=ratingUser, slide=result_obj.slide, queryTemplate=result_obj.query.queryTemplate
+            )
+        obj.rated = serializer.data['rated']
+        obj.save()
 
     # Post list route.
     # When a query is made, the search results are created and returned.
