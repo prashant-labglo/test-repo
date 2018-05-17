@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Max
 from enumfields import Enum, EnumField
 from taggit.managers import TaggableManager
 
@@ -57,13 +57,13 @@ class SlideContentChoices(Enum):
 class Slide(models.Model):
     parent = models.ForeignKey(Construct, related_name="slides", on_delete=models.CASCADE)
     pptxFile = models.FileField(upload_to="uploads/pptx/", default="/static/pptx/default.pptx")
-    pptFile = models.URLField()
+    pptFile = models.URLField(blank=True, null=True)
     tags = TaggableManager()
     enabled = models.BooleanField()
 
     # Attributes derived from PPT file.
     imageFile = models.ImageField(upload_to="uploads/images/", default="/static/images/default.jpg")
-    thumbnailFile = models.URLField()
+    thumbnailFile = models.URLField(blank=True, null=True)
     hasIcon = models.BooleanField()
     hasImage = models.BooleanField()
     layout = EnumField(LayoutChoices, default=LayoutChoices.Basic)
@@ -85,8 +85,18 @@ class Slide(models.Model):
         elif self.style == StyleChoices.Enhanced and self.layout == LayoutChoices.Enhanced:
             return VisualStyleChoices.Fancy
 
+    def zeptoNum(self):
+        """
+        Method to get default value for zeptoId.
+        """
+        num = Slide.objects.all().aggregate(Max('zeptoId'))
+        if num is None:
+            return 10000
+        else:
+            return num["zeptoId__max"] + 1
+
     # Zepto ID is used to cross reference with corresponding entry in Lisa-Zepto.
-    zeptoId = models.IntegerField(unique=True)
+    zeptoId = models.IntegerField(unique=True, default=zeptoNum)
 
     # Number of downloads of this slide made on Zepto site.
-    zeptoDownloads = models.IntegerField()
+    zeptoDownloads = models.IntegerField(default=0)
