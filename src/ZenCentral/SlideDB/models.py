@@ -85,7 +85,7 @@ class Slide(models.Model):
         elif self.style == StyleChoices.Enhanced and self.layout == LayoutChoices.Enhanced:
             return VisualStyleChoices.Fancy
 
-    def zeptoNum(self):
+    def zeptoNum():
         """
         Method to get default value for zeptoId.
         """
