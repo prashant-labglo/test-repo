@@ -93,7 +93,7 @@ class Slide(models.Model):
         if num is None:
             return 10000
         else:
-            return num["zeptoId__max"] + 1
+            return max(num["zeptoId__max"] + 1, 10000)
 
     # Zepto ID is used to cross reference with corresponding entry in Lisa-Zepto.
     zeptoId = models.IntegerField(unique=True, default=zeptoNum)
